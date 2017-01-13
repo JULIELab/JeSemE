@@ -1,42 +1,52 @@
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
+import spark.Request;
+import spark.Response;
 import static spark.Spark.*;
+
 import com.google.gson.Gson;
+
+import database.Query;
 
 public class ProofOfConcept {
 
-    public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 
-        staticFileLocation("/public");
-        redirect.get("/", "/index.html");
+		staticFileLocation("/public");
+		redirect.get("/", "/index.html");
 
-        get("/hello", (req, res) -> "hello");
+		get("/hello", (req, res) -> "hello");
 
-        // matches "GET /hello/foo" and "GET /hello/bar"
-// request.params(":name") is 'foo' or 'bar'
-        get("/hello/:name", (request, response) -> {
-            return "Hello: " + request.params(":name");
-        });
+		// matches "GET /hello/foo" and "GET /hello/bar"
+		// request.params(":name") is 'foo' or 'bar'
+		get("/hello/:name", (request, response) -> {
+			return "Hello: " + request.params(":name");
+		});
 
-        // matches "GET /say/hello/to/world"
-// request.splat()[0] is 'hello' and request.splat()[1] 'world'
-        get("/say/*/to/*", (request, response) -> {
-            return Arrays.stream(request.splat()).collect(Collectors.joining(" to "));
-        });
-        Gson gson = new Gson();
-        HashMap<String, Object[]> fo = new HashMap<>();
-        Object[] bar = new Object[]{new Object[]{"data3",400,11,33}};
+		// matches "GET /say/hello/to/world"
+		// request.splat()[0] is 'hello' and request.splat()[1] 'world'
+		get("/say/*/to/*",
+				(request, response) -> {
+					return Arrays.stream(request.splat()).collect(
+							Collectors.joining(" to "));
+				});
+		Gson gson = new Gson();
+		Class.forName("org.hsqldb.jdbcDriver");
+		Query q = new Query();
+		get("/json", (request, response) -> ProofOfConcept.getJSON(q, request,
+				response), gson::toJson);
+		
 
-        fo.put("columns",bar);
-        get("/json", (request, response) -> fo, gson::toJson);
+	}
 
-//        "{\n" +
-//                "            columns: [\n" +
-//                "                ['data3', 400, 250, 150, 200, 100, 350]\n" +
-//                "            ]\n" +
-//                "        }"
-    }
+	static final HashMap<String, Object[]> getJSON(Query q, Request request,
+			Response response) throws Exception {
+		HashMap<String, Object[]> fo = new HashMap<>();
+		Object[] bar = new Object[] { q.getSimilarity("bar","foo") };
+		fo.put("columns", bar);
+		return fo;
+	}
+	
 }
