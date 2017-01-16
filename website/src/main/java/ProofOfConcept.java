@@ -1,6 +1,17 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.eclipse.jetty.server.session.HashSessionIdManager;
+import org.sql2o.Sql2o;
+import org.sql2o.logging.SysOutLogger;
 
 import spark.Request;
 import spark.Response;
@@ -9,6 +20,7 @@ import static spark.Spark.*;
 import com.google.gson.Gson;
 
 import database.Query;
+import database.YearAndSimilarity;
 
 public class ProofOfConcept {
 
@@ -34,19 +46,41 @@ public class ProofOfConcept {
 				});
 		Gson gson = new Gson();
 		Class.forName("org.hsqldb.jdbcDriver");
-		Query q = new Query();
+		Sql2o sql2o = new Sql2o("jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA", "");
+		Query q = new Query(sql2o);
 		get("/json", (request, response) -> ProofOfConcept.getJSON(q, request,
 				response), gson::toJson);
 		
+//		final Connection connection = DriverManager.getConnection(
+//				"jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA", "");
 
 	}
 
-	static final HashMap<String, Object[]> getJSON(Query q, Request request,
+	static final HashMap<String, Object> getJSON(Query q, Request request,
 			Response response) throws Exception {
-		HashMap<String, Object[]> fo = new HashMap<>();
-		Object[] bar = new Object[] { q.getSimilarity("bar","foo") };
-		fo.put("columns", bar);
-		return fo;
+		
+		HashMap<String,String> xs = new HashMap<>();
+		ArrayList<Object> columns = new ArrayList<>();
+		for(String word : new String[]{"bar", "arr", "boo"}){
+			List<Object> simList = new ArrayList<>();
+			List<Object> xList = new ArrayList<>();
+			xs.put(word, word+"-x-value");
+			simList.add(word);
+			xList.add(word+"-x-value");
+			
+			for(YearAndSimilarity yas : q.getYearAndSimilarity(word,"foo")){
+				simList.add(yas.similarity);
+				xList.add(yas.year);
+			}
+			
+			columns.add(simList);
+			columns.add(xList);
+		}
+
+		HashMap<String, Object> data = new HashMap<>();
+		data.put("xs", xs);
+		data.put("columns", columns);
+		return data;
 	}
 	
 }

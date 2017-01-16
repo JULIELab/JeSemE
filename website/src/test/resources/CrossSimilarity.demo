@@ -6,3 +6,10 @@ bar moo 1910 0.2
 bar moo 1920 0.3
 bar moo 1930 0.2
 bar moo 1940 0.9
+arr foo 1910 0.43
+arr foo 1920 0.54
+arr foo 1930 0.26
+arr foo 1940 0.18
+boo foo 1910 0.34
+boo foo 1920 0.15
+boo foo 1940 0.01
