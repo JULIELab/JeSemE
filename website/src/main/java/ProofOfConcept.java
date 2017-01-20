@@ -1,84 +1,76 @@
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.eclipse.jetty.server.session.HashSessionIdManager;
-import org.sql2o.Sql2o;
-import org.sql2o.logging.SysOutLogger;
-
-import spark.Request;
-import spark.Response;
-import static spark.Spark.*;
-
 import com.google.gson.Gson;
-
 import database.Query;
 import database.YearAndSimilarity;
+import org.slf4j.LoggerFactory;
+import org.sql2o.Sql2o;
+import org.sql2o.logging.SysOutLogger;
+import spark.ModelAndView;
+import spark.Request;
+import spark.Response;
+import spark.template.thymeleaf.ThymeleafTemplateEngine;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static spark.Spark.*;
 
 public class ProofOfConcept {
 
+
+
 	public static void main(String[] args) throws Exception {
+       // System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
+
+		Sql2o sql2o = new Sql2o("jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA", "");
+		Query q = new Query(sql2o); //save when multiple connections are made? move into query methods?
 
 		staticFileLocation("/public");
 		redirect.get("/", "/index.html");
 
-		get("/hello", (req, res) -> "hello");
+		get("/search", (request, response) -> {
+			String word = request.queryParams("word");
 
-		// matches "GET /hello/foo" and "GET /hello/bar"
-		// request.params(":name") is 'foo' or 'bar'
-		get("/hello/:name", (request, response) -> {
-			return "Hello: " + request.params(":name");
-		});
+			//get similar words from first and last year
+			List<Integer> years = q.getYears(word);
+			List<String> otherWords = q.getMostSimilarWordsInYear(word,years.get(0),2);
+            List<String> moreWords = q.getMostSimilarWordsInYear(word,years.get(years.size() - 1),2);
+            Set<String> words = new HashSet(otherWords);
+            words.addAll(moreWords);
 
-		// matches "GET /say/hello/to/world"
-		// request.splat()[0] is 'hello' and request.splat()[1] 'world'
-		get("/say/*/to/*",
-				(request, response) -> {
-					return Arrays.stream(request.splat()).collect(
-							Collectors.joining(" to "));
-				});
-		Gson gson = new Gson();
-		Class.forName("org.hsqldb.jdbcDriver");
-		Sql2o sql2o = new Sql2o("jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA", "");
-		Query q = new Query(sql2o);
-		get("/json", (request, response) -> ProofOfConcept.getJSON(q, request,
-				response), gson::toJson);
-		
-		 Map map = new HashMap();
-        	 map.put("name", "Sam");
+			Map map = new HashMap();
+			map.put("word", word);
+			map.put("similaritydata", getJSON(q,word,words.toArray(new String[words.size()])));
+			return new ModelAndView(map, "result");}, new ThymeleafTemplateEngine());
 
-        // TODO: replace map, test with static data, test reading of parameters
-                 get("/result", (rq, rs) -> new ModelAndView(map, "hello"), new ThymeleafTemplateEngine());
-		
-//		final Connection connection = DriverManager.getConnection(
-//				"jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA", "");
+        get("/api/similarity", (request, response) -> {
+            String word1 = request.queryParams("word1");
+            String word2 = request.queryParams("word2");
+            return getJSON(q,word1,word2);}, new Gson()::toJson);
 
+        //TODO: replace with real implementation
+        get("/api/ppmi", (request, response) -> {
+            String word1 = request.queryParams("word1");
+            String word2 = request.queryParams("word2");
+            return getJSON(q,word1,word2);}, new Gson()::toJson);
 	}
 
-	static final HashMap<String, Object> getJSON(Query q, Request request,
-			Response response) throws Exception {
-		
+
+	static final HashMap<String, Object> getJSON(Query q, String word2, String... otherWords) throws Exception {
+
 		HashMap<String,String> xs = new HashMap<>();
 		ArrayList<Object> columns = new ArrayList<>();
-		for(String word : new String[]{"bar", "arr", "boo"}){
+		for(String word : otherWords){
 			List<Object> simList = new ArrayList<>();
 			List<Object> xList = new ArrayList<>();
 			xs.put(word, word+"-x-value");
 			simList.add(word);
 			xList.add(word+"-x-value");
-			
-			for(YearAndSimilarity yas : q.getYearAndSimilarity(word,"foo")){
+
+			for(YearAndSimilarity yas : q.getYearAndSimilarity(word,word2)){
 				simList.add(yas.similarity);
 				xList.add(yas.year);
 			}
-			
+
 			columns.add(simList);
 			columns.add(xList);
 		}

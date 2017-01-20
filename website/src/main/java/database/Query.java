@@ -41,29 +41,24 @@ public class Query {
 		}
 	}
 
-//	public List<Integer> getYears() throws Exception {
-//		final Connection connection = DriverManager.getConnection(
-//				"jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA", "");
-//		final List<Integer> years = new ArrayList<>();
-//		ResultSet r = connection.createStatement().executeQuery(
-//				"SELECT DISTINCT year FROM test ORDER BY year");
-//		while (r.next())
-//			years.add(r.getInt(1));
-//		return years;
-//	}
+	public List<Integer> getYears(String word) throws Exception {
+		String sql = "SELECT DISTINCT year FROM test WHERE word1=:word1 OR word2=:word2 ORDER BY year";
+		try (Connection con = sql2o.open()) {
+			return con.createQuery(sql)
+					.addParameter("word1", word)
+					.addParameter("word2", word).executeScalarList(Integer.class);
+		}
+	}
 
 	public List<String> getMostSimilarWordsInYear(String givenWord,
-			Integer year, int limit) throws Exception {
+			Integer year, int limit) {
 
-		String sql = "SELECT word FROM :table WHERE word1=:givenWord AND year=:year ORDER BY similarity DESC LIMIT :limit";
 
+		String sql = "SELECT word1 FROM "+"test"+" WHERE word2=:givenWord AND year=:year ORDER BY similarity DESC LIMIT :limit";
 		try (Connection con = sql2o.open()) {
-			List<String> mostSimilar = con.createQuery(sql)
-					.addParameter("table", "test")
+			return con.createQuery(sql)
 					.addParameter("givenWord", givenWord)
-					.addParameter("year", year).addParameter("limit", limit)
-					.executeScalarList(String.class);
-			return mostSimilar;
+					.addParameter("year", year).addParameter("limit", limit).executeScalarList(String.class);
 		}
 	}
 

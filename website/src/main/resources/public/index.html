@@ -17,38 +17,10 @@
 <body>
 
 <h1>Welcome to JeDiSem</h1>
-<p>This is a paragraph.</p>
-    
-Here comes a search bar!
-<form id="search-form" action="result" method="get">
-    <ul>
-        <li>
-            <label for="word">Name:</label>
-            <input type="search" name="word" id="word" value="" />
-        </li>
-        <li>
-            <input type="submit" value="submit" />
-            <input type="reset" value="reset" />
-        </li>
-    </ul>
+<p>The Jena Diachronic Semantic search engine</p>
+
+<form id="search-form" action="search" method="get">
+            <input type="search" name="word" id="word" value="" />  <input type="submit" value="Search"/>
 </form>
-    
-<div id="chart">where is my chart?</div>
-und kram
-<script>
-    var chart = c3.generate({
-        bindto: "#chart",
-        data: {
-            "columns": [
-                []
-            ]
-        }
-    });
-
-
-    $.getJSON( "/json", function( data ) {
-        chart.load(data);
-    });
-</script>
 </body>
 </html>

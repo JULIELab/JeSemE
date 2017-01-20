@@ -13,3 +13,6 @@ arr foo 1940 0.18
 boo foo 1910 0.34
 boo foo 1920 0.15
 boo foo 1940 0.01
+goo moo 1950 1
+goa moo 1950 0.11
+gob moo 1950 0.1
