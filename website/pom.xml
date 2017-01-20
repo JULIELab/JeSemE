@@ -13,6 +13,11 @@
 	<!-- library dependencies -->
 	<dependencies>
 		<dependency>
+		    <groupId>org.thymeleaf</groupId>
+		    <artifactId>thymeleaf</artifactId>
+		    <version>3.0.3.RELEASE</version>
+		</dependency>
+		<dependency>
 			<groupId>org.sql2o</groupId>
 			<artifactId>sql2o</artifactId>
 			<version>1.5.4</version>
