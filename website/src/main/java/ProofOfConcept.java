@@ -51,6 +51,12 @@ public class ProofOfConcept {
 		get("/json", (request, response) -> ProofOfConcept.getJSON(q, request,
 				response), gson::toJson);
 		
+		 Map map = new HashMap();
+        	 map.put("name", "Sam");
+
+        // TODO: replace map, test with static data, test reading of parameters
+                 get("/result", (rq, rs) -> new ModelAndView(map, "hello"), new ThymeleafTemplateEngine());
+		
 //		final Connection connection = DriverManager.getConnection(
 //				"jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA", "");
 
