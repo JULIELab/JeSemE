@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
 
     <!--css -->
@@ -18,22 +18,23 @@
 
 
 <h1>This will become the result page!</h1>
+The word you searched for is <td th:text="${word}">not his placeholder</td>
+
+<script th:inline="javascript">
+    var data = /*[[${data}]]*/ null;
+</script>
+
 <div id="chart">where is my chart?</div>
 und kram
 <script>
     var chart = c3.generate({
         bindto: "#chart",
-        data: {
-            "columns": [
-                []
-            ]
-        }
+        data: data
     });
 
-
-    $.getJSON( "/json", function( data ) {
-        chart.load(data);
-    });
+   // $.getJSON( "/json", function( data ) {
+   //     chart.load(data);
+   // });
 </script>
 </body>
 </html>
