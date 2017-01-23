@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML> 
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
 
@@ -12,13 +12,13 @@
 
     <!--constants -->
     <script th:inline="javascript">
-        const similaritydata = /*[[${similaritydata}]]*/ null;
-        const ppmidata = /*[[${ppmidata}]]*/ null;
-        const word = /*[[${word}]]*/ null;
+        similaritydata = /*[[${similaritydata}]]*/ null;
+        ppmidata = /*[[${ppmidata}]]*/ null;
+        word = /*[[${word}]]*/ null;
     </script>
 
     <!-- helper functions -->
-    <script>
+    <script type="text/javascript"> 
         function decadeFormatter(year) {
             return year + "s"
         }
@@ -28,7 +28,7 @@
         }
 
         function addWordTo(chart, url, wordBox, error) {
-            var word2 = document.getElementById(wordBox).value
+            let word2 = document.getElementById(wordBox).value
             document.getElementById(wordBox).value = ""
             document.getElementById(error).innerHTML = ""
             if (word2 !== "") {
@@ -73,8 +73,8 @@ The following chart shows its similarity to the most similar words over time.
 <div id="similaritychart">No matches for
     <td th:text="${word}">not his placeholder</td>
 </div>
-<script>
-    const similaritychart = chart("#similaritychart", similaritydata,{
+<script type="text/javascript"> 
+    similaritychart = chart("#similaritychart", similaritydata,{
         max: 1,
         min: 0,
         padding: {top: 0, bottom: 0}
@@ -90,8 +90,8 @@ The following chart shows its similarity to the most similar words over time.
 
 <h2>PPMI Chart</h2>
 <div id="ppmichart">No matches for <td th:text="${word}">not his placeholder</td></div>
-<script>
-    const ppmichart = chart("#ppmichart", ppmidata)
+<script type="text/javascript"> 
+    ppmichart = chart("#ppmichart", ppmidata)
 </script>
 <form action="javascript:void(0);"
       onsubmit="addWordTo(ppmichart, '/api/ppmi', 'addWordToPPMITextBox', 'addWordToPPMITextBoxError')">
