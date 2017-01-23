@@ -2,15 +2,12 @@ package database;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.dbunit.DatabaseUnitException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.sql2o.Sql2o;
-
-import com.google.common.collect.Lists;
 
 public class TestDatabaseService {
 
@@ -30,13 +27,10 @@ public class TestDatabaseService {
 
 	@Test
 	public void testGetMostSimilar() throws DatabaseUnitException, Exception {
-		assertEquals(
-				Arrays.asList(new WordAndID[] { new WordAndID("arr", 4), }),
+		assertEquals(Arrays.asList(new String[] { "arr"}),
 				db.getMostSimilarWordsInYear("foo", 1910, 1));
 
-		assertEquals(
-				Arrays.asList(new WordAndID[] { new WordAndID("arr", 4),
-						new WordAndID("bar", 1) }),
+		assertEquals(Arrays.asList(new String[] {"arr","bar" }),
 				db.getMostSimilarWordsInYear("foo", 1910, 2));
 	}
 

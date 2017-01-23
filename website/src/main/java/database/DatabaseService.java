@@ -14,7 +14,9 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 
 /**
- * Similarity data is symmetrical and has no ordering in its queries, while cooccurrence is asymmetrical!
+ * Similarity data is symmetrical and has no ordering in its queries, while
+ * cooccurrence is asymmetrical!
+ * 
  * @author hellrich
  *
  */
@@ -34,7 +36,7 @@ public class DatabaseService {
 		readDemo();
 		initializeMapping();
 	}
-
+	
 	private void initializeMapping() {
 		String sql = "SELECT word,id FROM " + TEST_WORDIDS;
 		try (Connection con = sql2o.open()) {
@@ -56,11 +58,17 @@ public class DatabaseService {
 
 	public List<YearAndSimilarity> getYearAndSimilarity(String word1,
 			String word2) throws Exception {
+		return getYearAndSimilarity(word2IdMapping.get(word1),
+				word2IdMapping.get(word2));
+	}
+
+	public List<YearAndSimilarity> getYearAndSimilarity(int word1Id, int word2Id)
+			throws Exception {
 		String sql = String.format(SIMILARITY_QUERY, TEST_SIMILARITY);
 		try (Connection con = sql2o.open()) {
 			List<YearAndSimilarity> mostSimilar = con.createQuery(sql)
-					.addParameter("word1", word2IdMapping.get(word1))
-					.addParameter("word2", word2IdMapping.get(word2))
+					.addParameter("word1", word1Id)
+					.addParameter("word2", word2Id)
 					.executeAndFetch(YearAndSimilarity.class);
 			return mostSimilar;
 		}
@@ -75,19 +83,21 @@ public class DatabaseService {
 		}
 	}
 
-	public List<WordAndID> getMostSimilarWordsInYear(String givenWord,
+	public List<String> getMostSimilarWordsInYear(String givenWord,
 			Integer year, int limit) {
 		int givenWordId = word2IdMapping.get(givenWord);
-		List<WordAndID> wordsAndIds = new ArrayList<>();
+		List<String> words = new ArrayList<>();
 		String sql = String.format(MOST_SIMILAR_QUERY, TEST_SIMILARITY);
 		try (Connection con = sql2o.open()) {
-			for(IDAndID wordId : con.createQuery(sql).addParameter("givenWord", givenWordId)
-			.addParameter("year", year).addParameter("limit", limit)
-			.executeAndFetch(IDAndID.class)){
-				int newWordId = wordId.WORD1 == givenWordId ? wordId.WORD2 : wordId.WORD1;
-				wordsAndIds.add(new WordAndID(word2IdMapping.inverse().get(newWordId), newWordId));
-			}	
-			return wordsAndIds;
+			for (IDAndID wordId : con.createQuery(sql)
+					.addParameter("givenWord", givenWordId)
+					.addParameter("year", year).addParameter("limit", limit)
+					.executeAndFetch(IDAndID.class)) {
+				int newWordId = wordId.WORD1 == givenWordId ? wordId.WORD2
+						: wordId.WORD1;
+				words.add(word2IdMapping.inverse().get(newWordId));
+			}
+			return words;
 		}
 	}
 
