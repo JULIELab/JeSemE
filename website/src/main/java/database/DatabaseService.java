@@ -1,5 +1,6 @@
 package database;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -22,11 +23,14 @@ import com.google.common.collect.HashBiMap;
  */
 
 public class DatabaseService {
-	private static final String TEST_SIMILARITY = "JEDISEM.TEST_SIMILARITY";
+	public static final String TEST_SIMILARITY = "JEDISEM.TEST_SIMILARITY";
 	private static final String TEST_WORDIDS = "JEDISEM.TEST_WORD_IDS";
-	private static final String SIMILARITY_QUERY = "SELECT year, similarity FROM %s WHERE (word1=:word1 AND word2=:word2) OR (word1=:word2 AND word2=:word1) ORDER BY year ASC";
+	private static final String DIRECTED_SIMILARITY_QUERY = "SELECT year, association FROM %s WHERE (word1=:word1 AND word2=:word2) ORDER BY year ASC";
+	private static final String UNDIRECTED_SIMILARITY_QUERY = "SELECT year, association FROM %s WHERE (word1=:word1 AND word2=:word2) OR (word1=:word2 AND word2=:word1) ORDER BY year ASC";
 	private static final String YEARS_QUERY = "SELECT DISTINCT year FROM %s WHERE word1=:word OR word2=:word ORDER BY year";
-	private static final String MOST_SIMILAR_QUERY = "SELECT word1, word2 FROM %s WHERE (word1=:givenWord OR word2=:givenWord) AND year=:year ORDER BY similarity DESC LIMIT :limit";
+	private static final String MOST_SIMILAR_QUERY = "SELECT word1, word2 FROM %s WHERE (word1=:givenWord OR word2=:givenWord) AND year=:year ORDER BY association DESC LIMIT :limit";
+	private static final String TOP_CONTEXT_QUERY = "SELECT word2 FROM %s WHERE word1=:givenWord AND year=:year ORDER BY association DESC LIMIT :limit";
+	public static final String TEST_PPMI = "JEDISEM.TEST_PPMI";
 
 	private final Sql2o sql2o;
 	private final BiMap<String, Integer> word2IdMapping = HashBiMap.create();
@@ -36,7 +40,7 @@ public class DatabaseService {
 		readDemo();
 		initializeMapping();
 	}
-	
+
 	private void initializeMapping() {
 		String sql = "SELECT word,id FROM " + TEST_WORDIDS;
 		try (Connection con = sql2o.open()) {
@@ -56,20 +60,21 @@ public class DatabaseService {
 		}
 	}
 
-	public List<YearAndSimilarity> getYearAndSimilarity(String word1,
-			String word2) throws Exception {
-		return getYearAndSimilarity(word2IdMapping.get(word1),
-				word2IdMapping.get(word2));
+	public List<YearAndAssociation> getYearAndAssociation(String table,
+			boolean directed, String word1, String word2) throws Exception {
+		return getYearAndAssociation(table, directed,
+				word2IdMapping.get(word1), word2IdMapping.get(word2));
 	}
 
-	public List<YearAndSimilarity> getYearAndSimilarity(int word1Id, int word2Id)
-			throws Exception {
-		String sql = String.format(SIMILARITY_QUERY, TEST_SIMILARITY);
+	public List<YearAndAssociation> getYearAndAssociation(String table,
+			boolean directed, int word1Id, int word2Id) throws Exception {
+		String sql = directed ? String.format(DIRECTED_SIMILARITY_QUERY, table)
+				: String.format(UNDIRECTED_SIMILARITY_QUERY, table);
 		try (Connection con = sql2o.open()) {
-			List<YearAndSimilarity> mostSimilar = con.createQuery(sql)
+			List<YearAndAssociation> mostSimilar = con.createQuery(sql)
 					.addParameter("word1", word1Id)
 					.addParameter("word2", word2Id)
-					.executeAndFetch(YearAndSimilarity.class);
+					.executeAndFetch(YearAndAssociation.class);
 			return mostSimilar;
 		}
 	}
@@ -101,6 +106,22 @@ public class DatabaseService {
 		}
 	}
 
+	public List<String> getTopContextWordsInYear(String table,
+			String givenWord, Integer year, int limit) {
+		int givenWordId = word2IdMapping.get(givenWord);
+		List<String> words = new ArrayList<>();
+		String sql = String.format(TOP_CONTEXT_QUERY, table);
+		try (Connection con = sql2o.open()) {
+			for (Integer wordId : con.createQuery(sql)
+					.addParameter("givenWord", givenWordId)
+					.addParameter("year", year).addParameter("limit", limit)
+					.executeScalarList(Integer.class)) {
+				words.add(word2IdMapping.inverse().get(wordId));
+			}
+			return words;
+		}
+	}
+
 	//Will be used for testing
 	void readDemo() throws Exception {
 		try (Connection con = sql2o.open()) {
@@ -111,10 +132,10 @@ public class DatabaseService {
 							+ TEST_WORDIDS
 							+ " (word TEXT, id INTEGER, PRIMARY KEY(word,id) );")
 					.executeUpdate();
-			con.createQuery(
-					"CREATE TABLE "
-							+ TEST_SIMILARITY
-							+ " (word1 INTEGER, word2 INTEGER, year SMALLINT, similarity REAL, PRIMARY KEY(word1, word2, year) );")
+			String assocTable = " (word1 INTEGER, word2 INTEGER, year SMALLINT, association REAL, PRIMARY KEY(word1, word2, year) );";
+			con.createQuery("CREATE TABLE " + TEST_SIMILARITY + assocTable)
+					.executeUpdate();
+			con.createQuery("CREATE TABLE " + TEST_PPMI + assocTable)
 					.executeUpdate();
 		}
 
@@ -131,21 +152,25 @@ public class DatabaseService {
 			con.commit(); // remember to call commit(), else sql2o will automatically rollback.
 		}
 
-		//Similarity
+		importAssociation(TEST_SIMILARITY, "src/test/resources/SIMILARITY.csv");
+		importAssociation(TEST_PPMI, "src/test/resources/PPMI.csv");
+
+	}
+
+	private void importAssociation(String tableName, String fileName)
+			throws IOException {
 		try (Connection con = sql2o.beginTransaction()) {
 			org.sql2o.Query query = con
 					.createQuery("INSERT INTO "
-							+ TEST_SIMILARITY
-							+ " (word1, word2, year, similarity) VALUES (:word1, :word2, :year, :similarity)");
-			for (String[] x : Files
-					.lines(Paths.get("src/test/resources/SIMILARITY.csv"))
+							+ tableName
+							+ " (word1, word2, year, association) VALUES (:word1, :word2, :year, :association)");
+			for (String[] x : Files.lines(Paths.get(fileName))
 					.map(x -> x.split(",")).collect(Collectors.toList()))
 				query.addParameter("word1", x[0]).addParameter("word2", x[1])
 						.addParameter("year", x[2])
-						.addParameter("similarity", x[3]).addToBatch();
+						.addParameter("association", x[3]).addToBatch();
 			query.executeBatch(); // executes entire batch
 			con.commit(); // remember to call commit(), else sql2o will automatically rollback.
 		}
-
 	}
 }

@@ -1,7 +1,7 @@
 import com.google.gson.Gson;
 
 import database.DatabaseService;
-import database.YearAndSimilarity;
+import database.YearAndAssociation;
 
 import org.sql2o.Sql2o;
 
@@ -34,22 +34,24 @@ public class ProofOfConcept {
 					Map<String, Object> model = new HashMap<>();
 					model.put("word", word);
 					model.put("similaritydata",
-							getJSON(db, word,
+							getJSON(db, DatabaseService.TEST_SIMILARITY, false, word,
 									getMostSimilarAtBeginningAndEnd(db, word)));
+					model.put("ppmidata",
+							getJSON(db, DatabaseService.TEST_PPMI, true, word,
+									getTopContextAtBeginningAndEnd(db, word)));
 					return new ModelAndView(model, "result");
 				}, new ThymeleafTemplateEngine());
 
 		get("/api/similarity", (request, response) -> {
 			String word1 = request.queryParams("word1");
 			String word2 = request.queryParams("word2");
-			return getJSON(db, word1, word2);
+			return getJSON(db, DatabaseService.TEST_SIMILARITY, false, word1, word2);
 		}, new Gson()::toJson);
 
-		//TODO: replace with real implementation
 		get("/api/ppmi", (request, response) -> {
 			String word1 = request.queryParams("word1");
 			String word2 = request.queryParams("word2");
-			return getJSON(db, word1, word2);
+			return getJSON(db, DatabaseService.TEST_PPMI, true, word1, word2);
 		}, new Gson()::toJson);
 	}
 
@@ -63,8 +65,19 @@ public class ProofOfConcept {
 				years.get(years.size() - 1), LIMIT));
 		return mostSimilar.toArray(new String[mostSimilar.size()]);
 	}
+	
+	static final String[] getTopContextAtBeginningAndEnd(DatabaseService db,
+			String word) throws Exception {
+		List<Integer> years = db.getYears(word);
+		Set<String> topContext = new HashSet<>();
+		topContext.addAll(db.getTopContextWordsInYear(DatabaseService.TEST_PPMI, word, years.get(0),
+				LIMIT));
+		topContext.addAll(db.getTopContextWordsInYear(DatabaseService.TEST_PPMI, word,
+				years.get(years.size() - 1), LIMIT));
+		return topContext.toArray(new String[topContext.size()]);
+	}
 
-	static final HashMap<String, Object> getJSON(DatabaseService db,
+	static final HashMap<String, Object> getJSON(DatabaseService db, String table, boolean directed,
 			String initialWord, String... moreWords) throws Exception {
 
 		HashMap<String, String> xs = new HashMap<>();
@@ -76,9 +89,9 @@ public class ProofOfConcept {
 			simList.add(word);
 			xList.add(word + "-x-value");
 
-			for (YearAndSimilarity yas : db.getYearAndSimilarity(initialWord,
+			for (YearAndAssociation yas : db.getYearAndAssociation(table, directed, initialWord,
 					word)) {
-				simList.add(yas.similarity);
+				simList.add(yas.association);
 				xList.add(yas.year);
 			}
 			columns.add(simList);
