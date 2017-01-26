@@ -1,24 +1,26 @@
 package database;
 
-public class YearAndAssociation {
+public class YearAndValue {
 	public Integer year;
-	public Float association;
+	public Float value;
 
-	public YearAndAssociation(Integer year, Float association) {
+	public YearAndValue(Integer year, Float value) {
 		this.year = year;
-		this.association = association;
+		this.value = value;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+
+
+	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "YearAndAssociation [year=" + this.year + ", association="
-				+ this.association + "]";
+		return "YearAndValue [year=" + this.year + ", value=" + this.value
+				+ "]";
 	}
+
+
 
 	/*
 	 * (non-Javadoc)
@@ -31,7 +33,7 @@ public class YearAndAssociation {
 		int result = 1;
 		result = prime
 				* result
-				+ ((this.association == null) ? 0 : this.association.hashCode());
+				+ ((this.value == null) ? 0 : this.value.hashCode());
 		result = prime * result
 				+ ((this.year == null) ? 0 : this.year.hashCode());
 		return result;
@@ -48,13 +50,13 @@ public class YearAndAssociation {
 			return true;
 		if (obj == null)
 			return false;
-		if (!(obj instanceof YearAndAssociation))
+		if (!(obj instanceof YearAndValue))
 			return false;
-		YearAndAssociation other = (YearAndAssociation) obj;
-		if (this.association == null) {
-			if (other.association != null)
+		YearAndValue other = (YearAndValue) obj;
+		if (this.value == null) {
+			if (other.value != null)
 				return false;
-		} else if (!this.association.equals(other.association))
+		} else if (!this.value.equals(other.value))
 			return false;
 		if (this.year == null) {
 			if (other.year != null)

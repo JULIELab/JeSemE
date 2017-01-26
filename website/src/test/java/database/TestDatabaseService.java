@@ -36,29 +36,29 @@ public class TestDatabaseService {
 
 	@Test
 	public void testGetYearAndAssociation() throws Exception {
-		assertEquals(Arrays.asList(new YearAndAssociation[] {
-				new YearAndAssociation(1910, 0.4f),
-				new YearAndAssociation(1920, 0.5f),
-				new YearAndAssociation(1930, 0.2f),
-				new YearAndAssociation(1940, 0.1f) }),
+		assertEquals(Arrays.asList(new YearAndValue[] {
+				new YearAndValue(1910, 0.4f),
+				new YearAndValue(1920, 0.5f),
+				new YearAndValue(1930, 0.2f),
+				new YearAndValue(1940, 0.1f) }),
 				db.getYearAndAssociation(DatabaseService.TEST_SIMILARITY,
 						false, "foo", "bar"));
-		assertEquals(Arrays.asList(new YearAndAssociation[] {
-				new YearAndAssociation(1910, 0.4f),
-				new YearAndAssociation(1920, 0.5f),
-				new YearAndAssociation(1930, 0.2f),
-				new YearAndAssociation(1940, 0.1f) }),
+		assertEquals(Arrays.asList(new YearAndValue[] {
+				new YearAndValue(1910, 0.4f),
+				new YearAndValue(1920, 0.5f),
+				new YearAndValue(1930, 0.2f),
+				new YearAndValue(1940, 0.1f) }),
 				db.getYearAndAssociation(DatabaseService.TEST_SIMILARITY,
 						false, "bar", "foo"));
-		assertEquals(Arrays.asList(new YearAndAssociation[] {
-				new YearAndAssociation(1910, 23f),
-				new YearAndAssociation(1930, 29f) }), db.getYearAndAssociation(
+		assertEquals(Arrays.asList(new YearAndValue[] {
+				new YearAndValue(1910, 23f),
+				new YearAndValue(1930, 29f) }), db.getYearAndAssociation(
 				DatabaseService.TEST_PPMI, true, "foo", "bar"));
 
-		assertEquals(Arrays.asList(new YearAndAssociation[] {
-				new YearAndAssociation(1920, 11f),
-				new YearAndAssociation(1930, 31f),
-				new YearAndAssociation(1940, 3f) }), db.getYearAndAssociation(
+		assertEquals(Arrays.asList(new YearAndValue[] {
+				new YearAndValue(1920, 11f),
+				new YearAndValue(1930, 31f),
+				new YearAndValue(1940, 3f) }), db.getYearAndAssociation(
 				DatabaseService.TEST_PPMI, true, "bar", "foo"));
 	}
 
@@ -70,5 +70,15 @@ public class TestDatabaseService {
 		assertEquals(Arrays.asList(new String[] { "bar", "boo" }),
 				db.getTopContextWordsInYear(DatabaseService.TEST_PPMI, "foo",
 						1910, 2));
+	}
+	
+	@Test
+	public void testGetYearAndFrequency() throws Exception {
+		assertEquals(Arrays.asList(new YearAndValue[] {
+				new YearAndValue(1910, 0.6f),
+				new YearAndValue(1920, 0.1f),
+				new YearAndValue(1930, 0.3f),
+				new YearAndValue(1940, 0.5f) }),
+				db.getYearAndFrequencyn(DatabaseService.TEST_FREQUENCY, "foo"));
 	}
 }
