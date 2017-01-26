@@ -1,7 +1,6 @@
 import com.google.gson.Gson;
 
 import database.DatabaseService;
-import database.YearAndValue;
 
 import org.sql2o.Sql2o;
 
@@ -29,13 +28,12 @@ public class ProofOfConcept {
 
 		get("/search", (request, response) -> {
 			String word = request.queryParams("word");
+			String[] mostSimilar = getMostSimilarAtBeginningAndEnd(db, word);
 
 			Map<String, Object> model = new HashMap<>();
 			model.put("word", word);
-			model.put("similaritydata",
-					getAssociationJSON(db, DatabaseService.TEST_SIMILARITY,
-							false, word,
-							getMostSimilarAtBeginningAndEnd(db, word)));
+			model.put("similaritydata", getAssociationJSON(db,
+					DatabaseService.TEST_SIMILARITY, false, word, mostSimilar));
 			model.put("ppmidata",
 					getAssociationJSON(db, DatabaseService.TEST_PPMI, true,
 							word, getTopContextAtBeginningAndEnd(db, word)));

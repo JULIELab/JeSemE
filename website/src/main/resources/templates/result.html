@@ -4,11 +4,13 @@
 
     <!--css -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css" rel="stylesheet" type="text/css"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/Dynatable/0.3.1/jquery.dynatable.min.css" rel="stylesheet" type="text/css"/>
 
     <!--js -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Dynatable/0.3.1/jquery.dynatable.min.js"></script>
 
     <!--constants -->
     <script th:inline="javascript">
@@ -62,13 +64,13 @@
                     },
                     y:myy
         }})}
+             
     </script>
+    
     <title>JeDiSem</title>
-
-</head>
-<body>
-
-
+  </head>
+  <body>
+  <h1>Results for <td th:text="${word}">not his placeholder</td></h1>
 <h2>Similarity Chart</h2>
 The following chart shows its similarity to the most similar words over time.
 <div id="similaritychart">No matches for
@@ -106,5 +108,34 @@ The following chart shows its similarity to the most similar words over time.
 <script type="text/javascript"> 
     ppmichart = chart("#frequencychart", frequencydata)
 </script>
+
+<h2>Compare Word Contexts</h2>
+<table id="my-final-table">
+  <thead>
+    <th>Band</th>
+    <th>Song</th>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+<script>
+	  x = [
+		  {
+			    "band": "Weezer",
+			    "song": "El Scorcho"
+			  },
+			  {
+			    "band": "Chevelle",
+			    "song": "Family System"
+			  }
+			]
+
+		$('#my-final-table').dynatable({
+			dataset: {
+			records: x
+			}
+		});
+</script>
+
 </body>
 </html>
