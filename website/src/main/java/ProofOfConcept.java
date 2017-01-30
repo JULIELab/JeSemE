@@ -12,14 +12,14 @@ import static spark.Spark.*;
 
 public class ProofOfConcept {
 
-	private static final int LIMIT = 2;
+	private static final int LIMIT = 10; //2;
 
 	public static void main(String[] args) throws Exception {
 		// System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
 
 		Sql2o sql2o = new Sql2o("jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true",
 				"SA", "");
-		DatabaseService db = new DatabaseService(sql2o); //save when multiple connections are made? move into query methods?
+		DatabaseService db = new DatabaseService(sql2o, "/home/hellrich/Schreibtisch/JeDiSemTest/target/"); //save when multiple connections are made? move into query methods?
 
 		db.getTables();
 

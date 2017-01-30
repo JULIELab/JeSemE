@@ -11,7 +11,8 @@ def main():
     Usage:
         vectors2similarity.py <target> <year> <vocab> <ppmi> <svd> <limit>
 """)
-    word2id, id2freq = read_vocab(args["<vocab>"], int(args["<limit>"]))
+    word2id = read_vocab(int(args["<limit>"]), args["<vocab>"])
+    id2freq = read_freq(args["<vocab>"], word2id)
     ppmi = read_generic(PositiveExplicit(
         args["<ppmi>"]).similarity_first_order, word2id)
     svd = read_generic(SVDEmbedding(args["<svd>"]).similarity, word2id)
@@ -38,19 +39,41 @@ def store_results(path, *mappings):
                 print >>f, ",".join(l)
 
 
-def read_vocab(vocab, limit):
-    word2id = {}
+def intersect(*words):
+    if len(words) == 0:
+        return set()
+    if len(words) == 1:
+        return words[0]:
+    intersection = words[0]
+    for w in words[1:]:
+        intersection = intersection.intersection(w)
+    return intersection
+
+
+def read_vocab(limit, *vocabs):
+    words = []
+    for vocab in vocabs:
+        w = set()
+        i = 0
+        with open(vocab, "r") as v:
+            for line in v:
+                if i == limit:
+                    break
+                i += 1
+                word, freq = line.strip().split()
+                w.add(word)
+        words.add(w)
+    return {x: y for x, y in enumerate(intersection(words))}
+
+
+def read_freq(vocab, word2id):
     id2freq = {}
-    i = 0
     with open(vocab, "r") as v:
         for line in v:
-            if i == limit:
-                break
             word, freq = line.strip().split()
-            word2id[word] = i
-            id2freq[i] = freq
-            i += 1
-    return word2id, id2freq
+            if word in word2id:
+                id2freq[word2id[word]] = freq
+    return id2freq
 
 
 def read_generic(method, word2id):
