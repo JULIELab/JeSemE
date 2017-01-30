@@ -23,6 +23,11 @@ import com.google.common.collect.HashBiMap;
  */
 
 public class DatabaseService {
+	private static final String TEST_PATH = "src/test/resources/";
+	private static final String FREQUENCY_CSV = "FREQUENCY.csv";
+	private static final String PPMI_CSV = "PPMI.csv";
+	private static final String SIMILARITY_CSV = "SIMILARITY.csv";
+	private static final String WORDIDS_CSV = "WORDIDS.csv";
 	public static final String TEST_SIMILARITY = "JEDISEM.TEST_SIMILARITY";
 	private static final String TEST_WORDIDS = "JEDISEM.TEST_WORD_IDS";
 	private static final String DIRECTED_SIMILARITY_QUERY = "SELECT year, association AS value FROM %s WHERE (word1=:word1 AND word2=:word2) ORDER BY year ASC";
@@ -40,7 +45,14 @@ public class DatabaseService {
 	public DatabaseService(Sql2o sql2o)
 			throws DatabaseUnitException, Exception {
 		this.sql2o = sql2o;
-		readDemo();
+		readDemo(TEST_PATH);
+		initializeMapping();
+	}
+	
+	public DatabaseService(Sql2o sql2o, String path)
+			throws DatabaseUnitException, Exception {
+		this.sql2o = sql2o;
+		readDemo(path);
 		initializeMapping();
 	}
 
@@ -140,7 +152,7 @@ public class DatabaseService {
 	}
 
 	//Will be used for testing
-	void readDemo() throws Exception {
+	void readDemo(String path) throws Exception {
 		try (Connection con = sql2o.open()) {
 			con.createQuery("CREATE SCHEMA jedisem").executeUpdate();
 			//TODO: think about good indexes
@@ -162,7 +174,7 @@ public class DatabaseService {
 			org.sql2o.Query query = con.createQuery("INSERT INTO "
 					+ TEST_WORDIDS + " (word, id) VALUES (:word, :id)");
 			for (String[] x : Files
-					.lines(Paths.get("src/test/resources/WORDIDS.csv"))
+					.lines(Paths.get(path+WORDIDS_CSV))
 					.map(x -> x.split(",")).collect(Collectors.toList()))
 				query.addParameter("word", x[0]).addParameter("id", x[1])
 						.addToBatch();
@@ -170,9 +182,9 @@ public class DatabaseService {
 			con.commit(); // remember to call commit(), else sql2o will automatically rollback.
 		}
 
-		importAssociation(TEST_SIMILARITY, "src/test/resources/SIMILARITY.csv");
-		importAssociation(TEST_PPMI, "src/test/resources/PPMI.csv");
-		importFrequency(TEST_FREQUENCY, "src/test/resources/FREQUENCY.csv");
+		importAssociation(TEST_SIMILARITY, path+SIMILARITY_CSV);
+		importAssociation(TEST_PPMI, path+PPMI_CSV);
+		importFrequency(TEST_FREQUENCY, path+FREQUENCY_CSV);
 	}
 
 	private void importFrequency(String tableName, String fileName)
