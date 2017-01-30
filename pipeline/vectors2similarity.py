@@ -9,21 +9,24 @@ from os.path import join
 def main():
     args = docopt("""
     Usage:
-        vectors2similarity.py <target> <vocab> <ppmi> <svd> <limit>
+        vectors2similarity.py <target> <year> <vocab> <ppmi> <svd> <limit>
 """)
     word2id, id2freq = read_vocab(args["<vocab>"], int(args["<limit>"]))
     ppmi = read_generic(PositiveExplicit(
         args["<ppmi>"]).similarity_first_order, word2id)
     svd = read_generic(SVDEmbedding(args["<svd>"]).similarity, word2id)
-    store_results(args["<target>"], ("WORDIDS", word2id), ("FREQUENCY",
-                                                           id2freq), ("PPMI", ppmi), ("SIMILARITY", svd))
+    year = args["<year>"]
+    store_results(args["<target>"], ("WORDIDS", iterate(word2id)), ("FREQUENCY", iterate(
+        id2freq, year)), ("PPMI", iterate(ppmi, year)), ("SIMILARITY", iterate(svd, year)))
 
 
-def iterate(mapping):
+def iterate(mapping, year=False):
     for word, value in mapping.items():
         if isinstance(value, dict):
             for word2, innervalue in value.items():
-                yield [str(x) for x in word, word2, innervalue]
+                yield [str(x) for x in word, word2, year, innervalue]
+        elif year != False:
+            yield [str(x) for x in word, year, value]
         else:
             yield [str(x) for x in word, value]
 
@@ -31,7 +34,7 @@ def iterate(mapping):
 def store_results(path, *mappings):
     for name, mapping in mappings:
         with open(join(path, name + ".csv"), "w") as f:
-            for l in iterate(mapping):
+            for l in mapping:
                 print >>f, ",".join(l)
 
 
