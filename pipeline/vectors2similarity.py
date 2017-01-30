@@ -43,7 +43,7 @@ def intersect(*words):
     if len(words) == 0:
         return set()
     if len(words) == 1:
-        return words[0]:
+        return words[0]
     intersection = words[0]
     for w in words[1:]:
         intersection = intersection.intersection(w)
@@ -62,8 +62,14 @@ def read_vocab(limit, *vocabs):
                 i += 1
                 word, freq = line.strip().split()
                 w.add(word)
-        words.add(w)
-    return {x: y for x, y in enumerate(intersection(words))}
+        words.append(w)
+    result = {}
+    i = 0
+    for w in intersect(words):
+        result[w] = i
+        i += 1
+    print result
+    return {x: y for x, y in enumerate(intersect(words))}
 
 
 def read_freq(vocab, word2id):
