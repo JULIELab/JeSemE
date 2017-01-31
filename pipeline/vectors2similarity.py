@@ -3,34 +3,44 @@ import numpy as np
 from collections import defaultdict
 from representations.embedding import SVDEmbedding
 from representations.explicit import PositiveExplicit
-from os.path import join
-
+from os.path import join, basename, normpath
 
 def main():
     args = docopt("""
     Usage:
-        vectors2similarity.py <target> <year> <vocab> <ppmi> <svd> <limit>
+        vectors2similarity.py <target> <limit> <folders>...
 """)
-    word2id = read_vocab(int(args["<limit>"]), args["<vocab>"])
-    id2freq = read_freq(args["<vocab>"], word2id)
-    ppmi = read_generic(PositiveExplicit(
-        args["<ppmi>"]).similarity_first_order, word2id)
-    svd = read_generic(SVDEmbedding(args["<svd>"]).similarity, word2id)
-    year = args["<year>"]
-    store_results(args["<target>"], ("WORDIDS", iterate(word2id)), ("FREQUENCY", iterate(
-        id2freq, year)), ("PPMI", iterate(ppmi, year)), ("SIMILARITY", iterate(svd, year)))
+    id2freq, ppmi, svd = [], [], []
+    folders = args["<folders>"]
+    limit = int(args["<limit>"])
 
-
-def iterate(mapping, year=False):
-    for word, value in mapping.items():
-        if isinstance(value, dict):
-            for word2, innervalue in value.items():
-                yield [str(x) for x in word, word2, year, innervalue]
-        elif year != False:
-            yield [str(x) for x in word, year, value]
+    word2id = read_vocabs(limit, folders)
+    for folder in folders:
+        name = basename(normpath(folder))
+        if "_" in name:
+            year = name.split("_")[1]
         else:
-            yield [str(x) for x in word, value]
+            year = name
+        id2freq.append((year, read_freq(folder, word2id)))
+        ppmi.append((year, read_generic(folder2ppmi(folder), word2id)))
+        svd.append((year, read_generic(folder2svd(folder), word2id)))
 
+    store_results(args["<target>"], ("WORDIDS", iterate(word2id, True)), ("FREQUENCY", iterate(
+        id2freq)), ("PPMI", iterate(ppmi)), ("SIMILARITY", iterate(svd)))
+
+
+def iterate(mapping, is_word2id=False):
+    if is_word2id:
+        for word, value in mapping.items():
+            yield [str(x) for x in word, value]
+    else:
+        for (year, info) in mapping:
+            for word, value in info.items():
+                if isinstance(value, dict):
+                    for word2, innervalue in value.items():
+                        yield [str(x) for x in word, word2, year, innervalue]
+                else:
+                    yield [str(x) for x in word, year, value]
 
 def store_results(path, *mappings):
     for name, mapping in mappings:
@@ -38,8 +48,14 @@ def store_results(path, *mappings):
             for l in mapping:
                 print >>f, ",".join(l)
 
+def folder2ppmi(folder):
+    return PositiveExplicit(join(folder, "pmi")).similarity_first_order
+def folder2svd(folder):
+    return SVDEmbedding(join(folder, "svd_pmi")).similarity
+def folder2vocab(folder):
+    return join(folder, join("shared", "counts.words.vocab"))
 
-def intersect(*words):
+def intersect(words):
     if len(words) == 0:
         return set()
     if len(words) == 1:
@@ -49,10 +65,9 @@ def intersect(*words):
         intersection = intersection.intersection(w)
     return intersection
 
-
-def read_vocab(limit, *vocabs):
+def read_vocabs(limit, folders):
     words = []
-    for vocab in vocabs:
+    for vocab in [folder2vocab(folder) for folder in folders]:
         w = set()
         i = 0
         with open(vocab, "r") as v:
@@ -63,18 +78,11 @@ def read_vocab(limit, *vocabs):
                 word, freq = line.strip().split()
                 w.add(word)
         words.append(w)
-    result = {}
-    i = 0
-    for w in intersect(words):
-        result[w] = i
-        i += 1
-    print result
-    return {x: y for x, y in enumerate(intersect(words))}
+    return {y:x for x, y in enumerate(intersect(words))}
 
-
-def read_freq(vocab, word2id):
+def read_freq(folder, word2id):
     id2freq = {}
-    with open(vocab, "r") as v:
+    with open(folder2vocab(folder), "r") as v:
         for line in v:
             word, freq = line.strip().split()
             if word in word2id:
