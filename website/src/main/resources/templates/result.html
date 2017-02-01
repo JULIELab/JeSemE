@@ -5,12 +5,33 @@
     <!--css -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css" rel="stylesheet" type="text/css"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/Dynatable/0.3.1/jquery.dynatable.min.css" rel="stylesheet" type="text/css"/>
-
+	<style type="text/css">
+		
+		*
+		{
+		text-align: center !important;
+		margin: auto !important;
+		}
+		
+		.c3-line {
+	    	stroke-width: 3px;
+	    }
+	    .chart{
+		  width: 80%;
+		}	
+		.c3-circle._expanded_ {
+		  stroke-width: 4px;
+		  stroke: white;
+		}
+		.c3-selected-circle {
+		  fill: white;
+		  stroke-width: 5px;
+		}	
+	</style>
     <!--js -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Dynatable/0.3.1/jquery.dynatable.min.js"></script>
 
     <!--constants -->
     <script th:inline="javascript">
@@ -25,9 +46,16 @@
         function decadeFormatter(year) {
             return year + "s"
         }
+        
+        function percentFormatter(value) {
+            return value+"%"
+        }
 
-        function roundingFormatter(value) {
-            return d3.format(".2")(value)
+        function roundingFormatter(format, value) {
+            return function(value){
+            	console.log(value + "  " + d3.format(format)(value))
+            	return d3.format(format)(value)
+            }
         }
 
         function addWordTo(chart, url, wordBox, error) {
@@ -49,10 +77,11 @@
 
         function chart(bindto, data, y){
             var myy =  y != null ? y : {}
-            myy["tick"] = {
-                    format: roundingFormatter
-                }
-
+            if(!("tick" in myy)){
+            	myy["tick"] = {
+                    format: roundingFormatter(".2")
+            	}
+            }
             return c3.generate({
                 bindto: bindto,
                 data: data != null ? data : {"columns": [[]]},
@@ -71,9 +100,11 @@
   </head>
   <body>
   <h1>Results for <td th:text="${word}">not his placeholder</td></h1>
+  
+  
 <h2>Similarity Chart</h2>
 The following chart shows its similarity to the most similar words over time.
-<div id="similaritychart">No matches for
+<div class="chart" id="similaritychart">No matches for
     <td th:text="${word}">not his placeholder</td>
 </div>
 <script type="text/javascript"> 
@@ -91,8 +122,9 @@ The following chart shows its similarity to the most similar words over time.
 </form>
 
 
-<h2>PPMI Chart</h2>
-<div id="ppmichart">No matches for <td th:text="${word}">not his placeholder</td></div>
+<h2>Context Chart</h2>
+The following chart shows its most speciffic context words over time (by PPMI).
+<div class="chart"  id="ppmichart">No matches for <td th:text="${word}">not his placeholder</td></div>
 <script type="text/javascript"> 
     ppmichart = chart("#ppmichart", ppmidata)
 </script>
@@ -104,38 +136,14 @@ The following chart shows its similarity to the most similar words over time.
 </form>
 
 <h2>Frequency Chart</h2>
-<div id="frequencychart">No matches for <td th:text="${word}">not his placeholder</td></div>
+The following chart shows its relative frequency over time.
+<div class="chart" id="frequencychart">No matches for <td th:text="${word}">not his placeholder</td></div>
 <script type="text/javascript"> 
-    ppmichart = chart("#frequencychart", frequencydata)
+    ppmichart = chart("#frequencychart", frequencydata, {
+        tick: {
+            format: percentFormatter
+        }
+    })
 </script>
-
-<!-- <h2>Compare Word Contexts</h2> -->
-<!-- <table id="my-final-table"> -->
-<!--   <thead> -->
-<!--     <th>Band</th> -->
-<!--     <th>Song</th> -->
-<!--   </thead> -->
-<!--   <tbody> -->
-<!--   </tbody> -->
-<!-- </table> -->
-<!-- <script> -->
-// 	  x = [
-// 		  {
-// 			    "band": "Weezer",
-// 			    "song": "El Scorcho"
-// 			  },
-// 			  {
-// 			    "band": "Chevelle",
-// 			    "song": "Family System"
-// 			  }
-// 			]
-
-// 		$('#my-final-table').dynatable({
-// 			dataset: {
-// 			records: x
-// 			}
-// 		});
-<!-- </script> -->
-
 </body>
 </html>

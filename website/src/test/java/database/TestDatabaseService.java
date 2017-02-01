@@ -16,7 +16,7 @@ public class TestDatabaseService {
 	@BeforeClass
 	public static void initializeDatabase() throws Exception {
 		db = new DatabaseService(new Sql2o(
-				"jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA", ""));
+				"jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA", ""), DatabaseService.TEST_PATH);
 	}
 
 	@Test
@@ -28,10 +28,10 @@ public class TestDatabaseService {
 	@Test
 	public void testGetMostSimilar() throws DatabaseUnitException, Exception {
 		assertEquals(Arrays.asList(new String[] { "arr" }),
-				db.getMostSimilarWordsInYear("foo", 1910, 1));
+				db.getMostSimilarWordsInYear(DatabaseService.TEST_SIMILARITY, "foo", 1910, 1));
 
 		assertEquals(Arrays.asList(new String[] { "arr", "bar" }),
-				db.getMostSimilarWordsInYear("foo", 1910, 2));
+				db.getMostSimilarWordsInYear(DatabaseService.TEST_SIMILARITY, "foo", 1910, 2));
 	}
 
 	@Test

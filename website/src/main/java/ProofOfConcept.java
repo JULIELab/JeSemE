@@ -12,14 +12,14 @@ import static spark.Spark.*;
 
 public class ProofOfConcept {
 
-	private static final int LIMIT = 10; //2;
+	private static final int LIMIT = 2;
 
 	public static void main(String[] args) throws Exception {
 		// System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
 
 		Sql2o sql2o = new Sql2o("jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true",
 				"SA", "");
-		DatabaseService db = new DatabaseService(sql2o, "/home/hellrich/Schreibtisch/JeDiSemTest/target/"); //save when multiple connections are made? move into query methods?
+		DatabaseService db = new DatabaseService(sql2o, "/Users/hellrich/Desktop/demo1000/"); //save when multiple connections are made? move into query methods?
 
 		db.getTables();
 
@@ -29,7 +29,6 @@ public class ProofOfConcept {
 		get("/search", (request, response) -> {
 			String word = request.queryParams("word");
 			String[] mostSimilar = getMostSimilarAtBeginningAndEnd(db, word);
-
 			Map<String, Object> model = new HashMap<>();
 			model.put("word", word);
 			model.put("similaritydata", getAssociationJSON(db,
@@ -45,6 +44,7 @@ public class ProofOfConcept {
 		get("/api/similarity", (request, response) -> {
 			String word1 = request.queryParams("word1");
 			String word2 = request.queryParams("word2");
+			System.out.println(word1+ " "+ word2);
 			return getAssociationJSON(db, DatabaseService.TEST_SIMILARITY,
 					false, word1, word2);
 		}, new Gson()::toJson);
@@ -67,8 +67,8 @@ public class ProofOfConcept {
 		List<Integer> years = db.getYears(word);
 		Set<String> mostSimilar = new HashSet<>();
 		mostSimilar.addAll(
-				db.getMostSimilarWordsInYear(word, years.get(0), LIMIT));
-		mostSimilar.addAll(db.getMostSimilarWordsInYear(word,
+				db.getMostSimilarWordsInYear(DatabaseService.TEST_SIMILARITY, word, years.get(0), LIMIT));
+		mostSimilar.addAll(db.getMostSimilarWordsInYear(DatabaseService.TEST_SIMILARITY, word,
 				years.get(years.size() - 1), LIMIT));
 		return mostSimilar.toArray(new String[mostSimilar.size()]);
 	}
@@ -94,7 +94,6 @@ public class ProofOfConcept {
 			data.addValues(word, db.getYearAndAssociation(table, directed,
 					initialWord, word));
 		}
-
 		return data.data;
 	}
 

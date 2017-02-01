@@ -21,7 +21,7 @@ public class TestProofOfConcept {
 	@BeforeClass
 	public static void initializeDatabase() throws Exception {
 		db = new DatabaseService(new Sql2o(
-				"jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA", ""));
+				"jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA", ""), DatabaseService.TEST_PATH);
 	}
 
 	@Test

@@ -82,11 +82,16 @@ def read_vocabs(limit, folders):
 
 def read_freq(folder, word2id):
     id2freq = {}
+    total = 0
     with open(folder2vocab(folder), "r") as v:
         for line in v:
             word, freq = line.strip().split()
             if word in word2id:
-                id2freq[word2id[word]] = freq
+                id2freq[word2id[word]] = float(freq)
+            total += float(freq)
+    total = total / 100
+    for i, f in id2freq.items():
+        id2freq[i] = f/total
     return id2freq
 
 

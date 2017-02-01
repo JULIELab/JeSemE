@@ -4,6 +4,17 @@
 
     <!--css -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css" rel="stylesheet" type="text/css"/>
+	<style>
+	.search-form {
+	    text-align: center;
+	    padding: 25px;
+	}
+	*
+	{
+	text-align: center !important;
+	margin: auto !important;
+	}
+	</style>
 
     <!--js -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
@@ -19,7 +30,7 @@
 <h1>Welcome to JeDiSem</h1>
 <p>The Jena Diachronic Semantic search engine</p>
 
-<form id="search-form" action="search" method="get">
+<form class="search-form" id="search-form" action="search" method="get">
             <input type="search" name="word" id="word" value="" />  <input type="submit" value="Search"/>
 </form>
 </body>
