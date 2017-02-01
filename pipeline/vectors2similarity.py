@@ -10,7 +10,7 @@ def main():
     Usage:
         vectors2similarity.py <target> <limit> <folders>...
 """)
-    id2freq, ppmi, svd = [], [], []
+    id2freq, ppmi, svd_similarity = [], [], []
     folders = args["<folders>"]
     limit = int(args["<limit>"])
 
@@ -23,10 +23,10 @@ def main():
             year = name
         id2freq.append((year, read_freq(folder, word2id)))
         ppmi.append((year, read_generic(folder2ppmi(folder), word2id)))
-        svd.append((year, read_generic(folder2svd(folder), word2id)))
+        svd_similarity.append((year, read_generic(folder2svd(folder), word2id, True)))
 
     store_results(args["<target>"], ("WORDIDS", iterate(word2id, True)), ("FREQUENCY", iterate(
-        id2freq)), ("PPMI", iterate(ppmi)), ("SIMILARITY", iterate(svd)))
+        id2freq)), ("PPMI", iterate(ppmi)), ("SIMILARITY", iterate(svd_similarity)))
 
 
 def iterate(mapping, is_word2id=False):
@@ -90,12 +90,16 @@ def read_freq(folder, word2id):
     return id2freq
 
 
-def read_generic(method, word2id):
+def read_generic(method, word2id, remove_duplicates=False):
     mapping = defaultdict(dict)
     for word1, id1 in word2id.items():
         for word2, id2 in word2id.items():
             if word1 != word2:
-                mapping[id1][id2] = method(word1, word2)
+                if remove_duplicates:
+                    if id1 < id2:
+                        mapping[id1][id2] = method(word1, word2)
+                else:
+                    mapping[id1][id2] = method(word1, word2)
     return mapping
 
 
