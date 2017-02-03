@@ -84,17 +84,19 @@ public class DatabaseService {
 	}
 
 	public List<YearAndValue> getYearAndAssociation(String table,
-			boolean directed, String word1, String word2) throws Exception {
+			boolean isContextQuery, String word1, String word2)
+			throws Exception {
 		if (!(word2IdMapping.containsKey(word1)
 				&& word2IdMapping.containsKey(word2)))
 			return new ArrayList<>();
-		return getYearAndAssociation(table, directed, word2IdMapping.get(word1),
-				word2IdMapping.get(word2));
+		return getYearAndAssociation(table, isContextQuery,
+				word2IdMapping.get(word1), word2IdMapping.get(word2));
 	}
 
-	List<YearAndValue> getYearAndAssociation(String table, boolean directed,
-			int word1Id, int word2Id) throws Exception {
-		if (!directed && word1Id > word2Id) {
+	List<YearAndValue> getYearAndAssociation(String table,
+			boolean isContextQuery, int word1Id, int word2Id) throws Exception {
+		//similarity data is symmetric, only half/traingle of it needs to be stored
+		if (!isContextQuery && word1Id > word2Id) {
 			int tmp = word1Id;
 			word1Id = word2Id;
 			word2Id = tmp;

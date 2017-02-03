@@ -85,12 +85,12 @@ public class ProofOfConcept {
 
 	//TODO: functional interface to merge both?
 	static final Map<String, Object> getAssociationJSON(DatabaseService db,
-			String table, boolean directed, String initialWord,
+			String table, boolean isContextQuery, String initialWord,
 			String... moreWords) throws Exception {
 		JSON data = new JSON();
 
 		for (String word : moreWords) {
-			data.addValues(word, db.getYearAndAssociation(table, directed,
+			data.addValues(word, db.getYearAndAssociation(table, isContextQuery,
 					initialWord, word));
 		}
 		return data.data;
