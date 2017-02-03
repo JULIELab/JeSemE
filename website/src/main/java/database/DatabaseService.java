@@ -25,7 +25,7 @@ import com.google.common.collect.HashBiMap;
  */
 
 public class DatabaseService {
-	public static final String TEST_PATH = "src/test/resources/";
+	public static final String TEST_PATH = "src/test/resources/table1/";
 	private static final String FREQUENCY_CSV = "FREQUENCY.csv";
 	private static final String PPMI_CSV = "PPMI.csv";
 	private static final String SIMILARITY_CSV = "SIMILARITY.csv";
