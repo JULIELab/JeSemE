@@ -9,6 +9,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.sql2o.Sql2o;
 
+import com.google.common.collect.Sets;
+
 public class TestDatabaseService {
 
 	private static DatabaseService db;
@@ -80,5 +82,11 @@ public class TestDatabaseService {
 				new YearAndValue(1930, 0.3f),
 				new YearAndValue(1940, 0.5f) }),
 				db.getYearAndFrequencyn(DatabaseService.TEST_FREQUENCY, "foo"));
+	}
+	
+	@Test
+	public void testCorpora() throws Exception {
+		assertEquals(Sets.newHashSet("test"),
+				db.corpora);
 	}
 }

@@ -44,7 +44,6 @@ public class ProofOfConcept {
 		get("/api/similarity", (request, response) -> {
 			String word1 = request.queryParams("word1");
 			String word2 = request.queryParams("word2");
-			System.out.println(word1+ " "+ word2);
 			return getAssociationJSON(db, DatabaseService.TEST_SIMILARITY,
 					false, word1, word2);
 		}, new Gson()::toJson);

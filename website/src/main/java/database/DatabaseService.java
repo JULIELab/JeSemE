@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.dbunit.DatabaseUnitException;
@@ -28,24 +30,26 @@ public class DatabaseService {
 	private static final String PPMI_CSV = "PPMI.csv";
 	private static final String SIMILARITY_CSV = "SIMILARITY.csv";
 	private static final String WORDIDS_CSV = "WORDIDS.csv";
-	public static final String TEST_SIMILARITY = "JEDISEM.TEST_SIMILARITY";
-	private static final String TEST_WORDIDS = "JEDISEM.TEST_WORD_IDS";
+
+	private static final String SCHEMA = "JEDISEM";
+	public static final String CORPORA = SCHEMA + ".TABLES";
+	public static final String TEST_SIMILARITY = SCHEMA + ".TEST_SIMILARITY";
+	private static final String TEST_WORDIDS = SCHEMA + ".TEST_WORD_IDS";
+	public static final String TEST_PPMI = SCHEMA + ".TEST_PPMI";
+	public static final String TEST_FREQUENCY = SCHEMA + ".TEST_FREQUENCY";
+
 	private static final String SIMILARITY_QUERY = "SELECT year, association AS value FROM %s WHERE (word1=:word1 AND word2=:word2) ORDER BY year ASC";
 	private static final String YEARS_QUERY = "SELECT DISTINCT year FROM %s WHERE word1=:word OR word2=:word ORDER BY year";
 	private static final String MOST_SIMILAR_QUERY = "SELECT word1, word2 FROM %s WHERE (word1=:givenWord OR word2=:givenWord) AND year=:year ORDER BY association DESC LIMIT :limit";
 	private static final String TOP_CONTEXT_QUERY = "SELECT word2 FROM %s WHERE word1=:givenWord AND year=:year ORDER BY association DESC LIMIT :limit";
-	public static final String TEST_PPMI = "JEDISEM.TEST_PPMI";
-	public static final String TEST_FREQUENCY = "JEDISEM.TEST_FREQUENCY";
 	private static final String FREQUENCY_QUERY = "SELECT year, frequency AS value FROM %s WHERE word=:word ORDER BY year ASC";
 
 	private final Sql2o sql2o;
 	private final BiMap<String, Integer> word2IdMapping = HashBiMap.create();
+	final Set<String> corpora = new HashSet<>();
 
-	public DatabaseService(Sql2o sql2o)
-			throws DatabaseUnitException, Exception {
-		this.sql2o = sql2o;
-		readDemo(TEST_PATH);
-		initializeMapping();
+	DatabaseService(Sql2o sql2o) throws DatabaseUnitException, Exception {
+		this(sql2o, TEST_PATH);
 	}
 
 	public DatabaseService(Sql2o sql2o, String path)
@@ -56,11 +60,16 @@ public class DatabaseService {
 	}
 
 	private void initializeMapping() {
-		String sql = "SELECT word,id FROM " + TEST_WORDIDS;
 		try (Connection con = sql2o.open()) {
-			for (WordAndID wordAndId : con.createQuery(sql)
+			for (WordAndID wordAndId : con
+					.createQuery("SELECT word,id FROM " + TEST_WORDIDS)
 					.executeAndFetch(WordAndID.class)) {
 				word2IdMapping.put(wordAndId.word, wordAndId.id);
+			}
+			for (String corpus : con
+					.createQuery("SELECT corpus FROM " + CORPORA)
+					.executeScalarList(String.class)) {
+				corpora.add(corpus);
 			}
 		}
 	}
@@ -85,7 +94,7 @@ public class DatabaseService {
 
 	List<YearAndValue> getYearAndAssociation(String table, boolean directed,
 			int word1Id, int word2Id) throws Exception {
-		if(!directed && word1Id > word2Id){
+		if (!directed && word1Id > word2Id) {
 			int tmp = word1Id;
 			word1Id = word2Id;
 			word2Id = tmp;
@@ -127,8 +136,8 @@ public class DatabaseService {
 		}
 	}
 
-	public List<String> getMostSimilarWordsInYear(String table, String word, Integer year,
-			int limit) {
+	public List<String> getMostSimilarWordsInYear(String table, String word,
+			Integer year, int limit) {
 		List<String> words = new ArrayList<>();
 		if (!word2IdMapping.containsKey(word))
 			return words;
@@ -167,8 +176,14 @@ public class DatabaseService {
 	// Will be used for testing
 	void readDemo(String path) throws Exception {
 		try (Connection con = sql2o.open()) {
-			con.createQuery("CREATE SCHEMA jedisem").executeUpdate();
-			// TODO: think about good indexes
+			con.createQuery("CREATE SCHEMA " + SCHEMA).executeUpdate();
+
+			con.createQuery("CREATE TABLE " + CORPORA
+					+ " (corpus TEXT, PRIMARY KEY(corpus) );").executeUpdate();
+			con.createQuery(
+					"INSERT INTO " + CORPORA + " (corpus) VALUES (:corpus);")
+					.addParameter("corpus", "test").executeUpdate();
+
 			con.createQuery("CREATE TABLE " + TEST_WORDIDS
 					+ " (word TEXT, id INTEGER, PRIMARY KEY(word,id) );")
 					.executeUpdate();
