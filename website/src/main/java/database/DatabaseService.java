@@ -1,17 +1,21 @@
 package database;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.dbunit.DatabaseUnitException;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
+import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -25,19 +29,14 @@ import com.google.common.collect.HashBiMap;
  */
 
 public class DatabaseService {
-	public static final String TEST_PATH = "src/test/resources/table1/";
+	public static final String TEST_PATH = "src/test/resources/";
+
 	private static final String FREQUENCY_CSV = "FREQUENCY.csv";
 	private static final String PPMI_CSV = "PPMI.csv";
 	private static final String SIMILARITY_CSV = "SIMILARITY.csv";
 	private static final String WORDIDS_CSV = "WORDIDS.csv";
-
-	private static final String SCHEMA = "JEDISEM";
-	public static final String CORPORA = SCHEMA + ".TABLES";
-	public static final String TEST_SIMILARITY = SCHEMA + ".TEST_SIMILARITY";
-	private static final String TEST_WORDIDS = SCHEMA + ".TEST_WORD_IDS";
-	public static final String TEST_PPMI = SCHEMA + ".TEST_PPMI";
-	public static final String TEST_FREQUENCY = SCHEMA + ".TEST_FREQUENCY";
-
+	
+	
 	private static final String SIMILARITY_QUERY = "SELECT year, association AS value FROM %s WHERE (word1=:word1 AND word2=:word2) ORDER BY year ASC";
 	private static final String YEARS_QUERY = "SELECT DISTINCT year FROM %s WHERE word1=:word OR word2=:word ORDER BY year";
 	private static final String MOST_SIMILAR_QUERY = "SELECT word1, word2 FROM %s WHERE (word1=:givenWord OR word2=:givenWord) AND year=:year ORDER BY association DESC LIMIT :limit";
@@ -45,8 +44,7 @@ public class DatabaseService {
 	private static final String FREQUENCY_QUERY = "SELECT year, frequency AS value FROM %s WHERE word=:word ORDER BY year ASC";
 
 	private final Sql2o sql2o;
-	private final BiMap<String, Integer> word2IdMapping = HashBiMap.create();
-	final Set<String> corpora = new HashSet<>();
+	private final Map<String,Corpus> corpora = new HashMap<>();
 
 	DatabaseService(Sql2o sql2o) throws DatabaseUnitException, Exception {
 		this(sql2o, TEST_PATH);
@@ -61,15 +59,14 @@ public class DatabaseService {
 
 	private void initializeMapping() {
 		try (Connection con = sql2o.open()) {
-			for (WordAndID wordAndId : con
-					.createQuery("SELECT word,id FROM " + TEST_WORDIDS)
-					.executeAndFetch(WordAndID.class)) {
-				word2IdMapping.put(wordAndId.word, wordAndId.id);
-			}
-			for (String corpus : con
-					.createQuery("SELECT corpus FROM " + CORPORA)
+			for (String corpusName : con
+					.createQuery("SELECT corpus FROM " + Corpus.CORPORA)
 					.executeScalarList(String.class)) {
-				corpora.add(corpus);
+				Corpus corpus = new Corpus(corpusName);
+				corpus.addIdMapping(con
+						.createQuery("SELECT word,id FROM " + corpus.getWordIdTable())
+						.executeAndFetch(WordAndID.class));
+				corpora.put(corpusName, corpus);
 			}
 		}
 	}
@@ -83,14 +80,15 @@ public class DatabaseService {
 		}
 	}
 
-	public List<YearAndValue> getYearAndAssociation(String table,
+	public List<YearAndValue> getYearAndAssociation(String corpusName,
 			boolean isContextQuery, String word1, String word2)
 			throws Exception {
-		if (!(word2IdMapping.containsKey(word1)
-				&& word2IdMapping.containsKey(word2)))
+		//TODO: brauche auch table name, nicht nur corpus! besser ein switch in corpus dafür und ne enum?
+		Corpus corpus = corpora.get(corpusName);
+		if (!corpus.hasMappingFor(word1,word2))
 			return new ArrayList<>();
-		return getYearAndAssociation(table, isContextQuery,
-				word2IdMapping.get(word1), word2IdMapping.get(word2));
+		return getYearAndAssociation(corpusName, isContextQuery,
+				corpus.getMappingFor(word1), corpus.getMappingFor(word2));
 	}
 
 	List<YearAndValue> getYearAndAssociation(String table,
@@ -177,44 +175,70 @@ public class DatabaseService {
 
 	// Will be used for testing
 	void readDemo(String path) throws Exception {
+		@SuppressWarnings("unchecked")
+		List<Map<String, String>> tables = (List<Map<String, String>>) new Yaml()
+				.load(new FileInputStream(
+						path + "tables.yaml"));
+		for (Map<String, String> table : tables) {
+			if (table.get("name").equals("table1"))
+				path = path + table.get("folder") + "/";
+			corpora.add(table.get("name"));
+		}
+
 		try (Connection con = sql2o.open()) {
-			con.createQuery("CREATE SCHEMA " + SCHEMA).executeUpdate();
-
-			con.createQuery("CREATE TABLE " + CORPORA
+			con.createQuery("CREATE SCHEMA " + Corpus.SCHEMA).executeUpdate();
+			con.createQuery("CREATE TABLE " + Corpus.CORPORA
 					+ " (corpus TEXT, PRIMARY KEY(corpus) );").executeUpdate();
-			con.createQuery(
-					"INSERT INTO " + CORPORA + " (corpus) VALUES (:corpus);")
-					.addParameter("corpus", "test").executeUpdate();
-
-			con.createQuery("CREATE TABLE " + TEST_WORDIDS
-					+ " (word TEXT, id INTEGER, PRIMARY KEY(word,id) );")
-					.executeUpdate();
-			String assocTable = " (word1 INTEGER, word2 INTEGER, year SMALLINT, association REAL, PRIMARY KEY(word1, word2, year) );";
-			con.createQuery("CREATE TABLE " + TEST_SIMILARITY + assocTable)
-					.executeUpdate();
-			con.createQuery("CREATE TABLE " + TEST_PPMI + assocTable)
-					.executeUpdate();
-			con.createQuery("CREATE TABLE " + TEST_FREQUENCY
-					+ " (word INTEGER, year SMALLINT, frequency REAL, PRIMARY KEY(word, year));")
-					.executeUpdate();
 		}
 
-		// ID mapping
-		try (Connection con = sql2o.beginTransaction()) {
-			org.sql2o.Query query = con.createQuery("INSERT INTO "
-					+ TEST_WORDIDS + " (word, id) VALUES (:word, :id)");
-			for (String[] x : Files.lines(Paths.get(path + WORDIDS_CSV))
-					.map(x -> x.split(",")).collect(Collectors.toList()))
-				query.addParameter("word", x[0]).addParameter("id", x[1])
-						.addToBatch();
-			query.executeBatch(); // executes entire batch
-			con.commit(); // remember to call commit(), else sql2o will
-							// automatically rollback.
-		}
+		for (String corpus : corpora) {
+			String wordIdTable = String.format(WORDIDS_TEMPLATE, corpus);
+			String similarityTable = String.format(SIMILARITY_TEMPLATE, corpus);
+			String ppmiTable = String.format(PPMI_TEMPLATE, corpus);
+			String frequencyTable = String.format(FREQUENCY_TEMPLATE, corpus);
+			try (Connection con = sql2o.open()) {
+				con.createQuery("INSERT INTO " + CORPORA
+						+ " (corpus) VALUES (:corpus);")
+						.addParameter("corpus", corpus).executeUpdate();
+				con.createQuery("CREATE SCHEMA " + SCHEMA).executeUpdate();
+				con.createQuery("CREATE TABLE " + CORPORA
+						+ " (corpus TEXT, PRIMARY KEY(corpus) );")
+						.executeUpdate();
 
-		importAssociation(TEST_SIMILARITY, path + SIMILARITY_CSV);
-		importAssociation(TEST_PPMI, path + PPMI_CSV);
-		importFrequency(TEST_FREQUENCY, path + FREQUENCY_CSV);
+				con.createQuery("INSERT INTO " + CORPORA
+						+ " (corpus) VALUES (:corpus);")
+						.addParameter("corpus", corpus).executeUpdate();
+
+				con.createQuery("CREATE TABLE " + wordIdTable
+						+ " (word TEXT, id INTEGER, PRIMARY KEY(word,id) );")
+						.executeUpdate();
+				String assocTable = " (word1 INTEGER, word2 INTEGER, year SMALLINT, association REAL, PRIMARY KEY(word1, word2, year) );";
+				con.createQuery("CREATE TABLE " + similarityTable + assocTable)
+						.executeUpdate();
+				con.createQuery("CREATE TABLE " + ppmiTable + assocTable)
+						.executeUpdate();
+				con.createQuery("CREATE TABLE " + frequencyTable
+						+ " (word INTEGER, year SMALLINT, frequency REAL, PRIMARY KEY(word, year));")
+						.executeUpdate();
+			}
+
+			// ID mapping
+			try (Connection con = sql2o.beginTransaction()) {
+				org.sql2o.Query query = con.createQuery("INSERT INTO "
+						+ wordIdTable + " (word, id) VALUES (:word, :id)");
+				for (String[] x : Files.lines(Paths.get(path + WORDIDS_CSV))
+						.map(x -> x.split(",")).collect(Collectors.toList()))
+					query.addParameter("word", x[0]).addParameter("id", x[1])
+							.addToBatch();
+				query.executeBatch(); // executes entire batch
+				con.commit(); // remember to call commit(), else sql2o will
+								// automatically rollback.
+			}
+
+			importAssociation(similarityTable, path + SIMILARITY_CSV);
+			importAssociation(ppmiTable, path + PPMI_CSV);
+			importFrequency(frequencyTable, path + FREQUENCY_CSV);
+		}
 	}
 
 	private void importFrequency(String tableName, String fileName)
