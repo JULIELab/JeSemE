@@ -39,6 +39,7 @@
         ppmidata = /*[[${ppmidata}]]*/ null;
         frequencydata = /*[[${frequencydata}]]*/ null;
         word = /*[[${word}]]*/ null;
+        corpus = /*[[${corpus}]]*/ null;
     </script>
 
     <!-- helper functions -->
@@ -64,11 +65,12 @@
             document.getElementById(error).innerHTML = ""
             if (word2 !== "") {
                 $.getJSON(url, {
+                	corpus: corpus,
                     word1: word,
                     word2: word2
                 }, function (data) {
                     if (data.columns[0].length === 1)
-                        document.getElementById(error).innerHTML = word2 + " not covered by corpus";
+                        document.getElementById(error).innerHTML = word2 + " not covered by "+corpus;
                     else
                         chart.load(data);
                 });
@@ -99,14 +101,12 @@
     <title>JeDiSem</title>
   </head>
   <body>
-  <h1>Results for <td th:text="${word}">not his placeholder</td></h1>
+  <h1>Results for <td th:text="${word}">WORD</td> in <td th:text="${corpus}">CORPUS</td></h1>
   
   
 <h2>Similarity Chart</h2>
 The following chart shows its similarity to the most similar words over time.
-<div class="chart" id="similaritychart">No matches for
-    <td th:text="${word}">not his placeholder</td>
-</div>
+<div class="chart" id="similaritychart"></div>
 <script type="text/javascript"> 
     similaritychart = chart("#similaritychart", similaritydata,{
         max: 1,
@@ -121,10 +121,9 @@ The following chart shows its similarity to the most similar words over time.
     <span id="addWordToSimilarityTextBoxError"></span>
 </form>
 
-
 <h2>Context Chart</h2>
 The following chart shows its most speciffic context words over time (by PPMI).
-<div class="chart"  id="ppmichart">No matches for <td th:text="${word}">not his placeholder</td></div>
+<div class="chart"  id="ppmichart"></div>
 <script type="text/javascript"> 
     ppmichart = chart("#ppmichart", ppmidata)
 </script>
@@ -137,9 +136,9 @@ The following chart shows its most speciffic context words over time (by PPMI).
 
 <h2>Frequency Chart</h2>
 The following chart shows its relative frequency over time.
-<div class="chart" id="frequencychart">No matches for <td th:text="${word}">not his placeholder</td></div>
+<div class="chart" id="frequencychart"></div>
 <script type="text/javascript"> 
-    ppmichart = chart("#frequencychart", frequencydata, {
+    frequencychart = chart("#frequencychart", frequencydata, {
         tick: {
             format: percentFormatter
         }
