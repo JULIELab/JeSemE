@@ -18,7 +18,7 @@ function train {
 	local path=$1
 
 	#CHI
-	python $HYPERWORD_PATH/hyperwords/counts2chi.py -$path/counts $path/chi
+	python $HYPERWORD_PATH/hyperwords/counts2chi.py $path/counts $path/chi
 	echo "finished $path chi1"
 
 	#CHI SMOOTHED
