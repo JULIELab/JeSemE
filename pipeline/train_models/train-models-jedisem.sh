@@ -1,9 +1,9 @@
-#parameters as suggested by Hamilton et al., Diachronic Word Embeddings Reveal Statistical Laws of Semantic Change, ACL 2016
+###parameters as suggested by Hamilton et al., Diachronic Word Embeddings Reveal Statistical Laws of Semantic Change, ACL 2016
 #assumes python 2 and correctly installed hyperwords with my customn extensions
 HYPERWORD_PATH="/home/hellrich/hyperwords/omerlevy-hyperwords-688addd64ca2"
 SMOOTHING="0.75"
 DIM="500"
-PATH="/home/hellrich/tmp/jedisem"
+_PATH="/home/hellrich/tmp/jedisem"
 
 function copy_vocab {
 	local path=$1
@@ -16,6 +16,9 @@ function copy_vocab {
 
 function train {
 	local path=$1
+
+	#vocab
+	python $HYPERWORD_PATH/hyperwords/counts2vocab.py $path/counts
 
 	#CHI
 	python $HYPERWORD_PATH/hyperwords/counts2chi.py $path/counts $path/chi
@@ -36,7 +39,7 @@ function train {
 }
 
 function train_dta {
-	_path=$PATH"/dta"
+	_path=$_PATH"/dta"
 	for path in $_path/*
 	do
 		echo "$path"
@@ -46,7 +49,7 @@ function train_dta {
 }
 
 function train_coha {
-	_path=$PATH"/coha"
+	_path=$_PATH"/coha"
 	for path in $_path/*
 	do
 		echo "$path"
@@ -55,5 +58,5 @@ function train_coha {
 	echo "finished coha"
 }
 
-train_dta & 
-train_coha &
+train_dta 
+train_coha

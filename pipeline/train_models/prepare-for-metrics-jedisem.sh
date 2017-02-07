@@ -49,5 +49,5 @@ function prepare_coha {
 	echo "finished COHA"
 }
 
-prepare_dta &
-prepare_coha &
+prepare_dta 
+prepare_coha 
