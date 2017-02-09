@@ -1,13 +1,17 @@
 import com.google.gson.Gson;
 
+import configuration.Configuration;
 import database.DatabaseService;
 
+import org.dbunit.DatabaseUnitException;
 import org.docopt.Docopt;
 import org.sql2o.Sql2o;
+import org.yaml.snakeyaml.Yaml;
 
 import spark.ModelAndView;
 import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
+import java.io.FileReader;
 import java.util.*;
 import static spark.Spark.*;
 
@@ -15,35 +19,43 @@ public class ProofOfConcept {
 
 	private static final int LIMIT = 2;
 	private static final String doc =
-		    "Naval Fate.\n"
-		    + "\n"
+		    "JeDiSem\n"
 		    + "Usage:\n"
-		    + "  naval_fate ship new <name>...\n"
-		    + "  naval_fate ship <name> move <x> <y> [--speed=<kn>]\n"
-		    + "  naval_fate ship shoot <x> <y>\n"
-		    + "  naval_fate mine (set|remove) <x> <y> [--moored | --drifting]\n"
-		    + "  naval_fate (-h | --help)\n"
-		    + "  naval_fate --version\n"
+		    + "  jedisem server <dbconfig>"
+		    + "  jedisem import <dbconfig>"
+		    + "  jedisem initialize <dbconfig>"
 		    + "\n"
 		    + "Options:\n"
 		    + "  -h --help     Show this screen.\n"
 		    + "  --version     Show version.\n"
-		    + "  --speed=<kn>  Speed in knots [default: 10].\n"
-		    + "  --moored      Moored (anchored) mine.\n"
-		    + "  --drifting    Drifting mine.\n"
 		    + "\n";
 
 	public static void main(String[] args) throws Exception {
 		Map<String, Object> opts =
 		        new Docopt(doc).withVersion("Naval Fate 2.0").parse(args);
-		      System.out.println(opts);
-		   
-		// System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
+		Configuration c = Configuration.readYamlFile(opts.get("<dbconfig>").toString()); //TODO: unused so far
+		if((boolean) opts.get("server"))
+			startServer(c);
+		else if((boolean) opts.get("import"))
+			importDatabase(c);
+		else if ((boolean) opts.get("initialize"))
+			initializeDatabase(c);
+	}
 
-		Sql2o sql2o = new Sql2o("jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true",
-				"SA", "");
-		DatabaseService db = new DatabaseService(sql2o, "/Users/hellrich/Desktop/demo1000"); //save when multiple connections are made? move into query methods?
+	private static void initializeDatabase(Configuration c) {
+		// TODO Auto-generated method stub
+		
+	}
 
+	private static void importDatabase(Configuration c) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private static void startServer(Configuration c) throws DatabaseUnitException, Exception {
+		Sql2o sql2o = new Sql2o(c.getDatabase().getUrl(),c.getDatabase().getUser(),c.getDatabase().getPassword());
+		//TODO: save when multiple connections are made? move into database service?
+		DatabaseService db = new DatabaseService(sql2o, "/Users/hellrich/Desktop/demo1000"); 
 		db.getTables();
 
 		staticFileLocation("/public");

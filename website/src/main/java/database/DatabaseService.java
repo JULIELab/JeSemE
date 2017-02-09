@@ -22,12 +22,22 @@ import org.yaml.snakeyaml.Yaml;
  */
 
 public class DatabaseService {
+	private static final String[] IMPORT_MAPPING_ASSOCIATION = new String[] { "word1", "word2", "year", "association" };
+	private static final String[] IMPORT_MAPPING_FREQUENCY = new String[] { "word", "year", "frequency" };
+	private static final String[] IMPORT_MAPPING_WORDS = new String[] { "word", "id" };
+
+	private static final String IMPORT_SQL_WORDS = "INSERT INTO %s (corpus, word, id) VALUES (:corpus, :word, :id)";
+
+	private static final String IMPORT_SQL_FREQUENCY = "INSERT INTO %s (corpus, word, year, frequency) VALUES (:corpus, :word, :year, :frequency)";
+
+	private static final String IMPORT_SQL_ASSOCIATION = "INSERT INTO %s (corpus, word1, word2, year, association) VALUES (:corpus, :word1, :word2, :year, :association)";
+
 	private static final String TEST_PATH = "src/test/resources/";
 
 	private static final String FREQUENCY_CSV = "FREQUENCY.csv";
 	private static final String PPMI_CSV = "PPMI.csv";
 	private static final String SIMILARITY_CSV = "SIMILARITY.csv";
-	private static final String WORDIDS_CSV = "WORDIDS.csv";
+	private static final String WORDS_CSV = "WORDIDS.csv";
 
 	private static final String SCHEMA = "JEDISEM";
 	private static final String CORPORA = SCHEMA + ".TABLES";
@@ -35,6 +45,8 @@ public class DatabaseService {
 	private static final String WORDIDS_TABLE = SCHEMA + ".WORDIDS";
 	public static final String PPMI_TABLE = SCHEMA + ".PPMI";
 	private static final String FREQUENCY_TABLE = SCHEMA + ".FREQUENCY";
+
+	private static final int IMPORT_BATCH_SIZE = 2000;
 
 	private static final String SIMILARITY_QUERY = "SELECT year, association AS value FROM "
 			+ "%s"
@@ -55,7 +67,8 @@ public class DatabaseService {
 	private final Sql2o sql2o;
 	public final Map<String, Corpus> corpora = new HashMap<>();
 
-	public DatabaseService(Sql2o sql2o) throws DatabaseUnitException, Exception {
+	public DatabaseService(Sql2o sql2o)
+			throws DatabaseUnitException, Exception {
 		this(sql2o, TEST_PATH);
 	}
 
@@ -208,13 +221,10 @@ public class DatabaseService {
 								+ " (corpus) VALUES (:corpus);", true)
 						.addParameter("corpus", corpusName).executeUpdate()
 						.getKey();
-
-				importWords(WORDIDS_TABLE, corpus, path);
-				importAssociation(SIMILARITY_TABLE, corpus,
-						path.resolve(SIMILARITY_CSV));
-				importAssociation(PPMI_TABLE, corpus, path.resolve(PPMI_CSV));
-				importFrequency(FREQUENCY_TABLE, corpus,
-						path.resolve(FREQUENCY_CSV));
+				importStuff(path.resolve(WORDS_CSV), WORDIDS_TABLE, corpus, IMPORT_SQL_WORDS, IMPORT_MAPPING_WORDS);
+				importStuff(path.resolve(SIMILARITY_CSV), SIMILARITY_TABLE, corpus, IMPORT_SQL_ASSOCIATION, IMPORT_MAPPING_ASSOCIATION);
+				importStuff(path.resolve(PPMI_CSV), PPMI_TABLE, corpus, IMPORT_SQL_ASSOCIATION, IMPORT_MAPPING_ASSOCIATION);
+				importStuff(path.resolve(FREQUENCY_CSV), FREQUENCY_TABLE, corpus, IMPORT_SQL_FREQUENCY, IMPORT_MAPPING_FREQUENCY);
 			}
 		}
 	}
@@ -242,49 +252,23 @@ public class DatabaseService {
 		}
 	}
 
-	private void importWords(String tableName, Integer corpus, Path path)
-			throws IOException {
+	private void importStuff(Path path, String tableName, Integer corpus, String sql,
+			String[] parameterMapping) throws IOException {
 		try (Connection con = sql2o.beginTransaction()) {
-			org.sql2o.Query query = con.createQuery("INSERT INTO " + tableName
-					+ " (corpus, word, id) VALUES (:corpus, :word, :id)");
-			Files.lines(path.resolve(WORDIDS_CSV)).map(x -> x.split(","))
-					.forEach(x -> query.addParameter("corpus", corpus)
-							.addParameter("word", x[0]).addParameter("id", x[1])
-							.addToBatch());
-			query.executeBatch(); // executes entire batch
-			con.commit(); // remember to call commit(), else sql2o will
-							// automatically rollback.
-		}
-
-	}
-
-	private void importFrequency(String tableName, Integer corpus, Path path)
-			throws IOException {
-		try (Connection con = sql2o.beginTransaction()) {
-			org.sql2o.Query query = con.createQuery("INSERT INTO " + tableName
-					+ " (corpus, word, year, frequency) VALUES (:corpus, :word, :year, :frequency)");
-			Files.lines(path).map(x -> x.split(","))
-					.forEach(x -> query.addParameter("corpus", corpus)
-							.addParameter("word", x[0])
-							.addParameter("year", x[1])
-							.addParameter("frequency", x[2]).addToBatch());
-			query.executeBatch(); // executes entire batch
-			con.commit(); // remember to call commit(), else sql2o will
-							// automatically rollback.
-		}
-	}
-
-	private void importAssociation(String tableName, Integer corpus, Path path)
-			throws IOException {
-		try (Connection con = sql2o.beginTransaction()) {
-			org.sql2o.Query query = con.createQuery("INSERT INTO " + tableName
-					+ " (corpus, word1, word2, year, association) VALUES (:corpus, :word1, :word2, :year, :association)");
-			Files.lines(path).map(x -> x.split(",")).forEach(x -> query
-					.addParameter("corpus", corpus).addParameter("word1", x[0])
-					.addParameter("word2", x[1]).addParameter("year", x[2])
-					.addParameter("association", x[3]).addToBatch());
-
-			query.executeBatch(); // executes entire batch
+			org.sql2o.Query query = con
+					.createQuery(String.format(sql, tableName));
+			int i = 0;
+			//see http://www.lambdafaq.org/how-do-i-turn-a-stream-into-an-iterable/
+			for (String[] s : (Iterable<String[]>) Files.lines(path).map(x -> x.split(","))::iterator) {
+				for (int j = 0; j < parameterMapping.length; ++j)
+					query.addParameter(parameterMapping[j], s[j]);
+				query.addParameter("corpus", corpus).addToBatch();
+				if (i > IMPORT_BATCH_SIZE) {
+					i = 0;
+					query.executeBatch();
+				}
+			}
+			query.executeBatch();
 			con.commit(); // remember to call commit(), else sql2o will
 							// automatically rollback.
 		}
