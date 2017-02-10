@@ -28,6 +28,13 @@ public class DatabaseService {
 	private static final String[] IMPORT_MAPPING_WORDS = new String[] { "word",
 			"id" };
 
+	private static final Class<?>[] IMPORT_CLASSES_ASSOCIATION = new Class[] {
+			Integer.class, Integer.class, Integer.class, Float.class };
+	private static final Class<?>[] IMPORT_CLASSES_FREQUENCY = new Class[] {
+			Integer.class, Integer.class, Float.class };
+	private static final Class<?>[] IMPORT_CLASSES_WORDS = new Class[] {
+			String.class, Integer.class };
+
 	private static final String IMPORT_SQL_WORDS = "INSERT INTO %s (corpus, word, id) VALUES (:corpus, :word, :id)";
 
 	private static final String IMPORT_SQL_FREQUENCY = "INSERT INTO %s (corpus, word, year, frequency) VALUES (:corpus, :word, :year, :frequency)";
@@ -66,7 +73,8 @@ public class DatabaseService {
 
 	private static void importStuff(final Sql2o sql2o, final Path path,
 			final String tableName, final Integer corpus, final String sql,
-			final String[] parameterMapping) throws IOException {
+			final String[] parameterMapping, final Class<?>[] classes)
+			throws IOException {
 		try (Connection con = sql2o.beginTransaction()) {
 			final org.sql2o.Query query = con
 					.createQuery(String.format(sql, tableName));
@@ -74,8 +82,17 @@ public class DatabaseService {
 			//see http://www.lambdafaq.org/how-do-i-turn-a-stream-into-an-iterable/
 			for (final String[] s : (Iterable<String[]>) Files.lines(path)
 					.map(x -> x.split(","))::iterator) {
-				for (int j = 0; j < parameterMapping.length; ++j)
-					query.addParameter(parameterMapping[j], s[j]);
+				for (int j = 0; j < parameterMapping.length; ++j) {
+					if (classes[j] == String.class)
+						query.addParameter(parameterMapping[j], s[j]);
+					else if (classes[j] == Integer.class)
+						query.addParameter(parameterMapping[j],
+								Integer.valueOf(s[j]));
+					else
+						query.addParameter(parameterMapping[j],
+								Float.valueOf(s[j]));
+				}
+
 				query.addParameter("corpus", corpus).addToBatch();
 				if (i > IMPORT_BATCH_SIZE) {
 					i = 0;
@@ -102,15 +119,17 @@ public class DatabaseService {
 						.addParameter("corpus", corpusName).executeUpdate()
 						.getKey();
 				importStuff(sql2o, path.resolve(WORDS_CSV), WORDIDS_TABLE,
-						corpusId, IMPORT_SQL_WORDS, IMPORT_MAPPING_WORDS);
+						corpusId, IMPORT_SQL_WORDS, IMPORT_MAPPING_WORDS,
+						IMPORT_CLASSES_WORDS);
 				importStuff(sql2o, path.resolve(SIMILARITY_CSV),
 						SIMILARITY_TABLE, corpusId, IMPORT_SQL_ASSOCIATION,
-						IMPORT_MAPPING_ASSOCIATION);
+						IMPORT_MAPPING_ASSOCIATION, IMPORT_CLASSES_ASSOCIATION);
 				importStuff(sql2o, path.resolve(PPMI_CSV), PPMI_TABLE, corpusId,
-						IMPORT_SQL_ASSOCIATION, IMPORT_MAPPING_ASSOCIATION);
+						IMPORT_SQL_ASSOCIATION, IMPORT_MAPPING_ASSOCIATION,
+						IMPORT_CLASSES_ASSOCIATION);
 				importStuff(sql2o, path.resolve(FREQUENCY_CSV), FREQUENCY_TABLE,
 						corpusId, IMPORT_SQL_FREQUENCY,
-						IMPORT_MAPPING_FREQUENCY);
+						IMPORT_MAPPING_FREQUENCY, IMPORT_CLASSES_FREQUENCY);
 			}
 		}
 	}
