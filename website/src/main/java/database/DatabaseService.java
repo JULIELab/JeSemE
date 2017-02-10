@@ -293,4 +293,15 @@ public class DatabaseService {
 		}
 	}
 
+	/**
+	 * Intended for testing
+	 */
+	public void dropAll() {
+		try (Connection con = sql2o.open()) {
+			con.createQuery("DROP SCHEMA " + SCHEMA + " CASCADE")
+					.executeUpdate();
+		}
+
+	}
+
 }

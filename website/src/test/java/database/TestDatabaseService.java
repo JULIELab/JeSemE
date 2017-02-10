@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import org.dbunit.DatabaseUnitException;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.sql2o.Sql2o;
@@ -30,6 +31,11 @@ public class TestDatabaseService {
 
 		return new DatabaseService(sql2o);
 
+	}
+
+	@AfterClass
+	public static void after() {
+		db.dropAll();
 	}
 
 	@BeforeClass
