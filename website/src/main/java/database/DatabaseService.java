@@ -53,7 +53,7 @@ public class DatabaseService {
 	public static final String PPMI_TABLE = SCHEMA + ".PPMI";
 	private static final String FREQUENCY_TABLE = SCHEMA + ".FREQUENCY";
 
-	private static final int IMPORT_BATCH_SIZE = 2000;
+	private static final int IMPORT_BATCH_SIZE = 10000;
 
 	private static final String SIMILARITY_QUERY = "SELECT year, association AS value FROM "
 			+ "%s"
@@ -100,8 +100,7 @@ public class DatabaseService {
 				}
 			}
 			query.executeBatch();
-			con.commit(); // remember to call commit(), else sql2o will
-							// automatically rollback.
+			con.commit(); // avoids rollback.
 		}
 	}
 
@@ -220,7 +219,7 @@ public class DatabaseService {
 	List<YearAndValue> getYearAndAssociation(final int corpus,
 			final String tableName, final boolean isContextQuery, int word1Id,
 			int word2Id) throws Exception {
-		//similarity data is symmetric, only half/traingle of it needs to be stored
+		//similarity data is symmetric, only half/triangle of it needs to be stored
 		if (!isContextQuery && (word1Id > word2Id)) {
 			final int tmp = word1Id;
 			word1Id = word2Id;
