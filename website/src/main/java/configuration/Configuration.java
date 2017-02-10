@@ -15,7 +15,7 @@ public class Configuration {
 
 	private Database database;
 
-	List<Table> tables;
+	List<Corpus> corpora;
 
 	public Configuration() {
 	}
@@ -28,26 +28,33 @@ public class Configuration {
 	}
 
 	/**
-	 * @return the tables
-	 */
-	public List<Table> getTables() {
-		return this.tables;
-	}
-
-	/**
-	 * @param database
-	 *            the database to set
+	 * @param database the database to set
 	 */
 	public void setDatabase(Database database) {
 		this.database = database;
 	}
 
 	/**
-	 * @param tables
-	 *            the tables to set
+	 * @return the corpora
 	 */
-	public void setTables(List<Table> tables) {
-		this.tables = tables;
+	public List<Corpus> getCorpora() {
+		return this.corpora;
+	}
+
+	/**
+	 * @param corpora the corpora to set
+	 */
+	public void setCorpora(List<Corpus> corpora) {
+		this.corpora = corpora;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Configuration [database=" + this.database + ", corpora="
+				+ this.corpora + "]";
 	}
 
 }

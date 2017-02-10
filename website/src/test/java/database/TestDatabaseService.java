@@ -10,17 +10,33 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.sql2o.Sql2o;
 
+import configuration.Configuration;
+
 public class TestDatabaseService {
 
 	private static final String TABLE = "test1";
 	private static DatabaseService db;
 
+	public static DatabaseService initializeDatabase() throws Exception {
+
+		final Configuration config = Configuration
+				.readYamlFile("src/test/resources/config.yaml");
+		final Sql2o sql2o = new Sql2o(config.getDatabase().getUrl(),
+				config.getDatabase().getUser(),
+				config.getDatabase().getPassword());
+
+		DatabaseService.initializeTables(sql2o);
+		DatabaseService.importTables(config, sql2o);
+
+		return new DatabaseService(sql2o);
+
+	}
+
 	@BeforeClass
-	public static void initializeDatabase() throws Exception {
-		db = new DatabaseService(
-				new Sql2o("jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA",
-						""));
-		assertEquals(new HashSet<String>(Arrays.asList("test1", "test2")),db.corpora.keySet());
+	public static void before() throws Exception {
+		db = initializeDatabase();
+		assertEquals(new HashSet<String>(Arrays.asList("test1", "test2")),
+				db.corpora.keySet());
 	}
 
 	@Test

@@ -1,0 +1,9 @@
+database : {
+            url : "jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", 
+            user : "SA",
+            password : ""
+           }
+corpora : [
+            {name : test1, path : "src/test/resources/table1"},
+            {name : test2, path : "src/test/resources/table2"}
+         ]

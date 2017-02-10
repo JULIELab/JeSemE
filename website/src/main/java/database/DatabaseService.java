@@ -1,7 +1,5 @@
 package database;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,29 +8,31 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.dbunit.DatabaseUnitException;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
-import org.yaml.snakeyaml.Yaml;
+import configuration.Configuration;
 
 /**
- * 
+ *
  * @author hellrich
  *
  */
 
 public class DatabaseService {
-	private static final String[] IMPORT_MAPPING_ASSOCIATION = new String[] { "word1", "word2", "year", "association" };
-	private static final String[] IMPORT_MAPPING_FREQUENCY = new String[] { "word", "year", "frequency" };
-	private static final String[] IMPORT_MAPPING_WORDS = new String[] { "word", "id" };
+	private static final String[] IMPORT_MAPPING_ASSOCIATION = new String[] {
+			"word1", "word2", "year", "association" };
+	private static final String[] IMPORT_MAPPING_FREQUENCY = new String[] {
+			"word", "year", "frequency" };
+	private static final String[] IMPORT_MAPPING_WORDS = new String[] { "word",
+			"id" };
 
 	private static final String IMPORT_SQL_WORDS = "INSERT INTO %s (corpus, word, id) VALUES (:corpus, :word, :id)";
 
 	private static final String IMPORT_SQL_FREQUENCY = "INSERT INTO %s (corpus, word, year, frequency) VALUES (:corpus, :word, :year, :frequency)";
 
 	private static final String IMPORT_SQL_ASSOCIATION = "INSERT INTO %s (corpus, word1, word2, year, association) VALUES (:corpus, :word1, :word2, :year, :association)";
-
-	private static final String TEST_PATH = "src/test/resources/";
 
 	private static final String FREQUENCY_CSV = "FREQUENCY.csv";
 	private static final String PPMI_CSV = "PPMI.csv";
@@ -64,202 +64,16 @@ public class DatabaseService {
 			+ FREQUENCY_TABLE
 			+ " WHERE corpus=:corpus AND word=:word ORDER BY year ASC";
 
-	private final Sql2o sql2o;
-	public final Map<String, Corpus> corpora = new HashMap<>();
-
-	public DatabaseService(Sql2o sql2o)
-			throws DatabaseUnitException, Exception {
-		this(sql2o, TEST_PATH);
-	}
-
-	public DatabaseService(Sql2o sql2o, String path)
-			throws DatabaseUnitException, Exception {
-		this.sql2o = sql2o;
-		readDemo(path);
-		initializeMapping();
-	}
-
-	private void initializeMapping() {
-		try (Connection con = sql2o.open()) {
-			for (WordAndID corpusAndId : con
-					.createQuery("SELECT corpus as word, id FROM " + CORPORA)
-					.executeAndFetch(WordAndID.class)) {
-				Corpus corpus = new Corpus(corpusAndId.id,
-						con.createQuery("SELECT word,id FROM " + WORDIDS_TABLE
-								+ " WHERE corpus=:corpus")
-								.addParameter("corpus", corpusAndId.id)
-								.executeAndFetch(WordAndID.class));
-				corpora.put(corpusAndId.word, corpus);
-			}
-		}
-	}
-
-	public void getTables() {
-		String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema='JEDISEM'";
-		try (Connection con = sql2o.open()) {
-			List<String> mostSimilar = con.createQuery(sql)
-					.executeScalarList(String.class);
-			System.out.println(mostSimilar);
-		}
-	}
-
-	public List<YearAndValue> getYearAndAssociation(String corpusName,
-			String tableName, boolean isContextQuery, String word1,
-			String word2) throws Exception {
-		Corpus corpus = corpora.get(corpusName);
-		if (!corpus.hasMappingFor(word1, word2))
-			return new ArrayList<>();
-		return getYearAndAssociation(corpus.getId(), tableName, isContextQuery,
-				corpus.getIdFor(word1), corpus.getIdFor(word2));
-	}
-
-	List<YearAndValue> getYearAndAssociation(int corpus, String tableName,
-			boolean isContextQuery, int word1Id, int word2Id) throws Exception {
-		//similarity data is symmetric, only half/traingle of it needs to be stored
-		if (!isContextQuery && word1Id > word2Id) {
-			int tmp = word1Id;
-			word1Id = word2Id;
-			word2Id = tmp;
-		}
-		String sql = String.format(SIMILARITY_QUERY, tableName);
-		try (Connection con = sql2o.open()) {
-			List<YearAndValue> mostSimilar = con.createQuery(sql)
-					.addParameter("word1", word1Id)
-					.addParameter("word2", word2Id)
-					.addParameter("corpus", corpus)
-					.executeAndFetch(YearAndValue.class);
-			return mostSimilar;
-		}
-	}
-
-	public List<YearAndValue> getYearAndFrequency(String corpusName,
-			String word) throws Exception {
-		Corpus corpus = corpora.get(corpusName);
-		if (!corpus.hasMappingFor(word))
-			return new ArrayList<>();
-		return getYearAndFrequency(corpus.getId(), corpus.getIdFor(word));
-	}
-
-	List<YearAndValue> getYearAndFrequency(int corpus, int wordId)
-			throws Exception {
-		try (Connection con = sql2o.open()) {
-			return con.createQuery(FREQUENCY_QUERY)
-					.addParameter("corpus", corpus).addParameter("word", wordId)
-					.executeAndFetch(YearAndValue.class);
-		}
-	}
-
-	public List<Integer> getYears(String corpusName, String word)
-			throws Exception {
-		Corpus corpus = corpora.get(corpusName);
-		if (!corpus.hasMappingFor(word))
-			return new ArrayList<>();
-		Integer wordId = corpus.getIdFor(word);
-		try (Connection con = sql2o.open()) {
-			return con.createQuery(YEARS_QUERY).addParameter("word", wordId)
-					.addParameter("corpus", corpus.getId())
-					.executeScalarList(Integer.class);
-		}
-	}
-
-	public List<String> getMostSimilarWordsInYear(String corpusName,
-			String word, Integer year, int limit) {
-		Corpus corpus = corpora.get(corpusName);
-		List<String> words = new ArrayList<>();
-		if (!corpus.hasMappingFor(word))
-			return words;
-		Integer wordId = corpus.getIdFor(word);
-		String sql = MOST_SIMILAR_QUERY;
-		try (Connection con = sql2o.open()) {
-			for (IDAndID ids : con.createQuery(sql)
-					.addParameter("givenWord", wordId)
-					.addParameter("corpus", corpus.getId())
-					.addParameter("year", year).addParameter("limit", limit)
-					.executeAndFetch(IDAndID.class)) {
-				Integer newWordId = ids.WORD1 == wordId ? ids.WORD2 : ids.WORD1;
-				words.add(corpus.getIdFor(newWordId));
-			}
-			return words;
-		}
-	}
-
-	public List<String> getTopContextWordsInYear(String corpusName, String word,
-			Integer year, int limit) {
-		Corpus corpus = corpora.get(corpusName);
-		List<String> words = new ArrayList<>();
-		if (!corpus.hasMappingFor(word))
-			return words;
-		Integer givenWordId = corpus.getIdFor(word);
-		String sql = TOP_CONTEXT_QUERY;
-		try (Connection con = sql2o.open()) {
-			for (Integer wordId : con.createQuery(sql)
-					.addParameter("givenWord", givenWordId)
-					.addParameter("corpus", corpus.getId())
-					.addParameter("year", year).addParameter("limit", limit)
-					.executeScalarList(Integer.class)) {
-				words.add(corpus.getIdFor(wordId));
-			}
-			return words;
-		}
-	}
-
-	// Will be used for testing
-
-	@SuppressWarnings("unchecked")
-	void readDemo(String descriptorPath) throws Exception {
-		makeTables();
-
-		for (Map<String, String> table : (List<Map<String, String>>) new Yaml()
-				.load(new FileInputStream(
-						new File(descriptorPath, "tables.yaml")))) {
-			String corpusName = table.get("name");
-			Path path = Paths.get(descriptorPath, table.get("folder"));
-
-			try (Connection con = sql2o.open()) {
-				int corpus = (int) con
-						.createQuery("INSERT INTO " + CORPORA
-								+ " (corpus) VALUES (:corpus);", true)
-						.addParameter("corpus", corpusName).executeUpdate()
-						.getKey();
-				importStuff(path.resolve(WORDS_CSV), WORDIDS_TABLE, corpus, IMPORT_SQL_WORDS, IMPORT_MAPPING_WORDS);
-				importStuff(path.resolve(SIMILARITY_CSV), SIMILARITY_TABLE, corpus, IMPORT_SQL_ASSOCIATION, IMPORT_MAPPING_ASSOCIATION);
-				importStuff(path.resolve(PPMI_CSV), PPMI_TABLE, corpus, IMPORT_SQL_ASSOCIATION, IMPORT_MAPPING_ASSOCIATION);
-				importStuff(path.resolve(FREQUENCY_CSV), FREQUENCY_TABLE, corpus, IMPORT_SQL_FREQUENCY, IMPORT_MAPPING_FREQUENCY);
-			}
-		}
-	}
-
-	private void makeTables() {
-		try (Connection con = sql2o.open()) {
-			con.createQuery("CREATE SCHEMA " + SCHEMA).executeUpdate();
-			con.createQuery("CREATE TABLE " + CORPORA
-					+ " (id SERIAL, corpus TEXT, PRIMARY KEY(id) );")
-					.executeUpdate(); //TODO: add descriptions/tooltipps
-			con.createQuery("CREATE TABLE " + WORDIDS_TABLE
-					+ " (corpus INTEGER, word TEXT, id INTEGER, PRIMARY KEY(corpus, word, id) );")
-					.executeUpdate();
-			String assocTable = " (corpus INTEGER, word1 INTEGER, word2 INTEGER, year SMALLINT, association REAL, PRIMARY KEY(word1, year, corpus, word2) );";
-			con.createQuery("CREATE TABLE " + SIMILARITY_TABLE + assocTable)
-					.executeUpdate()
-					.createQuery("CREATE INDEX word2_index ON "
-							+ SIMILARITY_TABLE + " (word2,year,corpus);")
-					.executeUpdate();
-			con.createQuery("CREATE TABLE " + PPMI_TABLE + assocTable)
-					.executeUpdate();
-			con.createQuery("CREATE TABLE " + FREQUENCY_TABLE
-					+ " (corpus INTEGER, word INTEGER, year SMALLINT, frequency REAL, PRIMARY KEY(word, year, corpus));")
-					.executeUpdate();
-		}
-	}
-
-	private void importStuff(Path path, String tableName, Integer corpus, String sql,
-			String[] parameterMapping) throws IOException {
+	private static void importStuff(final Sql2o sql2o, final Path path,
+			final String tableName, final Integer corpus, final String sql,
+			final String[] parameterMapping) throws IOException {
 		try (Connection con = sql2o.beginTransaction()) {
-			org.sql2o.Query query = con
+			final org.sql2o.Query query = con
 					.createQuery(String.format(sql, tableName));
 			int i = 0;
 			//see http://www.lambdafaq.org/how-do-i-turn-a-stream-into-an-iterable/
-			for (String[] s : (Iterable<String[]>) Files.lines(path).map(x -> x.split(","))::iterator) {
+			for (final String[] s : (Iterable<String[]>) Files.lines(path)
+					.map(x -> x.split(","))::iterator) {
 				for (int j = 0; j < parameterMapping.length; ++j)
 					query.addParameter(parameterMapping[j], s[j]);
 				query.addParameter("corpus", corpus).addToBatch();
@@ -273,4 +87,192 @@ public class DatabaseService {
 							// automatically rollback.
 		}
 	}
+
+	public static void importTables(final Configuration config,
+			final Sql2o sql2o) throws Exception {
+
+		for (final configuration.Corpus corpus : config.getCorpora()) {
+			final String corpusName = corpus.getName();
+			final Path path = Paths.get(corpus.getPath());
+
+			try (Connection con = sql2o.open()) {
+				final int corpusId = (int) con
+						.createQuery("INSERT INTO " + CORPORA
+								+ " (corpus) VALUES (:corpus);", true)
+						.addParameter("corpus", corpusName).executeUpdate()
+						.getKey();
+				importStuff(sql2o, path.resolve(WORDS_CSV), WORDIDS_TABLE,
+						corpusId, IMPORT_SQL_WORDS, IMPORT_MAPPING_WORDS);
+				importStuff(sql2o, path.resolve(SIMILARITY_CSV),
+						SIMILARITY_TABLE, corpusId, IMPORT_SQL_ASSOCIATION,
+						IMPORT_MAPPING_ASSOCIATION);
+				importStuff(sql2o, path.resolve(PPMI_CSV), PPMI_TABLE, corpusId,
+						IMPORT_SQL_ASSOCIATION, IMPORT_MAPPING_ASSOCIATION);
+				importStuff(sql2o, path.resolve(FREQUENCY_CSV), FREQUENCY_TABLE,
+						corpusId, IMPORT_SQL_FREQUENCY,
+						IMPORT_MAPPING_FREQUENCY);
+			}
+		}
+	}
+
+	public static void initializeTables(final Sql2o sql2o) {
+		try (Connection con = sql2o.open()) {
+			con.createQuery("CREATE SCHEMA " + SCHEMA).executeUpdate();
+			con.createQuery("CREATE TABLE " + CORPORA
+					+ " (id SERIAL, corpus TEXT, PRIMARY KEY(id) );")
+					.executeUpdate(); //TODO: add descriptions/tooltipps? hardcoded atm
+			con.createQuery("CREATE TABLE " + WORDIDS_TABLE
+					+ " (corpus INTEGER, word TEXT, id INTEGER, PRIMARY KEY(corpus, word, id) );")
+					.executeUpdate();
+			final String assocTable = " (corpus INTEGER, word1 INTEGER, word2 INTEGER, year SMALLINT, association REAL, PRIMARY KEY(word1, year, corpus, word2) );";
+			con.createQuery("CREATE TABLE " + SIMILARITY_TABLE + assocTable)
+					.executeUpdate()
+					.createQuery("CREATE INDEX word2_index ON "
+							+ SIMILARITY_TABLE + " (word2,year,corpus);")
+					.executeUpdate();
+			con.createQuery("CREATE TABLE " + PPMI_TABLE + assocTable)
+					.executeUpdate();
+			con.createQuery("CREATE TABLE " + FREQUENCY_TABLE
+					+ " (corpus INTEGER, word INTEGER, year SMALLINT, frequency REAL, PRIMARY KEY(word, year, corpus));")
+					.executeUpdate();
+		}
+	}
+
+	private final Sql2o sql2o;
+
+	public final Map<String, Corpus> corpora = new HashMap<>();
+
+	public DatabaseService(final Sql2o sql2o)
+			throws DatabaseUnitException, Exception {
+		this.sql2o = sql2o;
+		initializeMapping();
+	}
+
+	public List<String> getMostSimilarWordsInYear(final String corpusName,
+			final String word, final Integer year, final int limit) {
+		final Corpus corpus = corpora.get(corpusName);
+		final List<String> words = new ArrayList<>();
+		if (!corpus.hasMappingFor(word))
+			return words;
+		final Integer wordId = corpus.getIdFor(word);
+		final String sql = MOST_SIMILAR_QUERY;
+		try (Connection con = sql2o.open()) {
+			for (final IDAndID ids : con.createQuery(sql)
+					.addParameter("givenWord", wordId)
+					.addParameter("corpus", corpus.getId())
+					.addParameter("year", year).addParameter("limit", limit)
+					.executeAndFetch(IDAndID.class)) {
+				final Integer newWordId = ids.WORD1 == wordId ? ids.WORD2
+						: ids.WORD1;
+				words.add(corpus.getIdFor(newWordId));
+			}
+			return words;
+		}
+	}
+
+	public void getTables() {
+		final String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema='JEDISEM'";
+		try (Connection con = sql2o.open()) {
+			final List<String> mostSimilar = con.createQuery(sql)
+					.executeScalarList(String.class);
+			System.out.println(mostSimilar);
+		}
+	}
+
+	public List<String> getTopContextWordsInYear(final String corpusName,
+			final String word, final Integer year, final int limit) {
+		final Corpus corpus = corpora.get(corpusName);
+		final List<String> words = new ArrayList<>();
+		if (!corpus.hasMappingFor(word))
+			return words;
+		final Integer givenWordId = corpus.getIdFor(word);
+		final String sql = TOP_CONTEXT_QUERY;
+		try (Connection con = sql2o.open()) {
+			for (final Integer wordId : con.createQuery(sql)
+					.addParameter("givenWord", givenWordId)
+					.addParameter("corpus", corpus.getId())
+					.addParameter("year", year).addParameter("limit", limit)
+					.executeScalarList(Integer.class))
+				words.add(corpus.getIdFor(wordId));
+			return words;
+		}
+	}
+
+	List<YearAndValue> getYearAndAssociation(final int corpus,
+			final String tableName, final boolean isContextQuery, int word1Id,
+			int word2Id) throws Exception {
+		//similarity data is symmetric, only half/traingle of it needs to be stored
+		if (!isContextQuery && (word1Id > word2Id)) {
+			final int tmp = word1Id;
+			word1Id = word2Id;
+			word2Id = tmp;
+		}
+		final String sql = String.format(SIMILARITY_QUERY, tableName);
+		try (Connection con = sql2o.open()) {
+			final List<YearAndValue> mostSimilar = con.createQuery(sql)
+					.addParameter("word1", word1Id)
+					.addParameter("word2", word2Id)
+					.addParameter("corpus", corpus)
+					.executeAndFetch(YearAndValue.class);
+			return mostSimilar;
+		}
+	}
+
+	public List<YearAndValue> getYearAndAssociation(final String corpusName,
+			final String tableName, final boolean isContextQuery,
+			final String word1, final String word2) throws Exception {
+		final Corpus corpus = corpora.get(corpusName);
+		if (!corpus.hasMappingFor(word1, word2))
+			return new ArrayList<>();
+		return getYearAndAssociation(corpus.getId(), tableName, isContextQuery,
+				corpus.getIdFor(word1), corpus.getIdFor(word2));
+	}
+
+	List<YearAndValue> getYearAndFrequency(final int corpus, final int wordId)
+			throws Exception {
+		try (Connection con = sql2o.open()) {
+			return con.createQuery(FREQUENCY_QUERY)
+					.addParameter("corpus", corpus).addParameter("word", wordId)
+					.executeAndFetch(YearAndValue.class);
+		}
+	}
+
+	// Will be used for testing
+
+	public List<YearAndValue> getYearAndFrequency(final String corpusName,
+			final String word) throws Exception {
+		final Corpus corpus = corpora.get(corpusName);
+		if (!corpus.hasMappingFor(word))
+			return new ArrayList<>();
+		return getYearAndFrequency(corpus.getId(), corpus.getIdFor(word));
+	}
+
+	public List<Integer> getYears(final String corpusName, final String word)
+			throws Exception {
+		final Corpus corpus = corpora.get(corpusName);
+		if (!corpus.hasMappingFor(word))
+			return new ArrayList<>();
+		final Integer wordId = corpus.getIdFor(word);
+		try (Connection con = sql2o.open()) {
+			return con.createQuery(YEARS_QUERY).addParameter("word", wordId)
+					.addParameter("corpus", corpus.getId())
+					.executeScalarList(Integer.class);
+		}
+	}
+
+	private void initializeMapping() {
+		try (Connection con = sql2o.open()) {
+			for (final WordAndID corpusAndId : con
+					.createQuery("SELECT corpus as word, id FROM " + CORPORA)
+					.executeAndFetch(WordAndID.class)) {
+				final Corpus corpus = new Corpus(corpusAndId.id,
+						con.createQuery("SELECT word,id FROM " + WORDIDS_TABLE
+								+ " WHERE corpus=:corpus")
+								.addParameter("corpus", corpusAndId.id)
+								.executeAndFetch(WordAndID.class));
+				corpora.put(corpusAndId.word, corpus);
+			}
+		}
+	}
+
 }

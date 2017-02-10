@@ -6,11 +6,11 @@ import java.util.Map;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.sql2o.Sql2o;
 
 import com.google.common.collect.Lists;
 
 import database.DatabaseService;
+import database.TestDatabaseService;
 import database.YearAndValue;
 
 public class TestProofOfConcept {
@@ -19,10 +19,8 @@ public class TestProofOfConcept {
 	private static final String CORPUS = "test1";
 
 	@BeforeClass
-	public static void initializeDatabase() throws Exception {
-		db = new DatabaseService(
-				new Sql2o("jdbc:hsqldb:mem:mymemdb;sql.syntax_pgs=true", "SA",
-						""));
+	public static void before() throws Exception {
+		db = TestDatabaseService.initializeDatabase();
 	}
 
 	@Test
