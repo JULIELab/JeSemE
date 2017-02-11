@@ -43,6 +43,7 @@ public class DatabaseService {
 
 	private static final String FREQUENCY_CSV = "FREQUENCY.csv";
 	private static final String PPMI_CSV = "PPMI.csv";
+	private static final String CHI_CSV = "CHI.csv";
 	private static final String SIMILARITY_CSV = "SIMILARITY.csv";
 	private static final String WORDS_CSV = "WORDIDS.csv";
 
@@ -51,6 +52,7 @@ public class DatabaseService {
 	public static final String SIMILARITY_TABLE = SCHEMA + ".SIMILARITY";
 	private static final String WORDIDS_TABLE = SCHEMA + ".WORDIDS";
 	public static final String PPMI_TABLE = SCHEMA + ".PPMI";
+	public static final String CHI_TABLE = SCHEMA + ".CHI";
 	private static final String FREQUENCY_TABLE = SCHEMA + ".FREQUENCY";
 
 	private static final int IMPORT_BATCH_SIZE = 10000;
@@ -126,6 +128,9 @@ public class DatabaseService {
 				importStuff(sql2o, path.resolve(PPMI_CSV), PPMI_TABLE, corpusId,
 						IMPORT_SQL_ASSOCIATION, IMPORT_MAPPING_ASSOCIATION,
 						IMPORT_CLASSES_ASSOCIATION);
+				importStuff(sql2o, path.resolve(CHI_CSV), CHI_TABLE, corpusId,
+						IMPORT_SQL_ASSOCIATION, IMPORT_MAPPING_ASSOCIATION,
+						IMPORT_CLASSES_ASSOCIATION);
 				importStuff(sql2o, path.resolve(FREQUENCY_CSV), FREQUENCY_TABLE,
 						corpusId, IMPORT_SQL_FREQUENCY,
 						IMPORT_MAPPING_FREQUENCY, IMPORT_CLASSES_FREQUENCY);
@@ -150,6 +155,8 @@ public class DatabaseService {
 					.executeUpdate();
 			con.createQuery("CREATE TABLE " + PPMI_TABLE + assocTable)
 					.executeUpdate();
+			con.createQuery("CREATE TABLE " + CHI_TABLE + assocTable)
+			.executeUpdate();
 			con.createQuery("CREATE TABLE " + FREQUENCY_TABLE
 					+ " (corpus INTEGER, word INTEGER, year SMALLINT, frequency REAL, PRIMARY KEY(word, year, corpus));")
 					.executeUpdate();
