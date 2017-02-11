@@ -66,6 +66,6 @@ public class TestProofOfConcept {
 	@Test
 	public void testGetTopContextAtBeginningAndEnd() throws Exception {
 		assertEquals(new String[] { "bar", "boo" }, ProofOfConcept
-				.getTopContextAtBeginningAndEnd(db, CORPUS, "foo"));
+				.getTopContextAtBeginningAndEnd(db, DatabaseService.PPMI_TABLE, CORPUS, "foo"));
 	}
 }

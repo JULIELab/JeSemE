@@ -99,9 +99,11 @@ public class TestDatabaseService {
 	@Test
 	public void testGetTopContextWordsInYear() throws Exception {
 		assertEquals(Arrays.asList(new String[] { "bar" }),
-				db.getTopContextWordsInYear(CORPUS, "foo", 1910, 1));
+				db.getTopContextWordsInYear(CORPUS, DatabaseService.PPMI_TABLE,
+						"foo", 1910, 1));
 		assertEquals(Arrays.asList(new String[] { "bar", "boo" }),
-				db.getTopContextWordsInYear(CORPUS, "foo", 1910, 2));
+				db.getTopContextWordsInYear(CORPUS, DatabaseService.PPMI_TABLE,
+						"foo", 1910, 2));
 	}
 
 	@Test

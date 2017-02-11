@@ -37,6 +37,7 @@
     <script th:inline="javascript">
         similaritydata = /*[[${similaritydata}]]*/ null;
         ppmidata = /*[[${ppmidata}]]*/ null;
+        chidata = /*[[${chidata}]]*/ null;
         frequencydata = /*[[${frequencydata}]]*/ null;
         word = /*[[${word}]]*/ null;
         corpus = /*[[${corpus}]]*/ null;
@@ -132,6 +133,19 @@ The following chart shows its most speciffic context words over time (by PPMI).
     Add word to graph: <input type="search" id="addWordToPPMITextBox"/>
     <input type="submit" value="add"/>
     <span id="addWordToPPMITextBoxError"></span>
+</form>
+
+<h2>Context Chart</h2>
+The following chart shows its most speciffic context words over time (by CHI^2).
+<div class="chart"  id="chichart"></div>
+<script type="text/javascript"> 
+    chichart = chart("#chichart", chidata)
+</script>
+<form action="javascript:void(0);"
+      onsubmit="addWordTo(chichart, '/api/chi', 'addWordToChiTextBox', 'addWordToChiTextBoxError')">
+    Add word to graph: <input type="search" id="addWordToChiTextBox"/>
+    <input type="submit" value="add"/>
+    <span id="addWordToChiTextBoxError"></span>
 </form>
 
 <h2>Frequency Chart</h2>

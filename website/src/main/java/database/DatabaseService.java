@@ -66,9 +66,7 @@ public class DatabaseService {
 	private static final String MOST_SIMILAR_QUERY = "SELECT word1, word2 FROM "
 			+ SIMILARITY_TABLE
 			+ " WHERE corpus=:corpus AND (word1=:givenWord OR word2=:givenWord) AND year=:year ORDER BY association DESC LIMIT :limit";
-	private static final String TOP_CONTEXT_QUERY = "SELECT word2 FROM "
-			+ PPMI_TABLE
-			+ " WHERE corpus=:corpus AND word1=:givenWord AND year=:year ORDER BY association DESC LIMIT :limit";
+	private static final String TOP_CONTEXT_QUERY = "SELECT word2 FROM %s WHERE corpus=:corpus AND word1=:givenWord AND year=:year ORDER BY association DESC LIMIT :limit";
 	private static final String FREQUENCY_QUERY = "SELECT year, frequency AS value FROM "
 			+ FREQUENCY_TABLE
 			+ " WHERE corpus=:corpus AND word=:word ORDER BY year ASC";
@@ -205,13 +203,13 @@ public class DatabaseService {
 	}
 
 	public List<String> getTopContextWordsInYear(final String corpusName,
-			final String word, final Integer year, final int limit) {
+			String table, final String word, final Integer year, final int limit) {
 		final Corpus corpus = corpora.get(corpusName);
 		final List<String> words = new ArrayList<>();
 		if (!corpus.hasMappingFor(word))
 			return words;
 		final Integer givenWordId = corpus.getIdFor(word);
-		final String sql = TOP_CONTEXT_QUERY;
+		final String sql = String.format(TOP_CONTEXT_QUERY, table);
 		try (Connection con = sql2o.open()) {
 			for (final Integer wordId : con.createQuery(sql)
 					.addParameter("givenWord", givenWordId)

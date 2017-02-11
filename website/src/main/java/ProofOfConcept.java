@@ -16,6 +16,7 @@ import com.google.gson.Gson;
 import configuration.Configuration;
 import database.DatabaseService;
 import spark.ModelAndView;
+import spark.Request;
 import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
 public class ProofOfConcept {
@@ -58,14 +59,14 @@ public class ProofOfConcept {
 	}
 
 	static final String[] getTopContextAtBeginningAndEnd(
-			final DatabaseService db, final String corpus, final String word)
+			final DatabaseService db, String table, final String corpus, final String word)
 			throws Exception {
 		final List<Integer> years = db.getYears(corpus, word);
 		final Set<String> topContext = new HashSet<>();
 		topContext.addAll(
-				db.getTopContextWordsInYear(corpus, word, years.get(0), LIMIT));
-		topContext.addAll(db.getTopContextWordsInYear(corpus, word,
-				years.get(years.size() - 1), LIMIT));
+				db.getTopContextWordsInYear(corpus, table, word, years.get(0), LIMIT));
+		topContext.addAll(db.getTopContextWordsInYear(corpus, table,
+				word, years.get(years.size() - 1), LIMIT));
 		return topContext.toArray(new String[topContext.size()]);
 	}
 
@@ -116,7 +117,11 @@ public class ProofOfConcept {
 			model.put("ppmidata",
 					getAssociationJSON(db, corpus, DatabaseService.PPMI_TABLE,
 							true, word,
-							getTopContextAtBeginningAndEnd(db, corpus, word)));
+							getTopContextAtBeginningAndEnd(db, DatabaseService.PPMI_TABLE, corpus,word)));
+			model.put("chidata",
+					getAssociationJSON(db, corpus, DatabaseService.CHI_TABLE,
+							true, word,
+							getTopContextAtBeginningAndEnd(db, DatabaseService.CHI_TABLE, corpus, word)));
 			System.out.println("ppmi " + (System.currentTimeMillis() - t));
 			t = System.currentTimeMillis();
 			model.put("frequencydata", getFrequencyJSON(db, corpus, word));
@@ -125,27 +130,32 @@ public class ProofOfConcept {
 			return new ModelAndView(model, "result");
 		}, new ThymeleafTemplateEngine());
 
-		get("/api/similarity", (request, response) -> {
-			final String corpus = request.queryParams("corpus");
-			final String word1 = request.queryParams("word1");
-			final String word2 = request.queryParams("word2");
-			return getAssociationJSON(db, corpus,
-					DatabaseService.SIMILARITY_TABLE, false, word1, word2);
-		}, new Gson()::toJson);
+		get("/api/similarity",
+				(request, response) -> getAssociation(request, db,
+						DatabaseService.SIMILARITY_TABLE, false),
+				new Gson()::toJson);
 
-		get("/api/ppmi", (request, response) -> {
-			final String corpus = request.queryParams("corpus");
-			final String word1 = request.queryParams("word1");
-			final String word2 = request.queryParams("word2");
-			return getAssociationJSON(db, corpus, DatabaseService.PPMI_TABLE,
-					true, word1, word2);
-		}, new Gson()::toJson);
+		get("/api/ppmi", (request, response) -> getAssociation(request, db,
+				DatabaseService.PPMI_TABLE, true), new Gson()::toJson);
+
+		get("/api/chi", (request, response) -> getAssociation(request, db,
+				DatabaseService.CHI_TABLE, true), new Gson()::toJson);
 
 		get("/api/frequency", (request, response) -> {
 			final String corpus = request.queryParams("corpus");
 			final String word = request.queryParams("word");
 			return getFrequencyJSON(db, corpus, word);
 		}, new Gson()::toJson);
+	}
+
+	private static Map<String, Object> getAssociation(Request request,
+			DatabaseService db, String table, boolean isContextQuery)
+			throws Exception {
+		final String corpus = request.queryParams("corpus");
+		final String word1 = request.queryParams("word1");
+		final String word2 = request.queryParams("word2");
+		return getAssociationJSON(db, corpus, table, isContextQuery, word1,
+				word2);
 	}
 
 }
