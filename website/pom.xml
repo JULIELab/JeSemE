@@ -17,7 +17,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>fully.qualified.MainClass</mainClass>
+							<mainClass>ProofOfConcept</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
