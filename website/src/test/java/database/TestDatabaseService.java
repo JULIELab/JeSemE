@@ -28,7 +28,7 @@ public class TestDatabaseService {
 		DatabaseService.initializeTables(sql2o);
 		DatabaseService.importTables(config, sql2o);
 
-		return new DatabaseService(sql2o);
+		return new DatabaseService(sql2o, config);
 	}
 
 	@AfterClass
@@ -47,6 +47,12 @@ public class TestDatabaseService {
 	public void testGetYears() throws Exception {
 		assertEquals(Arrays.asList(new Integer[] { 1910, 1920, 1930, 1940 }),
 				db.getYears(CORPUS, "foo"));
+	}
+	
+	@Test
+	public void testGetYearsWithMapping() throws Exception {
+		assertEquals(Arrays.asList(new Integer[] { 1910, 1920, 1930, 1940 }),
+				db.getYears(CORPUS, "fooo"));
 	}
 
 	@Test

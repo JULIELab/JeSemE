@@ -4,6 +4,6 @@ database : {
             password : ""
            }
 corpora : [
-            {name : test1, path : "src/test/resources/table1"},
+            {name : test1, path : "src/test/resources/table1", mappingPath : "src/test/resources/testDTAMapping.csv"},
             {name : test2, path : "src/test/resources/table2"}
          ]

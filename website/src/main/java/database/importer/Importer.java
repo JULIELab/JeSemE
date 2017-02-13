@@ -59,7 +59,7 @@ public abstract class Importer {
 				if ((i % IMPORT_BATCH_SIZE) == 0)
 					query.executeBatch();
 				if ((i % IMPORT_COMMIT_SIZE) == 0) {
-					query.executeBatch().commit();
+					query.getConnection().commit();
 					LOGGER.info("Finishd import of {}", i);
 					query = null;
 				}

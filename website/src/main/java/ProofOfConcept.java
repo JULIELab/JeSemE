@@ -22,9 +22,10 @@ import spark.template.thymeleaf.ThymeleafTemplateEngine;
 public class ProofOfConcept {
 	private static final int LIMIT = 2;
 	private static final String doc = "JeDiSem\n" + "Usage:\n"
-			+ "  jedisem server <dbconfig>" + "  jedisem import <dbconfig>"
-			+ "  jedisem initialize <dbconfig>" + "  jedisem demo <dbconfig>"
-			+ "\n" + "Options:\n" + "  -h --help     Show this screen.\n"
+			+ "  jedisem server <dbconfig>\n" + "  jedisem import <dbconfig>\n"
+			+ "  jedisem initialize <dbconfig>\n"
+			+ "  jedisem demo <dbconfig>\n" + "\n" + "Options:\n"
+			+ "  -h --help     Show this screen.\n"
 			+ "  --version     Show version.\n" + "\n";
 
 	//TODO: functional interface to merge both?
@@ -58,14 +59,14 @@ public class ProofOfConcept {
 	}
 
 	static final String[] getTopContextAtBeginningAndEnd(
-			final DatabaseService db, String table, final String corpus, final String word)
-			throws Exception {
+			final DatabaseService db, String table, final String corpus,
+			final String word) throws Exception {
 		final List<Integer> years = db.getYears(corpus, word);
 		final Set<String> topContext = new HashSet<>();
-		topContext.addAll(
-				db.getTopContextWordsInYear(corpus, table, word, years.get(0), LIMIT));
-		topContext.addAll(db.getTopContextWordsInYear(corpus, table,
-				word, years.get(years.size() - 1), LIMIT));
+		topContext.addAll(db.getTopContextWordsInYear(corpus, table, word,
+				years.get(0), LIMIT));
+		topContext.addAll(db.getTopContextWordsInYear(corpus, table, word,
+				years.get(years.size() - 1), LIMIT));
 		return topContext.toArray(new String[topContext.size()]);
 	}
 
@@ -79,7 +80,7 @@ public class ProofOfConcept {
 				config.getDatabase().getPassword());
 		//TODO: save when multiple connections are made? move into database service?
 		if ((boolean) opts.get("server"))
-			startServer(new DatabaseService(sql2o));
+			startServer(new DatabaseService(sql2o,config));
 		else if ((boolean) opts.get("import"))
 			DatabaseService.importTables(config, sql2o);
 		else if ((boolean) opts.get("initialize"))
@@ -87,7 +88,7 @@ public class ProofOfConcept {
 		else if ((boolean) opts.get("demo")) {
 			DatabaseService.initializeTables(sql2o);
 			DatabaseService.importTables(config, sql2o);
-			startServer(new DatabaseService(sql2o));
+			startServer(new DatabaseService(sql2o,config));
 		}
 	}
 
@@ -99,34 +100,44 @@ public class ProofOfConcept {
 		get("/search", (request, response) -> {
 			final String corpus = request.queryParams("corpus");
 			final String word = request.queryParams("word");
-			long t = System.currentTimeMillis();
-			final String[] mostSimilar = getMostSimilarAtBeginningAndEnd(db,
-					corpus, word);
-			System.out.println("most " + (System.currentTimeMillis() - t));
-			t = System.currentTimeMillis();
 			final Map<String, Object> model = new HashMap<>();
+
 			model.put("word", word);
 			model.put("corpus", corpus);
-			model.put("similaritydata",
-					getAssociationJSON(db, corpus,
-							DatabaseService.SIMILARITY_TABLE, false, word,
-							mostSimilar));
-			System.out.println("sim " + (System.currentTimeMillis() - t));
-			t = System.currentTimeMillis();
-			model.put("ppmidata",
-					getAssociationJSON(db, corpus, DatabaseService.PPMI_TABLE,
-							true, word,
-							getTopContextAtBeginningAndEnd(db, DatabaseService.PPMI_TABLE, corpus,word)));
-			model.put("chidata",
-					getAssociationJSON(db, corpus, DatabaseService.CHI_TABLE,
-							true, word,
-							getTopContextAtBeginningAndEnd(db, DatabaseService.CHI_TABLE, corpus, word)));
-			System.out.println("ppmi " + (System.currentTimeMillis() - t));
-			t = System.currentTimeMillis();
-			model.put("frequencydata", getFrequencyJSON(db, corpus, word));
-			System.out.println("freq " + (System.currentTimeMillis() - t));
-			t = System.currentTimeMillis();
-			return new ModelAndView(model, "result");
+
+			if (db.wordInCorpus(word, corpus)) {
+				long t = System.currentTimeMillis();
+				final String[] mostSimilar = getMostSimilarAtBeginningAndEnd(db,
+						corpus, word);
+				System.out.println("most " + (System.currentTimeMillis() - t));
+				t = System.currentTimeMillis();
+
+				model.put("similaritydata",
+						getAssociationJSON(db, corpus,
+								DatabaseService.SIMILARITY_TABLE, false, word,
+								mostSimilar));
+				System.out.println("sim " + (System.currentTimeMillis() - t));
+				t = System.currentTimeMillis();
+				model.put("ppmidata",
+						getAssociationJSON(db, corpus,
+								DatabaseService.PPMI_TABLE, true, word,
+								getTopContextAtBeginningAndEnd(db,
+										DatabaseService.PPMI_TABLE, corpus,
+										word)));
+				model.put("chidata",
+						getAssociationJSON(db, corpus,
+								DatabaseService.CHI_TABLE, true, word,
+								getTopContextAtBeginningAndEnd(db,
+										DatabaseService.CHI_TABLE, corpus,
+										word)));
+				System.out.println("ppmi " + (System.currentTimeMillis() - t));
+				t = System.currentTimeMillis();
+				model.put("frequencydata", getFrequencyJSON(db, corpus, word));
+				System.out.println("freq " + (System.currentTimeMillis() - t));
+				t = System.currentTimeMillis();
+				return new ModelAndView(model, "result");
+			} else
+				return new ModelAndView(model, "unknown");
 		}, new ThymeleafTemplateEngine());
 
 		get("/api/similarity",

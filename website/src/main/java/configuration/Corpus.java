@@ -3,37 +3,46 @@ package configuration;
 public class Corpus {
 	private String name;
 	private String path;
+	private String mappingPath;
 
 	public Corpus() {
+	}
+
+	public String getMappingPath() {
+		return mappingPath;
 	}
 
 	/**
 	 * @return the name
 	 */
 	public String getName() {
-		return this.name;
-	}
-
-	/**
-	 * @param name
-	 *            the name to set
-	 */
-	public void setName(String name) {
-		this.name = name;
+		return name;
 	}
 
 	/**
 	 * @return the path
 	 */
 	public String getPath() {
-		return this.path;
+		return path;
+	}
+
+	public void setMappingPath(final String mappingPath) {
+		this.mappingPath = mappingPath;
+	}
+
+	/**
+	 * @param name
+	 *            the name to set
+	 */
+	public void setName(final String name) {
+		this.name = name;
 	}
 
 	/**
 	 * @param path
 	 *            the path to set
 	 */
-	public void setPath(String path) {
+	public void setPath(final String path) {
 		this.path = path;
 	}
 
@@ -44,7 +53,8 @@ public class Corpus {
 	 */
 	@Override
 	public String toString() {
-		return "Corpus [name=" + this.name + ", path=" + this.path + "]";
+		return "Corpus [name=" + name + ", path=" + path + ", mappingPath="
+				+ mappingPath + "]";
 	}
 
 }

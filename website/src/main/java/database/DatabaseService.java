@@ -1,11 +1,13 @@
 package database;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.dbunit.DatabaseUnitException;
 import org.slf4j.Logger;
@@ -14,6 +16,10 @@ import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 
 import configuration.Configuration;
+import database.corpus.Corpus;
+import database.corpus.DTAMapper;
+import database.corpus.LowerCaseMapper;
+import database.corpus.WordMapper;
 import database.importer.AssociationImporter;
 import database.importer.FrequencyImporter;
 import database.importer.Importer;
@@ -51,6 +57,11 @@ public class DatabaseService {
 	private static final String FREQUENCY_QUERY = "SELECT year, frequency AS value FROM "
 			+ FREQUENCY_TABLE
 			+ " WHERE corpus=:corpus AND word=:word ORDER BY year ASC";
+
+	public boolean wordInCorpus(final String word, final String corpus) {
+		return corpora.containsKey(corpus)
+				&& corpora.get(corpus).hasMappingFor(word);
+	}
 
 	public static void importTables(final Configuration config,
 			final Sql2o sql2o) throws Exception {
@@ -110,10 +121,10 @@ public class DatabaseService {
 
 	public final Map<String, Corpus> corpora = new HashMap<>();
 
-	public DatabaseService(final Sql2o sql2o)
+	public DatabaseService(final Sql2o sql2o, final Configuration config)
 			throws DatabaseUnitException, Exception {
 		this.sql2o = sql2o;
-		initializeMapping();
+		initializeMapping(config);
 	}
 
 	/**
@@ -240,16 +251,29 @@ public class DatabaseService {
 		}
 	}
 
-	private void initializeMapping() {
+	private void initializeMapping(Configuration config) throws IOException {
 		try (Connection con = sql2o.open()) {
 			for (final WordAndID corpusAndId : con
 					.createQuery("SELECT corpus as word, id FROM " + CORPORA)
 					.executeAndFetch(WordAndID.class)) {
-				final Corpus corpus = new Corpus(corpusAndId.id,
+				WordMapper mapper = null;
+				List<configuration.Corpus> corpusConfig = config.getCorpora().stream().filter(x -> x.getName().equals(corpusAndId.word)).collect(Collectors.toList());
+				if(corpusConfig.size() != 1)
+							throw new IllegalArgumentException(
+									"Configuration and database do not match for "
+											+ corpusAndId.word);
+				String pathName = corpusConfig.get(0).getMappingPath();
+				if (pathName == null)
+					mapper = new LowerCaseMapper();
+				else
+					mapper = new DTAMapper(Paths.get(pathName));
+					
+				Corpus corpus = new Corpus(corpusAndId.id,
 						con.createQuery("SELECT word,id FROM " + WORDIDS_TABLE
 								+ " WHERE corpus=:corpus")
 								.addParameter("corpus", corpusAndId.id)
-								.executeAndFetch(WordAndID.class));
+								.executeAndFetch(WordAndID.class),
+						mapper);
 				corpora.put(corpusAndId.word, corpus);
 			}
 		}
