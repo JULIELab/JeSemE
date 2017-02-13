@@ -1,7 +1,5 @@
 package database;
 
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -10,9 +8,16 @@ import java.util.List;
 import java.util.Map;
 
 import org.dbunit.DatabaseUnitException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
+
 import configuration.Configuration;
+import database.importer.AssociationImporter;
+import database.importer.FrequencyImporter;
+import database.importer.Importer;
+import database.importer.WordImporter;
 
 /**
  *
@@ -21,31 +26,6 @@ import configuration.Configuration;
  */
 
 public class DatabaseService {
-	private static final String[] IMPORT_MAPPING_ASSOCIATION = new String[] {
-			"word1", "word2", "year", "association" };
-	private static final String[] IMPORT_MAPPING_FREQUENCY = new String[] {
-			"word", "year", "frequency" };
-	private static final String[] IMPORT_MAPPING_WORDS = new String[] { "word",
-			"id" };
-
-	private static final Class<?>[] IMPORT_CLASSES_ASSOCIATION = new Class[] {
-			Integer.class, Integer.class, Integer.class, Float.class };
-	private static final Class<?>[] IMPORT_CLASSES_FREQUENCY = new Class[] {
-			Integer.class, Integer.class, Float.class };
-	private static final Class<?>[] IMPORT_CLASSES_WORDS = new Class[] {
-			String.class, Integer.class };
-
-	private static final String IMPORT_SQL_WORDS = "INSERT INTO %s (corpus, word, id) VALUES (:corpus, :word, :id)";
-
-	private static final String IMPORT_SQL_FREQUENCY = "INSERT INTO %s (corpus, word, year, frequency) VALUES (:corpus, :word, :year, :frequency)";
-
-	private static final String IMPORT_SQL_ASSOCIATION = "INSERT INTO %s (corpus, word1, word2, year, association) VALUES (:corpus, :word1, :word2, :year, :association)";
-
-	private static final String FREQUENCY_CSV = "FREQUENCY.csv";
-	private static final String PPMI_CSV = "PPMI.csv";
-	private static final String CHI_CSV = "CHI.csv";
-	private static final String SIMILARITY_CSV = "SIMILARITY.csv";
-	private static final String WORDS_CSV = "WORDIDS.csv";
 
 	private static final String SCHEMA = "JEDISEM";
 	private static final String CORPORA = SCHEMA + ".TABLES";
@@ -55,7 +35,8 @@ public class DatabaseService {
 	public static final String CHI_TABLE = SCHEMA + ".CHI";
 	private static final String FREQUENCY_TABLE = SCHEMA + ".FREQUENCY";
 
-	private static final int IMPORT_BATCH_SIZE = 10000;
+	private static final Logger LOGGER = LoggerFactory
+			.getLogger(DatabaseService.class);
 
 	private static final String SIMILARITY_QUERY = "SELECT year, association AS value FROM "
 			+ "%s"
@@ -71,39 +52,6 @@ public class DatabaseService {
 			+ FREQUENCY_TABLE
 			+ " WHERE corpus=:corpus AND word=:word ORDER BY year ASC";
 
-	private static void importStuff(final Sql2o sql2o, final Path path,
-			final String tableName, final Integer corpus, final String sql,
-			final String[] parameterMapping, final Class<?>[] classes)
-			throws IOException {
-		try (Connection con = sql2o.beginTransaction()) {
-			final org.sql2o.Query query = con
-					.createQuery(String.format(sql, tableName));
-			int i = 0;
-			//see http://www.lambdafaq.org/how-do-i-turn-a-stream-into-an-iterable/
-			for (final String[] s : (Iterable<String[]>) Files.lines(path)
-					.map(x -> x.split(","))::iterator) {
-				for (int j = 0; j < parameterMapping.length; ++j) {
-					if (classes[j] == String.class)
-						query.addParameter(parameterMapping[j], s[j]);
-					else if (classes[j] == Integer.class)
-						query.addParameter(parameterMapping[j],
-								Integer.valueOf(s[j]));
-					else
-						query.addParameter(parameterMapping[j],
-								Float.valueOf(s[j]));
-				}
-
-				query.addParameter("corpus", corpus).addToBatch();
-				if (i > IMPORT_BATCH_SIZE) {
-					i = 0;
-					query.executeBatch();
-				}
-			}
-			query.executeBatch();
-			con.commit(); // avoids rollback.
-		}
-	}
-
 	public static void importTables(final Configuration config,
 			final Sql2o sql2o) throws Exception {
 
@@ -117,21 +65,18 @@ public class DatabaseService {
 								+ " (corpus) VALUES (:corpus);", true)
 						.addParameter("corpus", corpusName).executeUpdate()
 						.getKey();
-				importStuff(sql2o, path.resolve(WORDS_CSV), WORDIDS_TABLE,
-						corpusId, IMPORT_SQL_WORDS, IMPORT_MAPPING_WORDS,
-						IMPORT_CLASSES_WORDS);
-				importStuff(sql2o, path.resolve(SIMILARITY_CSV),
-						SIMILARITY_TABLE, corpusId, IMPORT_SQL_ASSOCIATION,
-						IMPORT_MAPPING_ASSOCIATION, IMPORT_CLASSES_ASSOCIATION);
-				importStuff(sql2o, path.resolve(PPMI_CSV), PPMI_TABLE, corpusId,
-						IMPORT_SQL_ASSOCIATION, IMPORT_MAPPING_ASSOCIATION,
-						IMPORT_CLASSES_ASSOCIATION);
-				importStuff(sql2o, path.resolve(CHI_CSV), CHI_TABLE, corpusId,
-						IMPORT_SQL_ASSOCIATION, IMPORT_MAPPING_ASSOCIATION,
-						IMPORT_CLASSES_ASSOCIATION);
-				importStuff(sql2o, path.resolve(FREQUENCY_CSV), FREQUENCY_TABLE,
-						corpusId, IMPORT_SQL_FREQUENCY,
-						IMPORT_MAPPING_FREQUENCY, IMPORT_CLASSES_FREQUENCY);
+				new WordImporter(sql2o, corpusId, WORDIDS_TABLE)
+						.importStuff(path.resolve(Importer.WORDS_CSV));
+				new AssociationImporter(sql2o, corpusId, SIMILARITY_TABLE)
+						.importStuff(path.resolve(Importer.SIMILARITY_CSV));
+				new AssociationImporter(sql2o, corpusId, PPMI_TABLE)
+						.importStuff(path.resolve(Importer.PPMI_CSV));
+				new AssociationImporter(sql2o, corpusId, CHI_TABLE)
+						.importStuff(path.resolve(Importer.CHI_CSV));
+				new FrequencyImporter(sql2o, corpusId, FREQUENCY_TABLE)
+						.importStuff(path.resolve(Importer.FREQUENCY_CSV));
+
+				LOGGER.info("Finished import");
 			}
 		}
 	}
@@ -154,7 +99,7 @@ public class DatabaseService {
 			con.createQuery("CREATE TABLE " + PPMI_TABLE + assocTable)
 					.executeUpdate();
 			con.createQuery("CREATE TABLE " + CHI_TABLE + assocTable)
-			.executeUpdate();
+					.executeUpdate();
 			con.createQuery("CREATE TABLE " + FREQUENCY_TABLE
 					+ " (corpus INTEGER, word INTEGER, year SMALLINT, frequency REAL, PRIMARY KEY(word, year, corpus));")
 					.executeUpdate();
@@ -169,6 +114,17 @@ public class DatabaseService {
 			throws DatabaseUnitException, Exception {
 		this.sql2o = sql2o;
 		initializeMapping();
+	}
+
+	/**
+	 * Intended for testing
+	 */
+	public void dropAll() {
+		try (Connection con = sql2o.open()) {
+			con.createQuery("DROP SCHEMA " + SCHEMA + " CASCADE")
+					.executeUpdate();
+		}
+
 	}
 
 	public List<String> getMostSimilarWordsInYear(final String corpusName,
@@ -203,7 +159,8 @@ public class DatabaseService {
 	}
 
 	public List<String> getTopContextWordsInYear(final String corpusName,
-			String table, final String word, final Integer year, final int limit) {
+			final String table, final String word, final Integer year,
+			final int limit) {
 		final Corpus corpus = corpora.get(corpusName);
 		final List<String> words = new ArrayList<>();
 		if (!corpus.hasMappingFor(word))
@@ -251,6 +208,8 @@ public class DatabaseService {
 				corpus.getIdFor(word1), corpus.getIdFor(word2));
 	}
 
+	// Will be used for testing
+
 	List<YearAndValue> getYearAndFrequency(final int corpus, final int wordId)
 			throws Exception {
 		try (Connection con = sql2o.open()) {
@@ -259,8 +218,6 @@ public class DatabaseService {
 					.executeAndFetch(YearAndValue.class);
 		}
 	}
-
-	// Will be used for testing
 
 	public List<YearAndValue> getYearAndFrequency(final String corpusName,
 			final String word) throws Exception {
@@ -296,17 +253,6 @@ public class DatabaseService {
 				corpora.put(corpusAndId.word, corpus);
 			}
 		}
-	}
-
-	/**
-	 * Intended for testing
-	 */
-	public void dropAll() {
-		try (Connection con = sql2o.open()) {
-			con.createQuery("DROP SCHEMA " + SCHEMA + " CASCADE")
-					.executeUpdate();
-		}
-
 	}
 
 }

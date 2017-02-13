@@ -20,7 +20,6 @@ import spark.Request;
 import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
 public class ProofOfConcept {
-
 	private static final int LIMIT = 2;
 	private static final String doc = "JeDiSem\n" + "Usage:\n"
 			+ "  jedisem server <dbconfig>" + "  jedisem import <dbconfig>"
