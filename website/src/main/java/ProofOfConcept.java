@@ -12,6 +12,7 @@ import org.docopt.Docopt;
 import org.sql2o.Sql2o;
 
 import com.google.gson.Gson;
+import com.zaxxer.hikari.HikariDataSource;
 
 import configuration.Configuration;
 import database.DatabaseService;
@@ -27,6 +28,16 @@ public class ProofOfConcept {
 			+ "  jedisem demo <dbconfig>\n" + "\n" + "Options:\n"
 			+ "  -h --help     Show this screen.\n"
 			+ "  --version     Show version.\n" + "\n";
+
+	private static Map<String, Object> getAssociation(final Request request,
+			final DatabaseService db, final String table,
+			final boolean isContextQuery) throws Exception {
+		final String corpus = request.queryParams("corpus");
+		final String word1 = request.queryParams("word1");
+		final String word2 = request.queryParams("word2");
+		return getAssociationJSON(db, corpus, table, isContextQuery, word1,
+				word2);
+	}
 
 	//TODO: functional interface to merge both?
 	static final Map<String, Object> getAssociationJSON(
@@ -59,7 +70,7 @@ public class ProofOfConcept {
 	}
 
 	static final String[] getTopContextAtBeginningAndEnd(
-			final DatabaseService db, String table, final String corpus,
+			final DatabaseService db, final String table, final String corpus,
 			final String word) throws Exception {
 		final List<Integer> years = db.getYears(corpus, word);
 		final Set<String> topContext = new HashSet<>();
@@ -75,12 +86,14 @@ public class ProofOfConcept {
 				.withVersion("Naval Fate 2.0").parse(args);
 		final Configuration config = Configuration
 				.readYamlFile(opts.get("<dbconfig>").toString());
-		final Sql2o sql2o = new Sql2o(config.getDatabase().getUrl(),
-				config.getDatabase().getUser(),
-				config.getDatabase().getPassword());
-		//TODO: save when multiple connections are made? move into database service?
+		final HikariDataSource ds = new HikariDataSource();
+		ds.setJdbcUrl(config.getDatabase().getUrl());
+		ds.setUsername(config.getDatabase().getUser());
+		ds.setPassword(config.getDatabase().getPassword());
+
+		final Sql2o sql2o = new Sql2o(ds);
 		if ((boolean) opts.get("server"))
-			startServer(new DatabaseService(sql2o,config));
+			startServer(new DatabaseService(sql2o, config), config);
 		else if ((boolean) opts.get("import"))
 			DatabaseService.importTables(config, sql2o);
 		else if ((boolean) opts.get("initialize"))
@@ -88,11 +101,16 @@ public class ProofOfConcept {
 		else if ((boolean) opts.get("demo")) {
 			DatabaseService.initializeTables(sql2o);
 			DatabaseService.importTables(config, sql2o);
-			startServer(new DatabaseService(sql2o,config));
+			startServer(new DatabaseService(sql2o, config), config);
 		}
 	}
 
-	private static void startServer(DatabaseService db) {
+	private static void startServer(final DatabaseService db,
+			final Configuration config) {
+		if (config.coversServer()) {
+			spark.Spark.ipAddress(config.getServer().getIp());
+			spark.Spark.port(config.getServer().getPort());
+		}
 
 		staticFileLocation("/public");
 		redirect.get("/", "/index.html");
@@ -156,16 +174,6 @@ public class ProofOfConcept {
 			final String word = request.queryParams("word");
 			return getFrequencyJSON(db, corpus, word);
 		}, new Gson()::toJson);
-	}
-
-	private static Map<String, Object> getAssociation(Request request,
-			DatabaseService db, String table, boolean isContextQuery)
-			throws Exception {
-		final String corpus = request.queryParams("corpus");
-		final String word1 = request.queryParams("word1");
-		final String word2 = request.queryParams("word2");
-		return getAssociationJSON(db, corpus, table, isContextQuery, word1,
-				word2);
 	}
 
 }
