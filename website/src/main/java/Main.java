@@ -1,4 +1,6 @@
 
+import static server.Server.startServer;
+
 import java.util.Map;
 
 import org.docopt.Docopt;
@@ -8,7 +10,6 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import configuration.Configuration;
 import database.DatabaseService;
-import static server.Server.startServer;
 
 public class Main {
 	private static final String doc = "JeDiSem\n" + "Usage:\n"
@@ -16,7 +17,6 @@ public class Main {
 			+ "  jedisem initialize <dbconfig>\n"
 			+ "  jedisem demo <dbconfig>\n" + "\n" + "Options:\n"
 			+ "  -h --help     Show this screen.\n";
-
 
 	public static void main(final String[] args) throws Exception {
 		final Map<String, Object> opts = new Docopt(doc).parse(args);

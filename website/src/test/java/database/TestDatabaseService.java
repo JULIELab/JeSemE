@@ -31,7 +31,7 @@ public class TestDatabaseService {
 		assertEquals(new HashSet<>(Arrays.asList("test1", "test2")),
 				db.corpora.keySet());
 	}
-	
+
 	public static DatabaseService initializeDatabase() throws Exception {
 		final Configuration config = Configuration
 				.readYamlFile("src/test/resources/config.yaml");

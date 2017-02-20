@@ -12,28 +12,28 @@ public class Database {
 	 * @return the password
 	 */
 	public String getPassword() {
-		return this.password;
+		return password;
 	}
 
 	/**
 	 * @return the url
 	 */
 	public String getUrl() {
-		return this.url;
+		return url;
 	}
 
 	/**
 	 * @return the user
 	 */
 	public String getUser() {
-		return this.user;
+		return user;
 	}
 
 	/**
 	 * @param password
 	 *            the password to set
 	 */
-	public void setPassword(String password) {
+	public void setPassword(final String password) {
 		this.password = password;
 	}
 
@@ -41,7 +41,7 @@ public class Database {
 	 * @param url
 	 *            the url to set
 	 */
-	public void setUrl(String url) {
+	public void setUrl(final String url) {
 		this.url = url;
 	}
 
@@ -49,7 +49,7 @@ public class Database {
 	 * @param user
 	 *            the user to set
 	 */
-	public void setUser(String user) {
+	public void setUser(final String user) {
 		this.user = user;
 	}
 

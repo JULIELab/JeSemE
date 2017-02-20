@@ -37,11 +37,12 @@ public class Server {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "sConfig [port=" + port + ", ip=" + ip + "]";
+		return "Server [port=" + port + ", ip=" + ip + "]";
 	}
+
 }

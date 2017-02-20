@@ -1,4 +1,5 @@
 package server;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,7 +9,7 @@ import database.YearAndValue;
 
 /**
  * Compromise between Thymeleaf JSON serialization and convenience
- * 
+ *
  * @author hellrich
  *
  */
@@ -24,16 +25,19 @@ public class JSON {
 		data.put("columns", columns);
 	}
 
-	public JSON addValues(String word, List<YearAndValue> yearAndValueList) {
+	public JSON addValues(final String word,
+			final List<YearAndValue> yearAndValueList) {
 		xs.put(word, word + "-x-value");
 
-		List<Object> yearList = new ArrayList<>(yearAndValueList.size() + 1);
+		final List<Object> yearList = new ArrayList<>(
+				yearAndValueList.size() + 1);
 		yearList.add(word + "-x-value");
 
-		List<Object> valueList = new ArrayList<>(yearAndValueList.size() + 1);
+		final List<Object> valueList = new ArrayList<>(
+				yearAndValueList.size() + 1);
 		valueList.add(word);
 
-		for (YearAndValue yas : yearAndValueList) {
+		for (final YearAndValue yas : yearAndValueList) {
 			valueList.add(yas.value);
 			yearList.add(yas.year);
 		}

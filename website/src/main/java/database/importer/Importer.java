@@ -31,7 +31,7 @@ public abstract class Importer {
 
 	protected Importer(final String sqlTemplate, final Sql2o sql2o,
 			final int corpusId, final String tableName) {
-		this.sql = String.format(sqlTemplate, tableName);
+		sql = String.format(sqlTemplate, tableName);
 		this.sql2o = sql2o;
 		this.corpusId = corpusId;
 		this.tableName = tableName;
@@ -68,6 +68,7 @@ public abstract class Importer {
 			if (query != null)
 				query.executeBatch().commit();
 		}
-		LOGGER.info("Finished import of {} rows from {} into {}", i, path, tableName);
+		LOGGER.info("Finished import of {} rows from {} into {}", i, path,
+				tableName);
 	}
 }

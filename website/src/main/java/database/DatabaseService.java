@@ -58,11 +58,6 @@ public class DatabaseService {
 			+ FREQUENCY_TABLE
 			+ " WHERE corpus=:corpus AND word=:word ORDER BY year ASC";
 
-	public boolean wordInCorpus(final String word, final String corpus) {
-		return corpora.containsKey(corpus)
-				&& corpora.get(corpus).hasMappingFor(word);
-	}
-
 	public static void importTables(final Configuration config,
 			final Sql2o sql2o) throws Exception {
 
@@ -219,8 +214,6 @@ public class DatabaseService {
 				corpus.getIdFor(word1), corpus.getIdFor(word2));
 	}
 
-	// Will be used for testing
-
 	List<YearAndValue> getYearAndFrequency(final int corpus, final int wordId)
 			throws Exception {
 		try (Connection con = sql2o.open()) {
@@ -229,6 +222,8 @@ public class DatabaseService {
 					.executeAndFetch(YearAndValue.class);
 		}
 	}
+
+	// Will be used for testing
 
 	public List<YearAndValue> getYearAndFrequency(final String corpusName,
 			final String word) throws Exception {
@@ -251,24 +246,28 @@ public class DatabaseService {
 		}
 	}
 
-	private void initializeMapping(Configuration config) throws IOException {
+	private void initializeMapping(final Configuration config)
+			throws IOException {
 		try (Connection con = sql2o.open()) {
 			for (final WordAndID corpusAndId : con
 					.createQuery("SELECT corpus as word, id FROM " + CORPORA)
 					.executeAndFetch(WordAndID.class)) {
 				WordMapper mapper = null;
-				List<configuration.Corpus> corpusConfig = config.getCorpora().stream().filter(x -> x.getName().equals(corpusAndId.word)).collect(Collectors.toList());
-				if(corpusConfig.size() != 1)
-							throw new IllegalArgumentException(
-									"Configuration and database do not match for "
-											+ corpusAndId.word);
-				String pathName = corpusConfig.get(0).getMappingPath();
+				final List<configuration.Corpus> corpusConfig = config
+						.getCorpora().stream()
+						.filter(x -> x.getName().equals(corpusAndId.word))
+						.collect(Collectors.toList());
+				if (corpusConfig.size() != 1)
+					throw new IllegalArgumentException(
+							"Configuration and database do not match for "
+									+ corpusAndId.word);
+				final String pathName = corpusConfig.get(0).getMappingPath();
 				if (pathName == null)
 					mapper = new LowerCaseMapper();
 				else
 					mapper = new DTAMapper(Paths.get(pathName));
-					
-				Corpus corpus = new Corpus(corpusAndId.id,
+
+				final Corpus corpus = new Corpus(corpusAndId.id,
 						con.createQuery("SELECT word,id FROM " + WORDIDS_TABLE
 								+ " WHERE corpus=:corpus")
 								.addParameter("corpus", corpusAndId.id)
@@ -277,6 +276,11 @@ public class DatabaseService {
 				corpora.put(corpusAndId.word, corpus);
 			}
 		}
+	}
+
+	public boolean wordInCorpus(final String word, final String corpus) {
+		return corpora.containsKey(corpus)
+				&& corpora.get(corpus).hasMappingFor(word);
 	}
 
 }

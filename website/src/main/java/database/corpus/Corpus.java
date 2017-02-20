@@ -14,9 +14,10 @@ public class Corpus {
 	private final int id;
 	private final WordMapper mapper;
 
-	public Corpus(int id, List<WordAndID> wordAndIds, WordMapper mapper) {
+	public Corpus(final int id, final List<WordAndID> wordAndIds,
+			final WordMapper mapper) {
 		this.id = id;
-		for (WordAndID wordAndId : wordAndIds)
+		for (final WordAndID wordAndId : wordAndIds)
 			word2id.put(wordAndId.word, wordAndId.id);
 		this.mapper = mapper;
 	}
@@ -25,17 +26,17 @@ public class Corpus {
 		return id;
 	}
 
-	public boolean hasMappingFor(String... words) {
-		return Arrays.stream(words).map(w -> mapper.map(w))
-				.allMatch(word -> word2id.containsKey(word));
+	public String getIdFor(final Integer id) {
+		return word2id.inverse().get(id);
 	}
 
-	public Integer getIdFor(String word) {
+	public Integer getIdFor(final String word) {
 		return word2id.get(mapper.map(word));
 	}
 
-	public String getIdFor(Integer id) {
-		return word2id.inverse().get(id);
+	public boolean hasMappingFor(final String... words) {
+		return Arrays.stream(words).map(w -> mapper.map(w))
+				.allMatch(word -> word2id.containsKey(word));
 	}
 
 }

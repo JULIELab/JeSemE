@@ -31,7 +31,6 @@ public class Server {
 				word2);
 	}
 
-	//TODO: functional interface to merge both?
 	static final Map<String, Object> getAssociationJSON(
 			final DatabaseService db, final String corpus, final String table,
 			final boolean isContextQuery, final String initialWord,

@@ -21,6 +21,11 @@ public class Configuration {
 	public Configuration() {
 	}
 
+	public boolean coversServer() {
+		return (server != null) && (server.getIp() != null)
+				&& (server.getPort() != null);
+	}
+
 	/**
 	 * @return the corpora
 	 */
@@ -40,11 +45,6 @@ public class Configuration {
 	 */
 	public Server getServer() {
 		return server;
-	}
-
-	public boolean coversServer() {
-		return (server != null) && (server.getIp() != null)
-				&& (server.getPort() != null);
 	}
 
 	/**
