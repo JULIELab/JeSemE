@@ -11,6 +11,6 @@ public class TestConfiguration {
 	public void test() throws FileNotFoundException{
 		Configuration config = Configuration.readYamlFile("src/test/resources/config.yaml");
 		assertTrue(config.coversServer());
-		assertEquals("not really an ip", config.getServer().getIp());
+		assertEquals("127.0.0.1", config.getServer().getIp());
 	}
 }
