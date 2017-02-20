@@ -3,7 +3,13 @@ database : {
             user : "SA",
             password : ""
            }
+           
+server : {
+            ip: "not really an ip",
+            port: 666
+           }
+           
 corpora : [
             {name : test1, path : "src/test/resources/table1", mappingPath : "src/test/resources/testDTAMapping.csv"},
             {name : test2, path : "src/test/resources/table2"}
-         ]
+          ]

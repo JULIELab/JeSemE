@@ -1,6 +1,6 @@
 package database;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -11,25 +11,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.sql2o.Sql2o;
 
+import com.zaxxer.hikari.HikariDataSource;
+
 import configuration.Configuration;
 
 public class TestDatabaseService {
 
 	private static final String CORPUS = "test1";
 	private static DatabaseService db;
-
-	public static DatabaseService initializeDatabase() throws Exception {
-		final Configuration config = Configuration
-				.readYamlFile("src/test/resources/config.yaml");
-		final Sql2o sql2o = new Sql2o(config.getDatabase().getUrl(),
-				config.getDatabase().getUser(),
-				config.getDatabase().getPassword());
-
-		DatabaseService.initializeTables(sql2o);
-		DatabaseService.importTables(config, sql2o);
-
-		return new DatabaseService(sql2o, config);
-	}
 
 	@AfterClass
 	public static void after() {
@@ -39,20 +28,24 @@ public class TestDatabaseService {
 	@BeforeClass
 	public static void before() throws Exception {
 		db = initializeDatabase();
-		assertEquals(new HashSet<String>(Arrays.asList("test1", "test2")),
+		assertEquals(new HashSet<>(Arrays.asList("test1", "test2")),
 				db.corpora.keySet());
 	}
 
-	@Test
-	public void testGetYears() throws Exception {
-		assertEquals(Arrays.asList(new Integer[] { 1910, 1920, 1930, 1940 }),
-				db.getYears(CORPUS, "foo"));
-	}
-	
-	@Test
-	public void testGetYearsWithMapping() throws Exception {
-		assertEquals(Arrays.asList(new Integer[] { 1910, 1920, 1930, 1940 }),
-				db.getYears(CORPUS, "fooo"));
+	public static DatabaseService initializeDatabase() throws Exception {
+		final Configuration config = Configuration
+				.readYamlFile("src/test/resources/config.yaml");
+		final HikariDataSource ds = new HikariDataSource();
+		ds.setJdbcUrl(config.getDatabase().getUrl());
+		ds.setUsername(config.getDatabase().getUser());
+		ds.setPassword(config.getDatabase().getPassword());
+
+		final Sql2o sql2o = new Sql2o(ds);
+
+		DatabaseService.initializeTables(sql2o);
+		DatabaseService.importTables(config, sql2o);
+
+		return new DatabaseService(sql2o, config);
 	}
 
 	@Test
@@ -62,6 +55,16 @@ public class TestDatabaseService {
 
 		assertEquals(Arrays.asList(new String[] { "arr", "bar" }),
 				db.getMostSimilarWordsInYear(CORPUS, "foo", 1910, 2));
+	}
+
+	@Test
+	public void testGetTopContextWordsInYear() throws Exception {
+		assertEquals(Arrays.asList(new String[] { "bar" }),
+				db.getTopContextWordsInYear(CORPUS, DatabaseService.PPMI_TABLE,
+						"foo", 1910, 1));
+		assertEquals(Arrays.asList(new String[] { "bar", "boo" }),
+				db.getTopContextWordsInYear(CORPUS, DatabaseService.PPMI_TABLE,
+						"foo", 1910, 2));
 	}
 
 	@Test
@@ -103,21 +106,23 @@ public class TestDatabaseService {
 	}
 
 	@Test
-	public void testGetTopContextWordsInYear() throws Exception {
-		assertEquals(Arrays.asList(new String[] { "bar" }),
-				db.getTopContextWordsInYear(CORPUS, DatabaseService.PPMI_TABLE,
-						"foo", 1910, 1));
-		assertEquals(Arrays.asList(new String[] { "bar", "boo" }),
-				db.getTopContextWordsInYear(CORPUS, DatabaseService.PPMI_TABLE,
-						"foo", 1910, 2));
-	}
-
-	@Test
 	public void testGetYearAndFrequency() throws Exception {
 		assertEquals(Arrays.asList(new YearAndValue[] {
 				new YearAndValue(1910, 0.6f), new YearAndValue(1920, 0.1f),
 				new YearAndValue(1930, 0.3f), new YearAndValue(1940, 0.5f) }),
 				db.getYearAndFrequency(CORPUS, "foo"));
+	}
+
+	@Test
+	public void testGetYears() throws Exception {
+		assertEquals(Arrays.asList(new Integer[] { 1910, 1920, 1930, 1940 }),
+				db.getYears(CORPUS, "foo"));
+	}
+
+	@Test
+	public void testGetYearsWithMapping() throws Exception {
+		assertEquals(Arrays.asList(new Integer[] { 1910, 1920, 1930, 1940 }),
+				db.getYears(CORPUS, "fooo"));
 	}
 
 }
