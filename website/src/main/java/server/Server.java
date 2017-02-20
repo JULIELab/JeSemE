@@ -1,3 +1,5 @@
+package server;
+
 import static spark.Spark.get;
 import static spark.Spark.redirect;
 import static spark.Spark.staticFileLocation;
@@ -8,25 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.docopt.Docopt;
-import org.sql2o.Sql2o;
-
 import com.google.gson.Gson;
-import com.zaxxer.hikari.HikariDataSource;
-
 import configuration.Configuration;
 import database.DatabaseService;
+import server.JSON;
 import spark.ModelAndView;
 import spark.Request;
 import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
-public class ProofOfConcept {
+public class Server {
 	private static final int LIMIT = 2;
-	private static final String doc = "JeDiSem\n" + "Usage:\n"
-			+ "  jedisem server <dbconfig>\n" + "  jedisem import <dbconfig>\n"
-			+ "  jedisem initialize <dbconfig>\n"
-			+ "  jedisem demo <dbconfig>\n" + "\n" + "Options:\n"
-			+ "  -h --help     Show this screen.\n";
 
 	private static Map<String, Object> getAssociation(final Request request,
 			final DatabaseService db, final String table,
@@ -80,30 +73,7 @@ public class ProofOfConcept {
 		return topContext.toArray(new String[topContext.size()]);
 	}
 
-	public static void main(final String[] args) throws Exception {
-		final Map<String, Object> opts = new Docopt(doc).parse(args);
-		final Configuration config = Configuration
-				.readYamlFile(opts.get("<dbconfig>").toString());
-		final HikariDataSource ds = new HikariDataSource();
-		ds.setJdbcUrl(config.getDatabase().getUrl());
-		ds.setUsername(config.getDatabase().getUser());
-		ds.setPassword(config.getDatabase().getPassword());
-
-		final Sql2o sql2o = new Sql2o(ds);
-		if ((boolean) opts.get("server"))
-			startServer(new DatabaseService(sql2o, config), config);
-		else if ((boolean) opts.get("import"))
-			DatabaseService.importTables(config, sql2o);
-		else if ((boolean) opts.get("initialize"))
-			DatabaseService.initializeTables(sql2o);
-		else if ((boolean) opts.get("demo")) {
-			DatabaseService.initializeTables(sql2o);
-			DatabaseService.importTables(config, sql2o);
-			startServer(new DatabaseService(sql2o, config), config);
-		}
-	}
-
-	private static void startServer(final DatabaseService db,
+	public static void startServer(final DatabaseService db,
 			final Configuration config) {
 		if (config.coversServer()) {
 			spark.Spark.ipAddress(config.getServer().getIp());

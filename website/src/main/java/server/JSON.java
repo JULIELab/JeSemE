@@ -1,3 +1,4 @@
+package server;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,7 @@ public class JSON {
 		data.put("columns", columns);
 	}
 
-	JSON addValues(String word, List<YearAndValue> yearAndValueList) {
+	public JSON addValues(String word, List<YearAndValue> yearAndValueList) {
 		xs.put(word, word + "-x-value");
 
 		List<Object> yearList = new ArrayList<>(yearAndValueList.size() + 1);
