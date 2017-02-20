@@ -11,9 +11,9 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.gson.Gson;
+
 import configuration.Configuration;
 import database.DatabaseService;
-import server.JSON;
 import spark.ModelAndView;
 import spark.Request;
 import spark.template.thymeleaf.ThymeleafTemplateEngine;
@@ -142,6 +142,10 @@ public class Server {
 			final String word = request.queryParams("word");
 			return getFrequencyJSON(db, corpus, word);
 		}, new Gson()::toJson);
+	}
+
+	public static void stopServer() {
+		spark.Spark.stop();
 	}
 
 }

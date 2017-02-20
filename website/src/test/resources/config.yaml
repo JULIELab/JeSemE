@@ -5,8 +5,8 @@ database : {
            }
            
 server : {
-            ip: "not really an ip",
-            port: 666
+            ip: "127.0.0.1",
+            port: 6666
            }
            
 corpora : [
