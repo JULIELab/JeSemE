@@ -26,8 +26,7 @@ public class ProofOfConcept {
 			+ "  jedisem server <dbconfig>\n" + "  jedisem import <dbconfig>\n"
 			+ "  jedisem initialize <dbconfig>\n"
 			+ "  jedisem demo <dbconfig>\n" + "\n" + "Options:\n"
-			+ "  -h --help     Show this screen.\n"
-			+ "  --version     Show version.\n" + "\n";
+			+ "  -h --help     Show this screen.\n";
 
 	private static Map<String, Object> getAssociation(final Request request,
 			final DatabaseService db, final String table,
@@ -82,8 +81,7 @@ public class ProofOfConcept {
 	}
 
 	public static void main(final String[] args) throws Exception {
-		final Map<String, Object> opts = new Docopt(doc)
-				.withVersion("Naval Fate 2.0").parse(args);
+		final Map<String, Object> opts = new Docopt(doc).parse(args);
 		final Configuration config = Configuration
 				.readYamlFile(opts.get("<dbconfig>").toString());
 		final HikariDataSource ds = new HikariDataSource();
