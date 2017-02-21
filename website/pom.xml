@@ -17,7 +17,7 @@
 					<archive>
 						<manifest>
 							<addClasspath>true</addClasspath>
-							<mainClass>ProofOfConcept</mainClass>
+							<mainClass>Main</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
