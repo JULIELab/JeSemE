@@ -1,39 +1,77 @@
-<!DOCTYPE HTML> 
+<!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <!--css -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css" rel="stylesheet" type="text/css"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/Dynatable/0.3.1/jquery.dynatable.min.css" rel="stylesheet" type="text/css"/>
-	<style type="text/css">
-		
-		*
-		{
-		text-align: center !important;
-		margin: auto !important;
-		}
-		
-		.c3-line {
-	    	stroke-width: 3px;
-	    }
-	    .chart{
-		  width: 80%;
-		}	
-		.c3-circle._expanded_ {
-		  stroke-width: 4px;
-		  stroke: white;
-		}
-		.c3-selected-circle {
-		  fill: white;
-		  stroke-width: 5px;
-		}	
-	</style>
-    <!--js -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
+<!--css -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.css"
+	rel="stylesheet" type="text/css" />
+<link
+	href="https://cdnjs.cloudflare.com/ajax/libs/Dynatable/0.3.1/jquery.dynatable.min.css"
+	rel="stylesheet" type="text/css" />
+<style type="text/css">
 
-    <!--constants -->
-    <script th:inline="javascript">
+
+.c3-line {
+	stroke-width: 3px;
+}
+
+.c3-circle._expanded_ {
+	stroke-width: 4px;
+	stroke: white;
+}
+
+.c3-selected-circle {
+	fill: white;
+	stroke-width: 5px;
+}
+
+.aChart{width: 80%; margin: auto; padding: 20px;}
+
+.header{
+  position:fixed;
+  top:0px;
+  width: 100%;
+  
+  height: 40px;
+  text-align: center;
+  line-height: 40px;
+  font-size: xx-large;
+  
+  background-color: #f5f5f5; 
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body { padding-top: 40px;  padding-bottom: 20px;}
+
+.footer {
+  position:fixed;
+  left:0px;
+  bottom: 0;
+  width: 100%;
+  
+  height: 20px;
+  text-align: center;
+  line-height: 20px;
+  
+  background-color: #f5f5f5; 
+}
+
+</style>
+<!--js -->
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
+<script
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+<!--constants -->
+<script th:inline="javascript">
         similaritydata = /*[[${similaritydata}]]*/ null;
         ppmidata = /*[[${ppmidata}]]*/ null;
         chidata = /*[[${chidata}]]*/ null;
@@ -42,8 +80,8 @@
         corpus = /*[[${corpus}]]*/ null;
     </script>
 
-    <!-- helper functions -->
-    <script type="text/javascript"> 
+<!-- helper functions -->
+<script type="text/javascript"> 
         function decadeFormatter(year) {
             return year + "s"
         }
@@ -76,6 +114,32 @@
                 });
             }
         }
+        
+        function addWordToTwo(chart, url, chart2, url2, wordBox, error) {
+            let word2 = document.getElementById(wordBox).value
+            document.getElementById(wordBox).value = ""
+            document.getElementById(error).innerHTML = ""
+            if (word2 !== "") {
+                $.getJSON(url, {
+                	corpus: corpus,
+                    word1: word,
+                    word2: word2
+                }, function (data) {
+                    if (data.columns[0].length === 1)
+                        document.getElementById(error).innerHTML = word2 + " not covered by "+corpus;
+                    else
+                        chart.load(data);
+                });
+                $.getJSON(url2, {
+                	corpus: corpus,
+                    word1: word,
+                    word2: word2
+                }, function (data) {
+                    if (data.columns[0].length !== 1)
+                        chart2.load(data);
+                });
+            }
+        }
 
         function chart(bindto, data, y){
             var myy =  y != null ? y : {}
@@ -84,78 +148,138 @@
                     format: roundingFormatter(".2")
             	}
             }
-            return c3.generate({
+            var aChart = c3.generate({
                 bindto: bindto,
                 data: data != null ? data : {"columns": [[]]},
-                axis: {
-                    x: {
-                        tick: {
-                            format: decadeFormatter
-                        }
-                    },
-                    y:myy
-        }})}
-             
-    </script>
-    
-    <title>JeDiSem</title>
-  </head>
-  <body>
-  <h1>Results for "<td th:text="${word}">WORD</td>" in "<td th:text="${corpus}">CORPUS</td>" corpus</h1>
-  
-  
-<h2>Similarity Chart</h2>
-The following chart shows its similarity to the most similar words over time.
-<div class="chart" id="similaritychart"></div>
-<script type="text/javascript"> 
-    similaritychart = chart("#similaritychart", similaritydata,{
-        max: 1,
-        min: 0,
-        padding: {top: 0, bottom: 0}
-    } )
-</script>
-<form action="javascript:void(0);"
-      onsubmit="addWordTo(similaritychart, '/api/similarity', 'addWordToSimilarityTextBox', 'addWordToSimilarityTextBoxError')">
-    Add word to graph: <input type="search" id="addWordToSimilarityTextBox"/>
-    <input type="submit" value="add"/>
-    <span id="addWordToSimilarityTextBoxError"></span>
-</form>
-
-<h2>Context Chart</h2>
-The following chart shows its most speciffic context words over time (by PPMI).
-<div class="chart"  id="ppmichart"></div>
-<script type="text/javascript"> 
-    ppmichart = chart("#ppmichart", ppmidata)
-</script>
-<form action="javascript:void(0);"
-      onsubmit="addWordTo(ppmichart, '/api/ppmi', 'addWordToPPMITextBox', 'addWordToPPMITextBoxError')">
-    Add word to graph: <input type="search" id="addWordToPPMITextBox"/>
-    <input type="submit" value="add"/>
-    <span id="addWordToPPMITextBoxError"></span>
-</form>
-
-<h2>Context Chart</h2>
-The following chart shows its most speciffic context words over time (by CHI^2).
-<div class="chart"  id="chichart"></div>
-<script type="text/javascript"> 
-    chichart = chart("#chichart", chidata)
-</script>
-<form action="javascript:void(0);"
-      onsubmit="addWordTo(chichart, '/api/chi', 'addWordToChiTextBox', 'addWordToChiTextBoxError')">
-    Add word to graph: <input type="search" id="addWordToChiTextBox"/>
-    <input type="submit" value="add"/>
-    <span id="addWordToChiTextBoxError"></span>
-</form>
-
-<h2>Frequency Chart</h2>
-The following chart shows its relative frequency over time.
-<div class="chart" id="frequencychart"></div>
-<script type="text/javascript"> 
-    frequencychart = chart("#frequencychart", frequencydata, {
-        tick: {
-            format: percentFormatter
+                axis: 	{
+	                    x: {
+	                        tick: {
+	                            format: decadeFormatter
+	                        }
+	                    },
+	                    y:myy
+        		},
+        		
+//         		tooltip: {
+//         	        position: function () {
+//         	            var position = c3.chart.internal.fn.tooltipPosition.apply(this, arguments);
+//         	            position.top = 0;
+//         	            return position;
+//         	        },
+//         	        contents: function (data, defaultTitleFormat, defaultValueFormat, color) {
+//         	            var $$ = this, config = $$.config,
+//         	            titleFormat = config.tooltip_format_title || defaultTitleFormat,
+//         	            nameFormat = config.tooltip_format_name || function (name) { return name; },
+//         	            valueFormat = config.tooltip_format_value || defaultValueFormat,
+//         	            text, i, title, value;
+//         	            text = '<a href="http://google.de" target="_blank">test</a>'
+        	     
+//         	            return text;
+//         	        }
+//         		}
+     			})
+     			
+// aChart.internal.hideTooltip = function () {
+//     setTimeout(aChart, 10)
+// };
+        	return aChart;    
         }
-    })
-</script>
+    </script>
+
+<title>JeDiSem</title>
+</head>
+<body>
+<div class="header">
+   Results for "<td th:text="${word}">WORD</td>" in <td th:text="${corpus}">CORPUS</td>
+</div>
+
+<div class="charts">
+	<div class="aChart">
+		<h2 class="text-center">
+			Relative Frequency
+		</h2>
+		<div class="row">
+			<div class="col-sm-8">
+				<div class="chart" id="frequencychart"></div>
+				<script type="text/javascript"> 
+				    frequencychart = chart("#frequencychart", frequencydata, {
+				        tick: {
+				            format: percentFormatter
+				        }
+				    })
+			    </script>
+			</div>
+			<div class="col-sm-4">The following chart shows its relative
+				frequency over time.</div>
+		</div>
+	</div>
+	<div class="aChart">
+		<h2 class="text-center">
+			Similar Words
+		</h2>
+		<div class="row">
+			<div class="col-sm-8">
+				<div class="chart" id="similaritychart"></div>
+				<script type="text/javascript"> 
+				    similaritychart = chart("#similaritychart", similaritydata,{
+				        max: 1,
+				        min: 0,
+				        padding: {top: 0, bottom: 0}
+				    } )
+				</script>
+			</div>
+			<div class="col-sm-4">
+				The following chart shows its similarity to the most similar words
+				over time.
+				<form action="javascript:void(0);"
+					onsubmit="addWordTo(similaritychart, '/api/similarity', 'addWordToSimilarityTextBox', 'addWordToSimilarityTextBoxError')">
+					Add word to graph: <input type="search"
+						id="addWordToSimilarityTextBox" /> <input type="submit"
+						value="add" /> <span id="addWordToSimilarityTextBoxError"></span>
+				</form>
+			</div>
+		</div>
+	</div>
+	<div class="aChart">
+		<h2 class="text-center">
+			Typical Context
+		</h2>
+		<div class="col-sm-8">
+			<ul class="nav nav-tabs">
+				<li class="active"><a data-toggle="tab" href="#chi">&chi;<sup>2</sup></a></li>
+				<li><a data-toggle="tab" href="#PPMI">PPMI</a></li>
+			</ul>
+			<div class="tab-content">
+				<div id="chi" class="tab-pane fade in active">
+					<h4>
+						Specific Context by &chi;<sup>2</sup>
+					</h4>
+					<div class="chart" id="chichart"></div>
+					<script type="text/javascript">chichart = chart("#chichart", chidata)</script>
+				</div>
+			<div id="PPMI" class="tab-pane fade">
+				<h4>
+					Specific Context by PPMI
+				</h4>
+				<div class="chart" id="ppmichart"></div>
+				<script type="text/javascript">ppmichart = chart("#ppmichart", ppmidata)</script>
+			</div>
+		</div>
+		</div>
+		<div class="col-sm-4">
+					The following chart shows its most specific context words over time
+					by &chi;<sup>2</sup> (balanced) and PPMI (favors rare words). TODO: fix add
+					<form action="javascript:void(0);"
+						onsubmit="addWordToTwo(chichart, '/api/chi', ppmichart, '/api/ppmi', 'addWordToContextInput', 'addWordToContextError')">
+						Add word to graph: <input type="search" id="addWordToContextInput" />
+						<input type="submit" value="add" /> <span
+							id="addWordToContextError"></span>
+					</form>
+		</div>	
+	</div>
+</div>
+<footer class="footer">
+	<p><a href="/help.html">Help</a></p>
+</footer>
 </body>
 </html>
