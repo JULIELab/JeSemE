@@ -15,7 +15,7 @@ public class Main {
 	private static final String doc = "JeDiSem\n" + "Usage:\n"
 			+ "  jedisem server <dbconfig>\n" + "  jedisem import <dbconfig>\n"
 			+ "  jedisem initialize <dbconfig>\n"
-			+ "  jedisem demo <dbconfig>\n" + "\n" + "Options:\n"
+			+ "  jedisem demo <dbconfig>\n\n" + "Options:\n"
 			+ "  -h --help     Show this screen.\n";
 
 	public static void main(final String[] args) throws Exception {

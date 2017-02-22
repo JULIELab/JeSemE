@@ -77,6 +77,7 @@ public class Server {
 		if (config.coversServer()) {
 			spark.Spark.ipAddress(config.getServer().getIp());
 			spark.Spark.port(config.getServer().getPort());
+			System.out.println("Using "+config.getServer().getIp()+":"+config.getServer().getPort());
 		}
 
 		staticFileLocation("/public");
@@ -89,6 +90,20 @@ public class Server {
 
 			model.put("word", word);
 			model.put("corpus", corpus);
+			model.put("corpusName", corpus.toUpperCase());
+
+			//TODO: move in config
+			if (corpus.equalsIgnoreCase("dta")) {
+				model.put("corpusnote",
+						"words lemmatized, thus normalizing spelling variants");
+				model.put("corpuslink",
+						"http://www.deutsches-textarchiv.de/search?q=" + word
+								+ "+%23less_by_date%5B1661%2C1900%5D&in=text");
+			} else if (corpus.equalsIgnoreCase("coha")) {
+				model.put("corpusnote", "words lowercased");
+				model.put("corpuslink", "http://corpus.byu.edu/coha/");
+			} else
+				throw new IllegalArgumentException("Corpus not supported!");
 
 			if (db.wordInCorpus(word, corpus)) {
 				long t = System.currentTimeMillis();

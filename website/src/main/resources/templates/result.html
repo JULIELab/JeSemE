@@ -33,7 +33,7 @@ html {
 body {
   /* Margin bottom by footer height */
   margin-bottom: 40px;
-  margin-top: 60px
+  margin-top: 120px
 }
 
 
@@ -44,10 +44,9 @@ body {
   top:0px;
   width: 100%;
   
-  height: 40px;
+  height: 100px;
   text-align: center;
-  line-height: 40px;
-  font-size: xx-large;
+  
 }
 
 
@@ -79,6 +78,7 @@ body {
         frequencydata = /*[[${frequencydata}]]*/ null;
         word = /*[[${word}]]*/ null;
         corpus = /*[[${corpus}]]*/ null;
+        corpusName = /*[[${corpusName}]]*/ null;
     </script>
 
 <!-- helper functions -->
@@ -109,7 +109,7 @@ body {
                     word2: word2
                 }, function (data) {
                     if (data.columns[0].length === 1)
-                        document.getElementById(error).innerHTML = word2 + " not covered by "+corpus;
+                        document.getElementById(error).innerHTML = word2 + " not covered by "+corpusName;
                     else
                         chart.load(data);
                 });
@@ -127,7 +127,7 @@ body {
                     word2: word2
                 }, function (data) {
                     if (data.columns[0].length === 1)
-                        document.getElementById(error).innerHTML = word2 + " not covered by "+corpus;
+                        document.getElementById(error).innerHTML = word2 + " not covered by "+corpusName;
                     else
                         chart.load(data);
                 });
@@ -191,7 +191,10 @@ body {
 </head>
 <body>
 <div class="header"><div class="container">
-   Results for "<td th:text="${word}">WORD</td>" in <td th:text="${corpus}">CORPUS</td>
+   <h2>Results for "<td th:text="${word}">WORD</td>" in <td th:text="${corpusName}">CORPUS</td></h2>
+   Note: <td th:text="${corpusnote}">a note</td>
+   <br></br>
+   Search in <a th:href="${corpuslink}">corpusName</a>
 </div></div>
 
 <div class="charts">
@@ -210,8 +213,8 @@ body {
 				    })
 			    </script>
 			</div>
-			<div class="col-sm-4">The following chart shows its relative
-				frequency over time.</div>
+			<div class="col-sm-4"><p>This chart shows the relative
+				frequency of "<td th:text="${word}">WORD</td>" over time. Changes in frequency might indicate shifts in meaning, yet can also be caused by cultural processes (what are people writing about) or sampling problems.</p></div>
 		</div>
 	</div>
 	<div class="aChart">
@@ -229,11 +232,12 @@ body {
 				    } )
 				</script>
 			</div>
-			<div class="col-sm-4">
-				The following chart shows its similarity to the most similar words
-				over time.
+			<div class="col-sm-4"><p>
+				This chart shows the words detected as most similar to "<td th:text="${word}">WORD</td>" and how their similarity changed
+				over time (higher is more similar). These values are based on SVD<sub>PPMI</sub>, see <a href="/help.html">Help</a> for details.
+				</p>
 				<form action="javascript:void(0);"
-					onsubmit="addWordTo(similaritychart, '/api/similarity', 'addWordToSimilarityTextBox', 'addWordToSimilarityTextBoxError')">
+					onsubmit="addWordTo(similaritychart, 'api/similarity', 'addWordToSimilarityTextBox', 'addWordToSimilarityTextBoxError')">
 					Add word to graph: <input type="search"
 						id="addWordToSimilarityTextBox" /> <input type="submit"
 						value="add" /> <span id="addWordToSimilarityTextBoxError"></span>
@@ -268,10 +272,12 @@ body {
 		</div>
 		</div>
 		<div class="col-sm-4">
-					The following chart shows its most specific context words over time
-					by &chi;<sup>2</sup> (balanced) and PPMI (favors rare words). TODO: fix add
+					<p>
+					These charts show the most specific contexts of "<td th:text="${word}">WORD</td>"
+				over time (higher is more specific). Specific contexts are words which appear often with "<td th:text="${word}">WORD</td>", yet not with other words. &chi;<sup>2</sup> provides a balanced view, while PPMI prefers rare contexts – see <a href="/help.html">Help</a> for details.
+				</p>
 					<form action="javascript:void(0);"
-						onsubmit="addWordToTwo(chichart, '/api/chi', ppmichart, '/api/ppmi', 'addWordToContextInput', 'addWordToContextError')">
+						onsubmit="addWordToTwo(chichart, 'api/chi', ppmichart, 'api/ppmi', 'addWordToContextInput', 'addWordToContextError')">
 						Add word to graph: <input type="search" id="addWordToContextInput" />
 						<input type="submit" value="add" /> <span
 							id="addWordToContextError"></span>
