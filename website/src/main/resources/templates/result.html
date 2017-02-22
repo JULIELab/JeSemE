@@ -194,7 +194,7 @@ body {
    <h2>Results for "<td th:text="${word}">WORD</td>" in <td th:text="${corpusName}">CORPUS</td></h2>
    Note: <td th:text="${corpusnote}">a note</td>
    <br></br>
-   Search in <a th:href="${corpuslink}">corpusName</a>
+   Search in <a th:href="${corpuslink}"><td th:text="${corpusName}">CORPUS</td></a>
 </div></div>
 
 <div class="charts">
@@ -234,7 +234,7 @@ body {
 			</div>
 			<div class="col-sm-4"><p>
 				This chart shows the words detected as most similar to "<td th:text="${word}">WORD</td>" and how their similarity changed
-				over time (higher is more similar). These values are based on SVD<sub>PPMI</sub>, see <a href="/help.html">Help</a> for details.
+				over time (higher is more similar). These values are based on SVD<sub>PPMI</sub> – see <a href="/help.html">Help</a> for details.
 				</p>
 				<form action="javascript:void(0);"
 					onsubmit="addWordTo(similaritychart, 'api/similarity', 'addWordToSimilarityTextBox', 'addWordToSimilarityTextBoxError')">
