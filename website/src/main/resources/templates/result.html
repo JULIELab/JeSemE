@@ -9,59 +9,8 @@
 <link
 	href="https://cdnjs.cloudflare.com/ajax/libs/Dynatable/0.3.1/jquery.dynatable.min.css"
 	rel="stylesheet" type="text/css" />
-<style type="text/css">
+<link href="result.css" rel="stylesheet" type="text/css" />
 
-
-.c3-line {
-	stroke-width: 3px;
-}
-
-.c3-circle._expanded_ {
-	stroke-width: 4px;
-	stroke: white;
-}
-
-.c3-selected-circle {
-	fill: white;
-	stroke-width: 5px;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-body {
-  /* Margin bottom by footer height */
-  margin-bottom: 40px;
-  margin-top: 120px
-}
-
-
-.aChart{width: 80%; margin: auto; }
-
-.header{
-  position: absolute;
-  top:0px;
-  width: 100%;
-  
-  height: 100px;
-  text-align: center;
-  
-}
-
-
-.footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  
-  height: 20px;
-  text-align: center;
-  line-height: 20px;
-
-}
-
-</style>
 <!--js -->
 <script
 	src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
@@ -69,224 +18,155 @@ body {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
 <script
 	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="chart.js"></script><!-- helper functions -->
 
 <!--constants -->
 <script th:inline="javascript">
-        similaritydata = /*[[${similaritydata}]]*/ null;
-        ppmidata = /*[[${ppmidata}]]*/ null;
-        chidata = /*[[${chidata}]]*/ null;
-        frequencydata = /*[[${frequencydata}]]*/ null;
-        word = /*[[${word}]]*/ null;
-        corpus = /*[[${corpus}]]*/ null;
-        corpusName = /*[[${corpusName}]]*/ null;
-    </script>
+	similaritydata = /*[[${similaritydata}]]*/null;
+	ppmidata = /*[[${ppmidata}]]*/null;
+	chidata = /*[[${chidata}]]*/null;
+	frequencydata = /*[[${frequencydata}]]*/null;
+	word = /*[[${word}]]*/null;
+	corpus = /*[[${corpus}]]*/null;
+	corpusName = /*[[${corpusName}]]*/null;
+</script>
 
-<!-- helper functions -->
-<script type="text/javascript"> 
-        function decadeFormatter(year) {
-            return year + "s"
-        }
-        
-        function percentFormatter(value) {
-            return value+"%"
-        }
-
-        function roundingFormatter(format, value) {
-            return function(value){
-            	console.log(value + "  " + d3.format(format)(value))
-            	return d3.format(format)(value)
-            }
-        }
-
-        function addWordTo(chart, url, wordBox, error) {
-            let word2 = document.getElementById(wordBox).value
-            document.getElementById(wordBox).value = ""
-            document.getElementById(error).innerHTML = ""
-            if (word2 !== "") {
-                $.getJSON(url, {
-                	corpus: corpus,
-                    word1: word,
-                    word2: word2
-                }, function (data) {
-                    if (data.columns[0].length === 1)
-                        document.getElementById(error).innerHTML = word2 + " not covered by "+corpusName;
-                    else
-                        chart.load(data);
-                });
-            }
-        }
-        
-        function addWordToTwo(chart, url, chart2, url2, wordBox, error) {
-            let word2 = document.getElementById(wordBox).value
-            document.getElementById(wordBox).value = ""
-            document.getElementById(error).innerHTML = ""
-            if (word2 !== "") {
-                $.getJSON(url, {
-                	corpus: corpus,
-                    word1: word,
-                    word2: word2
-                }, function (data) {
-                    if (data.columns[0].length === 1)
-                        document.getElementById(error).innerHTML = word2 + " not covered by "+corpusName;
-                    else
-                        chart.load(data);
-                });
-                $.getJSON(url2, {
-                	corpus: corpus,
-                    word1: word,
-                    word2: word2
-                }, function (data) {
-                    if (data.columns[0].length !== 1)
-                        chart2.load(data);
-                });
-            }
-        }
-
-        function chart(bindto, data, y){
-            var myy =  y != null ? y : {}
-            if(!("tick" in myy)){
-            	myy["tick"] = {
-                    format: roundingFormatter(".2")
-            	}
-            }
-            var aChart = c3.generate({
-                bindto: bindto,
-                data: data != null ? data : {"columns": [[]]},
-                axis: 	{
-	                    x: {
-	                        tick: {
-	                            format: decadeFormatter
-	                        }
-	                    },
-	                    y:myy
-        		},
-        		
-//         		tooltip: {
-//         	        position: function () {
-//         	            var position = c3.chart.internal.fn.tooltipPosition.apply(this, arguments);
-//         	            position.top = 0;
-//         	            return position;
-//         	        },
-//         	        contents: function (data, defaultTitleFormat, defaultValueFormat, color) {
-//         	            var $$ = this, config = $$.config,
-//         	            titleFormat = config.tooltip_format_title || defaultTitleFormat,
-//         	            nameFormat = config.tooltip_format_name || function (name) { return name; },
-//         	            valueFormat = config.tooltip_format_value || defaultValueFormat,
-//         	            text, i, title, value;
-//         	            text = '<a href="http://google.de" target="_blank">test</a>'
-        	     
-//         	            return text;
-//         	        }
-//         		}
-     			})
-     			
-// aChart.internal.hideTooltip = function () {
-//     setTimeout(aChart, 10)
-// };
-        	return aChart;    
-        }
-    </script>
 
 <title>JeDiSem</title>
 </head>
 <body>
-<div class="header"><div class="container">
-   <h2>Results for "<td th:text="${word}">WORD</td>" in <td th:text="${corpusName}">CORPUS</td></h2>
-   Note: <td th:text="${corpusnote}">a note</td>
-   <br></br>
-   Search in <a th:href="${corpuslink}"><td th:text="${corpusName}">CORPUS</td></a>
-</div></div>
+	<div class="header">
+		<div class="container">
+			<h2>
+				Results for "<td th:text="${word}">WORD</td>" in <td th:text="${corpusName}">CORPUS</td>
+			</h2>
+			Note:
+			<td th:text="${corpusnote}">a note</td> <br></br> Search in <a
+				th:href="${corpuslink}"><td th:text="${corpusName}">CORPUS</td></a>
+		</div>
+	</div>
 
-<div class="charts">
-	<div class="aChart">
-		<h2 class="text-center">
-			Relative Frequency
-		</h2>
-		<div class="row">
-			<div class="col-sm-8">
-				<div class="chart" id="frequencychart"></div>
-				<script type="text/javascript"> 
-				    frequencychart = chart("#frequencychart", frequencydata, {
-				        tick: {
-				            format: percentFormatter
-				        }
-				    })
-			    </script>
-			</div>
-			<div class="col-sm-4"><p>This chart shows the relative
-				frequency of "<td th:text="${word}">WORD</td>" over time. Changes in frequency might indicate shifts in meaning, yet can also be caused by cultural processes (what are people writing about) or sampling problems.</p></div>
-		</div>
-	</div>
-	<div class="aChart">
-		<h2 class="text-center">
-			Similar Words
-		</h2>
-		<div class="row">
-			<div class="col-sm-8">
-				<div class="chart" id="similaritychart"></div>
-				<script type="text/javascript"> 
-				    similaritychart = chart("#similaritychart", similaritydata,{
-				        max: 1,
-				        min: 0,
-				        padding: {top: 0, bottom: 0}
-				    } )
-				</script>
-			</div>
-			<div class="col-sm-4"><p>
-				This chart shows the words detected as most similar to "<td th:text="${word}">WORD</td>" and how their similarity changed
-				over time (higher is more similar). These values are based on SVD<sub>PPMI</sub> – see <a href="/help.html">Help</a> for details.
-				</p>
-				<form action="javascript:void(0);"
-					onsubmit="addWordTo(similaritychart, 'api/similarity', 'addWordToSimilarityTextBox', 'addWordToSimilarityTextBoxError')">
-					Add word to graph: <input type="search"
-						id="addWordToSimilarityTextBox" /> <input type="submit"
-						value="add" /> <span id="addWordToSimilarityTextBoxError"></span>
-				</form>
-			</div>
-		</div>
-	</div>
-	<div class="aChart">
-		<h2 class="text-center">
-			Typical Context
-		</h2>
-		<div class="col-sm-8">
-			<ul class="nav nav-tabs">
-				<li class="active"><a data-toggle="tab" href="#chi">&chi;<sup>2</sup></a></li>
-				<li><a data-toggle="tab" href="#PPMI">PPMI</a></li>
-			</ul>
-			<div class="tab-content">
-				<div id="chi" class="tab-pane fade in active">
-					<h4>
-						Specific Context by &chi;<sup>2</sup>
-					</h4>
-					<div class="chart" id="chichart"></div>
-					<script type="text/javascript">chichart = chart("#chichart", chidata)</script>
+	<div class="charts">
+		<div class="aChart panel panel-default">
+			<div class="panel-body">
+				<h2 class="text-center">Relative Frequency</h2>
+				<div class="row">
+					<div class="col-sm-8">
+						<div class="chart" id="frequencychart"></div>
+						<script type="text/javascript">
+							frequencychart = chart("#frequencychart",
+									frequencydata, {
+										tick : {
+											format : percentFormatter
+										}
+									})
+						</script>
+					</div>
+					<div class="col-sm-4">
+						<p>
+							This chart shows the relative frequency of "
+							<td th:text="${word}">WORD</td>" over time. Changes in frequency
+							might indicate shifts in meaning, yet can also be caused by
+							cultural processes (what are people writing about) or sampling
+							problems. Note that these numbers may not match those provided by
+							other sources, as they were calucluated based on frequent words
+							only– see <a href="/help.html">Help</a> for details.
+						</p>
+						<form action="javascript:void(0);"
+							onsubmit="addWordToFrequencyChart(frequencychart, 'api/frequency', 'addWordToFrequencyTextBox', 'addWordToFrequencyTextBoxError')">
+							Add word to graph: <input type="search"
+								id="addWordToFrequencyTextBox" /> <input type="submit"
+								value="add" /> <span id="addWordToFrequencyTextBoxError"></span>
+						</form>
+					</div>
 				</div>
-			<div id="PPMI" class="tab-pane fade">
-				<h4>
-					Specific Context by PPMI
-				</h4>
-				<div class="chart" id="ppmichart"></div>
-				<script type="text/javascript">ppmichart = chart("#ppmichart", ppmidata)</script>
 			</div>
 		</div>
+		<div class="aChart panel panel-default">
+			<div class="panel-body">
+				<h2 class="text-center">Similar Words</h2>
+				<div class="row">
+					<div class="col-sm-8">
+						<div class="chart" id="similaritychart"></div>
+						<script type="text/javascript">
+							similaritychart = chart("#similaritychart",
+									similaritydata, {
+										max : 1,
+										min : 0,
+										padding : {
+											top : 0,
+											bottom : 0
+										}
+									})
+						</script>
+					</div>
+					<div class="col-sm-4">
+						<p>
+							This chart shows the words detected as most similar to "
+							<td th:text="${word}">WORD</td>" and how their similarity changed
+							over time (higher is more similar). These values are based on SVD<sub>PPMI</sub>
+							– see <a href="/help.html">Help</a> for details.
+						</p>
+						<form action="javascript:void(0);"
+							onsubmit="addWordTo(similaritychart, 'api/similarity', 'addWordToSimilarityTextBox', 'addWordToSimilarityTextBoxError')">
+							Add word to graph: <input type="search"
+								id="addWordToSimilarityTextBox" /> <input type="submit"
+								value="add" /> <span id="addWordToSimilarityTextBoxError"></span>
+						</form>
+					</div>
+				</div>
+			</div>
 		</div>
-		<div class="col-sm-4">
+		<div class="aChart panel panel-default">
+			<div class="panel-body">
+				<h2 class="text-center">Typical Context</h2>
+				<div class="col-sm-8">
+					<ul class="nav nav-tabs">
+						<li class="active"><a data-toggle="tab" href="#chi">&chi;<sup>2</sup></a></li>
+						<li><a data-toggle="tab" href="#PPMI">PPMI</a></li>
+					</ul>
+					<div class="tab-content">
+						<div id="chi" class="tab-pane fade in active">
+							<h4>
+								Specific Context by &chi;<sup>2</sup>
+							</h4>
+							<div class="chart" id="chichart"></div>
+							<script type="text/javascript">
+								chichart = chart("#chichart", chidata)
+							</script>
+						</div>
+						<div id="PPMI" class="tab-pane fade">
+							<h4>Specific Context by PPMI</h4>
+							<div class="chart" id="ppmichart"></div>
+							<script type="text/javascript">
+								ppmichart = chart("#ppmichart", ppmidata)
+							</script>
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-4">
 					<p>
-					These charts show the most specific contexts of "<td th:text="${word}">WORD</td>"
-				over time (higher is more specific). Specific contexts are words which appear often with "<td th:text="${word}">WORD</td>", yet not with other words. &chi;<sup>2</sup> provides a balanced view, while PPMI prefers rare contexts – see <a href="/help.html">Help</a> for details.
-				</p>
+						These charts show the most specific contexts of "
+						<td th:text="${word}">WORD</td>" over time (higher is more
+						specific). Specific contexts are words which appear often with "
+						<td th:text="${word}">WORD</td>", yet not with other words. &chi;<sup>2</sup>
+						provides a balanced view, while PPMI prefers rare contexts – see <a
+							href="/help.html">Help</a> for details.
+					</p>
 					<form action="javascript:void(0);"
 						onsubmit="addWordToTwo(chichart, 'api/chi', ppmichart, 'api/ppmi', 'addWordToContextInput', 'addWordToContextError')">
 						Add word to graph: <input type="search" id="addWordToContextInput" />
 						<input type="submit" value="add" /> <span
 							id="addWordToContextError"></span>
 					</form>
-		</div>	
+				</div>
+			</div>
+		</div>
 	</div>
-</div>
-<footer class="footer"><div class="container">
-	<p><a href="/help.html">Help</a></p></div>
-</footer>
+	<footer class="footer">
+		<div class="container">
+			<p><a href="help.html">Help</a>&emsp;&emsp;<a href="about.html">About</a></p>
+		</div>
+	</footer>
 </body>
 </html>
