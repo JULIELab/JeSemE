@@ -31,56 +31,19 @@
 	corpusName = /*[[${corpusName}]]*/null;
 </script>
 
-
 <title>JeDiSem</title>
 </head>
 <body>
 	<div class="header">
 		<div class="container">
-			<h2>
-				Results for "<td th:text="${word}">WORD</td>" in <td th:text="${corpusName}">CORPUS</td>
-			</h2>
-			Note:
-			<td th:text="${corpusnote}">a note</td> <br></br> Search in <a
-				th:href="${corpuslink}"><td th:text="${corpusName}">CORPUS</td></a>
+			<h2 style="margin-top: 5px;">JeDiSem - The Jena Diachronic Semantic explorer</h2>
+			Results for "<td th:text="${word}">WORD</td>" in <td th:text="${corpusName}">CORPUS</td> <br></br> 
+			Note: <td th:text="${corpusnote}">a note</td> <br></br> 
+			Search in <a th:href="${corpuslink}"><td th:text="${corpusName}">CORPUS</td></a>
 		</div>
 	</div>
 
 	<div class="charts">
-		<div class="aChart panel panel-default">
-			<div class="panel-body">
-				<h2 class="text-center">Relative Frequency</h2>
-				<div class="row">
-					<div class="col-sm-8">
-						<div class="chart" id="frequencychart"></div>
-						<script type="text/javascript">
-							frequencychart = chart("#frequencychart",
-									frequencydata, {
-										tick : {
-											format : percentFormatter
-										}
-									})
-						</script>
-					</div>
-					<div class="col-sm-4">
-						<p>
-							This chart shows the relative frequency of "<td th:text="${word}">WORD</td>" over time. Changes in frequency
-							might indicate shifts in meaning, yet can also be caused by
-							cultural processes (what are people writing about) or sampling
-							problems. Note that these numbers may not match those provided by
-							other sources, as they were calucluated based on frequent words
-							only – see <a href="/help.html">Help</a> for details.
-						</p>
-						<form action="javascript:void(0);"
-							onsubmit="addWordToFrequencyChart(frequencychart, 'api/frequency', 'addWordToFrequencyTextBox', 'addWordToFrequencyTextBoxError')">
-							Add word to graph: <input type="search"
-								id="addWordToFrequencyTextBox" /> <input type="submit"
-								value="add" /> <span id="addWordToFrequencyTextBoxError"></span>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
 		<div class="aChart panel panel-default">
 			<div class="panel-body">
 				<h2 class="text-center">Similar Words</h2>
@@ -103,7 +66,7 @@
 						<p>
 							This chart shows the words detected as most similar to "<td th:text="${word}">WORD</td>" and how their similarity changed
 							over time (higher is more similar). These values are based on SVD<sub>PPMI</sub>
-							– see <a href="/help.html">Help</a> for details.
+							- see <a href="/help.html">Help</a> for details.
 						</p>
 						<form action="javascript:void(0);"
 							onsubmit="addWordTo(similaritychart, 'api/similarity', 'addWordToSimilarityTextBox', 'addWordToSimilarityTextBoxError')">
@@ -147,7 +110,7 @@
 						These charts show the most specific contexts of "<td th:text="${word}">WORD</td>" over time (higher is more
 						specific). Specific contexts are words which appear often with "
 						<td th:text="${word}">WORD</td>", yet not with other words. &chi;<sup>2</sup>
-						provides a balanced view, while PPMI prefers rare contexts – see <a
+						provides a balanced view, while PPMI prefers rare contexts - see <a
 							href="/help.html">Help</a> for details.
 					</p>
 					<form action="javascript:void(0);"
@@ -156,6 +119,40 @@
 						<input type="submit" value="add" /> <span
 							id="addWordToContextError"></span>
 					</form>
+				</div>
+			</div>
+		</div>
+		<div class="aChart panel panel-default">
+			<div class="panel-body">
+				<h2 class="text-center">Relative Frequency</h2>
+				<div class="row">
+					<div class="col-sm-8">
+						<div class="chart" id="frequencychart"></div>
+						<script type="text/javascript">
+							frequencychart = chart("#frequencychart",
+									frequencydata, {
+										tick : {
+											format : percentFormatter
+										}
+									})
+						</script>
+					</div>
+					<div class="col-sm-4">
+						<p>
+							This chart shows the relative frequency of "<td th:text="${word}">WORD</td>" over time. Changes in frequency
+							might indicate shifts in meaning, yet can also be caused by
+							cultural processes (what are people writing about) or sampling
+							problems. Note that these numbers may not match those provided by
+							other sources, as they were calucluated based on frequent words
+							only - see <a href="/help.html">Help</a> for details.
+						</p>
+						<form action="javascript:void(0);"
+							onsubmit="addWordToFrequencyChart(frequencychart, 'api/frequency', 'addWordToFrequencyTextBox', 'addWordToFrequencyTextBoxError')">
+							Add word to graph: <input type="search"
+								id="addWordToFrequencyTextBox" /> <input type="submit"
+								value="add" /> <span id="addWordToFrequencyTextBoxError"></span>
+						</form>
+					</div>
 				</div>
 			</div>
 		</div>

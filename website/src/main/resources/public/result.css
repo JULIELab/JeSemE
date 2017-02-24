@@ -11,7 +11,6 @@
 	fill: white;
 	stroke-width: 5px;
 }
-
 html {
 	position: relative;
 	min-height: 100%;
@@ -20,8 +19,11 @@ html {
 body {
 	/* Margin bottom by footer height */
 	margin-bottom: 40px;
-	margin-top: 140px
 }
+
+.charts {margin-top: 140px;
+    z-index:5;
+    overflow:auto;}
 
 .aChart {
 	width: 80%;
@@ -30,13 +32,17 @@ body {
 }
 
 .header {
-	position: absolute;
-	top: 0px;
+	position: fixed; 
+	top: 0;
 	width: 100%;
 	height: 100px;
 	text-align: center;
+	z-index:10;
+    background:inherit;
+    background-color: WhiteSmoke;
+    line-height:100%;
 }
-
+    
 .footer {
 	position: absolute;
 	bottom: 0;

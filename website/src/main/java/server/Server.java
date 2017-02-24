@@ -150,6 +150,14 @@ public class Server {
 
 		get("/api/chi", (request, response) -> getAssociation(request, db,
 				DatabaseService.CHI_TABLE, true), new Gson()::toJson);
+		
+		get("/api/covers", (request, response) -> {
+			final String corpus = request.queryParams("corpus");
+			final String word = request.queryParams("word");
+			Map<String,Boolean> answer = new HashMap<>();
+			answer.put("covers", db.wordInCorpus(word, corpus));
+			return answer;
+		}, new Gson()::toJson);
 
 		get("/api/frequency", (request, response) -> {
 			final String corpus = request.queryParams("corpus");

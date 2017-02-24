@@ -14,37 +14,51 @@
 	src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 <script
 	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-	
-<style>
 
+<style>
 html {
-  position: relative;
-  min-height: 100%;
+	position: relative;
+	min-height: 100%;
 }
 
-tooltipedtext {border-bottom: 1px dotted;}
+tooltipedtext {
+	border-bottom: 1px dotted;
+}
 
 .footer {
-  position:fixed;
-  left:0px;
-  bottom: 0;
-  width: 100%;
-  
-  height: 20px;
-  text-align: center;
-  line-height: 20px;
+	position: fixed;
+	left: 0px;
+	bottom: 0;
+	width: 100%;
+	height: 20px;
+	text-align: center;
+	line-height: 20px;
 }
 
-.center-block{
-    text-align: center;
-    padding: 200px;
+.center-block {
+	text-align: center;
+	padding: 200px;
 }
 </style>
 
 <script>
-$(document).ready(function(){
-    $('[data-toggle="tooltip"]').tooltip(); 
-});
+	$(document).ready(function() {
+		$('[data-toggle="tooltip"]').tooltip();
+	});
+
+// 	function validateForm() {
+// 		console.log("called")
+// 		var word = document.forms["search-form"]["word"].value;
+// 		var corpus = document.forms["search-form"]["corpus"].value;
+// 		var covers = $.getJSON("api/covers", {
+// 			corpus : corpus,
+// 			word : word,
+// 		}, function(response) {
+// 			return response["covers"];
+// 		});
+// 		console.log(covers);
+// 		return false;
+// 	}
 </script>
 
 <title>JeDiSem</title>
@@ -55,20 +69,26 @@ $(document).ready(function(){
 	<div class="center-block">
 
 		<h1>Welcome to JeDiSem</h1>
-		<p>The Jena Diachronic Semantic search engine</p>
+		<p>The Jena Diachronic Semantic explorer</p>
 
 		<form class="search-form" id="search-form" action="search"
 			method="get">
-			<input type="search" name="word" id="word" placeholder="enter a word" /> <input type="submit" value="Search" /> <br>
-			<input type="radio" name="corpus" value="coha" checked="checked">
-			<tooltipedtext data-toggle="tooltip" title="Corpus of Historical American English, 400 Million words, all lowercased">COHA</tooltipedtext>
+<!-- 			 onsubmit="return validateForm()"> -->
+			<input type="search" name="word" id="word" placeholder="enter a word" />
+			<input type="submit" value="Search" /> <br> <input type="radio"
+				name="corpus" value="coha" checked="checked">
+			<tooltipedtext data-toggle="tooltip"
+				title="Corpus of Historical American English, 400 Million words, all lowercased">COHA</tooltipedtext>
 			<input type="radio" name="corpus" value="dta">
-			<tooltipedtext data-toggle="tooltip" title="Deutsches Textarchiv 'German Text Archive', nearly 2000 books, lemmatized">DTA</tooltipedtext>
+			<tooltipedtext data-toggle="tooltip"
+				title="Deutsches Textarchiv 'German Text Archive', nearly 2000 books, lemmatized">DTA</tooltipedtext>
 		</form>
 	</div>
 	<footer class="footer">
-        <p><a href="help.html">Help</a>&emsp;&emsp;<a href="about.html">About</a></p>
-    </footer>
+		<p>
+			<a href="help.html">Help</a>&emsp;&emsp;<a href="about.html">About</a>
+		</p>
+	</footer>
 </body>
 
 

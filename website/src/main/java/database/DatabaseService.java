@@ -150,21 +150,9 @@ public class DatabaseService {
 				
 				final Integer newWordId = ids.WORD1.equals(wordId) ? ids.WORD2
 						: ids.WORD1;
-				System.out.println(word+" "+corpus.getStringFor(ids.WORD1)+" "+corpus.getStringFor(ids.WORD2));
-				System.out.println(wordId +" "+ids.WORD1+" "+ids.WORD2+" "+(ids.WORD1 == wordId));
 				words.add(corpus.getStringFor(newWordId));
 			}
-			System.out.println(words);
 			return words;
-		}
-	}
-
-	public void getTables() {
-		final String sql = "SELECT table_name FROM information_schema.tables WHERE table_schema='JEDISEM'";
-		try (Connection con = sql2o.open()) {
-			final List<String> mostSimilar = con.createQuery(sql)
-					.executeScalarList(String.class);
-			System.out.println(mostSimilar);
 		}
 	}
 
