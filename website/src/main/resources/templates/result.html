@@ -64,13 +64,12 @@
 					</div>
 					<div class="col-sm-4">
 						<p>
-							This chart shows the relative frequency of "
-							<td th:text="${word}">WORD</td>" over time. Changes in frequency
+							This chart shows the relative frequency of "<td th:text="${word}">WORD</td>" over time. Changes in frequency
 							might indicate shifts in meaning, yet can also be caused by
 							cultural processes (what are people writing about) or sampling
 							problems. Note that these numbers may not match those provided by
 							other sources, as they were calucluated based on frequent words
-							only– see <a href="/help.html">Help</a> for details.
+							only – see <a href="/help.html">Help</a> for details.
 						</p>
 						<form action="javascript:void(0);"
 							onsubmit="addWordToFrequencyChart(frequencychart, 'api/frequency', 'addWordToFrequencyTextBox', 'addWordToFrequencyTextBoxError')">
@@ -102,8 +101,7 @@
 					</div>
 					<div class="col-sm-4">
 						<p>
-							This chart shows the words detected as most similar to "
-							<td th:text="${word}">WORD</td>" and how their similarity changed
+							This chart shows the words detected as most similar to "<td th:text="${word}">WORD</td>" and how their similarity changed
 							over time (higher is more similar). These values are based on SVD<sub>PPMI</sub>
 							– see <a href="/help.html">Help</a> for details.
 						</p>
@@ -146,8 +144,7 @@
 				</div>
 				<div class="col-sm-4">
 					<p>
-						These charts show the most specific contexts of "
-						<td th:text="${word}">WORD</td>" over time (higher is more
+						These charts show the most specific contexts of "<td th:text="${word}">WORD</td>" over time (higher is more
 						specific). Specific contexts are words which appear often with "
 						<td th:text="${word}">WORD</td>", yet not with other words. &chi;<sup>2</sup>
 						provides a balanced view, while PPMI prefers rare contexts – see <a
