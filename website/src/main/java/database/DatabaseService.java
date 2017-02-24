@@ -147,10 +147,14 @@ public class DatabaseService {
 					.addParameter("corpus", corpus.getId())
 					.addParameter("year", year).addParameter("limit", limit)
 					.executeAndFetch(IDAndID.class)) {
-				final Integer newWordId = ids.WORD1 == wordId ? ids.WORD2
+				
+				final Integer newWordId = ids.WORD1.equals(wordId) ? ids.WORD2
 						: ids.WORD1;
-				words.add(corpus.getIdFor(newWordId));
+				System.out.println(word+" "+corpus.getStringFor(ids.WORD1)+" "+corpus.getStringFor(ids.WORD2));
+				System.out.println(wordId +" "+ids.WORD1+" "+ids.WORD2+" "+(ids.WORD1 == wordId));
+				words.add(corpus.getStringFor(newWordId));
 			}
+			System.out.println(words);
 			return words;
 		}
 	}
@@ -179,7 +183,7 @@ public class DatabaseService {
 					.addParameter("corpus", corpus.getId())
 					.addParameter("year", year).addParameter("limit", limit)
 					.executeScalarList(Integer.class))
-				words.add(corpus.getIdFor(wordId));
+				words.add(corpus.getStringFor(wordId));
 			return words;
 		}
 	}

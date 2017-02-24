@@ -26,7 +26,7 @@ public class Corpus {
 		return id;
 	}
 
-	public String getIdFor(final Integer id) {
+	public String getStringFor(final Integer id) {
 		return word2id.inverse().get(id);
 	}
 
