@@ -31,7 +31,6 @@ public class Server {
 				word2);
 	}
 
-	//TODO: are best words selected? COHA -> fame, honor seems better than rest
 	static final Map<String, Object> getAssociationJSON(
 			final DatabaseService db, final String corpus, final String table,
 			final boolean isContextQuery, final String initialWord,
