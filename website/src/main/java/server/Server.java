@@ -102,6 +102,12 @@ public class Server {
 			} else if (corpus.equalsIgnoreCase("coha")) {
 				model.put("corpusnote", "words lowercased");
 				model.put("corpuslink", "http://corpus.byu.edu/coha/");
+			} else if (corpus.equalsIgnoreCase("gbgerman")) {
+				model.put("corpusnote", "words lemmatized, thus normalizing spelling variants");
+				model.put("corpuslink", "https://books.google.com/advanced_book_search");
+			} else if (corpus.equalsIgnoreCase("gbfiction")) {
+				model.put("corpusnote", "words lowercased");
+				model.put("corpuslink", "https://books.google.com/advanced_book_search");
 			} else
 				throw new IllegalArgumentException("Corpus not supported!");
 

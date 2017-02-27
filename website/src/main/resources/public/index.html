@@ -46,19 +46,19 @@ tooltipedtext {
 		$('[data-toggle="tooltip"]').tooltip();
 	});
 
-// 	function validateForm() {
-// 		console.log("called")
-// 		var word = document.forms["search-form"]["word"].value;
-// 		var corpus = document.forms["search-form"]["corpus"].value;
-// 		var covers = $.getJSON("api/covers", {
-// 			corpus : corpus,
-// 			word : word,
-// 		}, function(response) {
-// 			return response["covers"];
-// 		});
-// 		console.log(covers);
-// 		return false;
-// 	}
+	// 	function validateForm() {
+	// 		console.log("called")
+	// 		var word = document.forms["search-form"]["word"].value;
+	// 		var corpus = document.forms["search-form"]["corpus"].value;
+	// 		var covers = $.getJSON("api/covers", {
+	// 			corpus : corpus,
+	// 			word : word,
+	// 		}, function(response) {
+	// 			return response["covers"];
+	// 		});
+	// 		console.log(covers);
+	// 		return false;
+	// 	}
 </script>
 
 <title>JeDiSem</title>
@@ -73,15 +73,23 @@ tooltipedtext {
 
 		<form class="search-form" id="search-form" action="search"
 			method="get">
-<!-- 			 onsubmit="return validateForm()"> -->
+			<!-- 			 onsubmit="return validateForm()"> -->
 			<input type="search" name="word" id="word" placeholder="enter a word" />
 			<input type="submit" value="Search" /> <br> <input type="radio"
 				name="corpus" value="coha" checked="checked">
 			<tooltipedtext data-toggle="tooltip"
-				title="Corpus of Historical American English, 400 Million words, all lowercased">COHA</tooltipedtext>
+				title="Corpus of Historical American English, 400 Million words, lowercased">COHA</tooltipedtext>
 			<input type="radio" name="corpus" value="dta">
 			<tooltipedtext data-toggle="tooltip"
 				title="Deutsches Textarchiv 'German Text Archive', nearly 2000 books, lemmatized">DTA</tooltipedtext>
+			<input type="radio" name="corpus" value="gbfiction">
+			<tooltipedtext data-toggle="tooltip"
+				title="Google Books English Fiction, part of biggest existing corpus, lowercased">GB
+			Fiction</tooltipedtext>
+			<input type="radio" name="corpus" value="gbgerman">
+			<tooltipedtext data-toggle="tooltip"
+				title="Google Books German, part of biggest existing corpus, lemmatized">GB
+			German</tooltipedtext>
 		</form>
 	</div>
 	<footer class="footer">
