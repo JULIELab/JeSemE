@@ -1,6 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="UTF-8">
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+
+<!--css -->
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+
+<!--js -->
+<script
+	src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<script
+	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+<script type="text/javascript" async
+	src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML">
+	
+</script>
+<style>
+.footer {
+	position: fixed;
+	left: 0px;
+	bottom: 0;
+	width: 100%;
+	height: 20px;
+	text-align: center;
+	line-height: 20px;
+}
+
+.center-block {
+	text-align: justified;
+	padding: 100px;
+}
+</style>
+
 
 
 <title>JeDiSem</title>
@@ -8,7 +44,69 @@
 </head>
 <body>
 
-	There is no help...
-	        <p><a href="about.html">About</a></p>
+	<div class="center-block">
+
+		<h1>JeDiSem Help</h1>
+		<p>
+			JeDiSem is described in detail in <a href="paper.pdf">our paper</a>,
+			the following is mostly a simplified overview.
+		</p>
+
+		<h2>Metrics</h2>
+		<h3>
+			PPMI and &chi;<sup>2</sup>
+		</h3>
+		<p>
+			Both Positive Pointwise Mutual Information (PPMI) and Pearson's &chi;<sup>2</sup>
+			measure how specific a combination of two words is. Both use the
+			frequency of a word \(i\) or context word \(j\) to calculate the
+			probability of finding one of them, as in \(P(i)\) respectively
+			\(P(j)\).They then compare the expected probability of encountering
+			both words \(P(i)P(j)\) with the observed frequency/probability
+			\(P(i,j)\).
+		</p>
+		<p>PPMI favors infrequent context words and can be calculated
+			with: $$PPMI(i,j) := max(\frac{P(i,j)}{P(i)P(j)},0)$$</p>
+		<p>
+			&chi;<sup>2</sup> is regarded as more balanced and can be calculated
+			with: $$\chi^2(i,j) := \frac{(P(i,j) - P(i)P(j))^2}{P(i)P(j)}$$
+		</p>
+
+		<h3>
+			SVD<sub>PPMI</sub>
+		</h3>
+
+		<p>
+			SVD<sub>PPMI</sub> uses singular value decomposition to reduce the
+			dimensionality of a matrix storing PPMI data. 
+			
+			It represents a PPMI-matrix $M$ as
+			the matrix product $$U \cdot \Sigma \cdot V^T$$. The best performing
+			word embeddings are then given by the top n (typically about 500)
+			entries of $$U$$ as determined by the corresponding singular values
+			in $$\Sigma$$.
+		</p>
+		<h2>Corpora</h2>
+		<h3></h3>
+		<p></p>
+		<h3></h3>
+		<p></p>
+		<h3></h3>
+		<p></p>
+		<h2>API</h2>
+		<h3>Similar Words</h3>
+		<p></p>
+		<h3>Typical Context</h3>
+		<p></p>
+		<h3>Relative Frequency</h3>
+		<p></p>
+	</div>
+	<footer class="footer">
+		<p>
+			<a href="help.html">Help</a>&emsp;&emsp;<a href="about.html">About</a>
+		</p>
+	</footer>
 </body>
+
+
 </html>
