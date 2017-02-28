@@ -13,13 +13,23 @@ public class Corpus {
 	private final BiMap<String, Integer> word2id = HashBiMap.create();
 	private final int id;
 	private final WordMapper mapper;
+	private final String fullName;
+	private final String note;
+	private final String url;
+	private final boolean insertInUrl;
+	
 
 	public Corpus(final int id, final List<WordAndID> wordAndIds,
-			final WordMapper mapper) {
+			final WordMapper mapper, final String fullName, final String note, final String url,
+	final boolean insertInUrl) {
 		this.id = id;
 		for (final WordAndID wordAndId : wordAndIds)
 			word2id.put(wordAndId.word, wordAndId.id);
 		this.mapper = mapper;
+		this.fullName = fullName;
+		this.note = note;
+		this.url = url;
+		this.insertInUrl = insertInUrl;
 	}
 
 	public int getId() {
@@ -39,4 +49,17 @@ public class Corpus {
 				.allMatch(word -> word2id.containsKey(word));
 	}
 
+	public String getFullName() {
+		return fullName;
+	}
+
+	public String getNote() {
+		return note;
+	}
+	
+	public String getUrl(String word) {
+		if(!insertInUrl)
+			return url;
+		return String.format(url, word);
+	}
 }

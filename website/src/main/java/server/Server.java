@@ -90,26 +90,9 @@ public class Server {
 
 			model.put("word", word);
 			model.put("corpus", corpus);
-			model.put("corpusName", corpus.toUpperCase());
-
-			//TODO: move in config
-			if (corpus.equalsIgnoreCase("dta")) {
-				model.put("corpusnote",
-						"words lemmatized, thus normalizing spelling variants");
-				model.put("corpuslink",
-						"http://www.deutsches-textarchiv.de/search?q=" + word
-								+ "+%23less_by_date%5B1661%2C1900%5D&in=text");
-			} else if (corpus.equalsIgnoreCase("coha")) {
-				model.put("corpusnote", "words lowercased");
-				model.put("corpuslink", "http://corpus.byu.edu/coha/");
-			} else if (corpus.equalsIgnoreCase("gbgerman")) {
-				model.put("corpusnote", "words lemmatized, thus normalizing spelling variants");
-				model.put("corpuslink", "https://books.google.com/advanced_book_search");
-			} else if (corpus.equalsIgnoreCase("gbfiction")) {
-				model.put("corpusnote", "words lowercased");
-				model.put("corpuslink", "https://books.google.com/advanced_book_search");
-			} else
-				throw new IllegalArgumentException("Corpus not supported!");
+			model.put("corpusName", db.getCorpusName(corpus));
+			model.put("corpusNote", db.getCorpusNote(corpus));
+			model.put("corpusLink",db.getCorpusLink(corpus, word));
 
 			if (db.wordInCorpus(word, corpus)) {
 				long t = System.currentTimeMillis();

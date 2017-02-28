@@ -18,6 +18,7 @@ import org.sql2o.Sql2o;
 import configuration.Configuration;
 import database.corpus.Corpus;
 import database.corpus.DTAMapper;
+import database.corpus.DummyMapper;
 import database.corpus.LowerCaseMapper;
 import database.corpus.WordMapper;
 import database.importer.AssociationImporter;
@@ -245,26 +246,35 @@ public class DatabaseService {
 					.createQuery("SELECT corpus as word, id FROM " + CORPORA)
 					.executeAndFetch(WordAndID.class)) {
 				WordMapper mapper = null;
-				final List<configuration.Corpus> corpusConfig = config
+				final List<configuration.Corpus> corpusConfigs = config
 						.getCorpora().stream()
 						.filter(x -> x.getName().equals(corpusAndId.word))
 						.collect(Collectors.toList());
-				if (corpusConfig.size() != 1)
+				if (corpusConfigs.size() != 1)
 					throw new IllegalArgumentException(
 							"Configuration and database do not match for "
 									+ corpusAndId.word);
-				final String pathName = corpusConfig.get(0).getMappingPath();
+				configuration.CorpusInfo info = corpusConfigs.get(0).getInfo();
+				final String pathName = info.getMappingPath();
+				final boolean lowercase = info.getLowercase();
 				if (pathName == null)
-					mapper = new LowerCaseMapper();
+					if(lowercase)
+						mapper = new LowerCaseMapper();
+					else
+						mapper = new DummyMapper();
 				else
-					mapper = new DTAMapper(Paths.get(pathName));
+					mapper = new DTAMapper(Paths.get(pathName),lowercase);
 
 				final Corpus corpus = new Corpus(corpusAndId.id,
 						con.createQuery("SELECT word,id FROM " + WORDIDS_TABLE
 								+ " WHERE corpus=:corpus")
 								.addParameter("corpus", corpusAndId.id)
 								.executeAndFetch(WordAndID.class),
-						mapper);
+						mapper, 
+						info.getFullName(), 
+						info.getNote(), 
+						info.getUrl(), 
+						info.getInsertInUrl());
 				corpora.put(corpusAndId.word, corpus);
 			}
 		}
@@ -274,5 +284,16 @@ public class DatabaseService {
 		return corpora.containsKey(corpus)
 				&& corpora.get(corpus).hasMappingFor(word);
 	}
+	
+	public String getCorpusName(String corpus){
+		return corpora.get(corpus).getFullName();
+	}
+	
+	public String getCorpusNote(String corpus){
+		return corpora.get(corpus).getNote();
+	}
 
+	public String getCorpusLink(String corpus, String word) {
+		return corpora.get(corpus).getUrl(word);
+	}
 }
