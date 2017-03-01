@@ -35,10 +35,6 @@ import database.importer.WordImporter;
  */
 
 public class DatabaseService {
-	private HashBasedTable<String, String, Integer> firstYearCache = HashBasedTable
-			.create();
-	private HashBasedTable<String, String, Integer> lastYearCache = HashBasedTable
-			.create();
 	private static final String SCHEMA = "JEDISEM_V09";
 	private static final String CORPORA = SCHEMA + ".TABLES";
 	public static final String SIMILARITY_TABLE = SCHEMA + ".SIMILARITY";
@@ -46,16 +42,16 @@ public class DatabaseService {
 	public static final String PPMI_TABLE = SCHEMA + ".PPMI";
 	public static final String CHI_TABLE = SCHEMA + ".CHI";
 	private static final String FREQUENCY_TABLE = SCHEMA + ".FREQUENCY";
-
 	private static final Logger LOGGER = LoggerFactory
 			.getLogger(DatabaseService.class);
-
 	private static final String SIMILARITY_QUERY = "SELECT year, association AS value FROM "
 			+ "%s"
 			+ " WHERE corpus=:corpus AND (word1=:word1 AND word2=:word2) ORDER BY year ASC";
+
 	private static final String YEAR_QUERY = "SELECT year FROM "
 			+ FREQUENCY_TABLE
 			+ " WHERE corpus=:corpus AND word=:word ORDER BY year";
+
 	private static final String FIRST_YEAR_QUERY = YEAR_QUERY + " ASC LIMIT 1";
 	private static final String LAST_YEAR_QUERY = YEAR_QUERY + " DESC LIMIT 1";
 	private static final String MOST_SIMILAR_QUERY = "SELECT word1, word2 FROM "
@@ -120,6 +116,12 @@ public class DatabaseService {
 		}
 	}
 
+	private final HashBasedTable<String, String, Integer> firstYearCache = HashBasedTable
+			.create();
+
+	private final HashBasedTable<String, String, Integer> lastYearCache = HashBasedTable
+			.create();
+
 	private final Sql2o sql2o;
 
 	public final Map<String, Corpus> corpora = new HashMap<>();
@@ -141,17 +143,66 @@ public class DatabaseService {
 
 	}
 
+	public String getCorpusLink(final String corpus, final String word) {
+		return corpora.get(corpus).getUrl(word);
+	}
+
+	public String getCorpusName(final String corpus) {
+		return corpora.get(corpus).getFullName();
+	}
+
+	public String getCorpusNote(final String corpus) {
+		return corpora.get(corpus).getNote();
+	}
+
+	public Integer getFirstYear(final String corpusName, final String word)
+			throws Exception {
+		if (!firstYearCache.contains(corpusName, word)) {
+			final Corpus corpus = corpora.get(corpusName);
+			if (!corpus.hasMappingFor(word))
+				firstYearCache.put(corpusName, word, null);
+			final Integer wordId = corpus.getIdFor(word);
+			try (Connection con = sql2o.open()) {
+				final Integer i = con.createQuery(FIRST_YEAR_QUERY)
+						.addParameter("word", wordId)
+						.addParameter("corpus", corpus.getId())
+						.executeScalar(Integer.class);
+				firstYearCache.put(corpusName, word, i);
+			}
+		}
+		return firstYearCache.get(corpusName, word);
+	}
+
+	public Integer getLastYear(final String corpusName, final String word)
+			throws Exception {
+		if (!lastYearCache.contains(corpusName, word)) {
+			final Corpus corpus = corpora.get(corpusName);
+			if (!corpus.hasMappingFor(word))
+				lastYearCache.put(corpusName, word, null);
+			final Integer wordId = corpus.getIdFor(word);
+			try (Connection con = sql2o.open()) {
+				final Integer i = con.createQuery(LAST_YEAR_QUERY)
+						.addParameter("word", wordId)
+						.addParameter("corpus", corpus.getId())
+						.executeScalar(Integer.class);
+				lastYearCache.put(corpusName, word, i);
+			}
+		}
+		return lastYearCache.get(corpusName, word);
+	}
+
+	// Will be used for testing
+
 	public List<String> getMostSimilarWordsInYear(final String corpusName,
 			final String word, final Integer year, final int limit) {
 		final Corpus corpus = corpora.get(corpusName);
 		final List<String> words = new ArrayList<>();
-		if (!corpus.hasMappingFor(word) || year == null)
+		if (!corpus.hasMappingFor(word) || (year == null))
 			return words;
 		final Integer wordId = corpus.getIdFor(word);
 		final String sql = MOST_SIMILAR_QUERY;
 
 		try (Connection con = sql2o.open()) {
-			long t = System.currentTimeMillis();
 			for (final IDAndID ids : con.createQuery(sql)
 					.addParameter("givenWord", wordId)
 					.addParameter("corpus", corpus.getId())
@@ -161,7 +212,6 @@ public class DatabaseService {
 						: ids.WORD1;
 				words.add(corpus.getStringFor(newWordId));
 			}
-			System.out.println("end most " + (System.currentTimeMillis() - t));
 			return words;
 		}
 	}
@@ -171,7 +221,7 @@ public class DatabaseService {
 			final int limit) {
 		final Corpus corpus = corpora.get(corpusName);
 		final List<String> words = new ArrayList<>();
-		if (!corpus.hasMappingFor(word) || year == null)
+		if (!corpus.hasMappingFor(word) || (year == null))
 			return words;
 		final Integer givenWordId = corpus.getIdFor(word);
 		final String sql = String.format(TOP_CONTEXT_QUERY, table);
@@ -225,50 +275,12 @@ public class DatabaseService {
 		}
 	}
 
-	// Will be used for testing
-
 	public List<YearAndValue> getYearAndFrequency(final String corpusName,
 			final String word) throws Exception {
 		final Corpus corpus = corpora.get(corpusName);
 		if (!corpus.hasMappingFor(word))
 			return new ArrayList<>();
 		return getYearAndFrequency(corpus.getId(), corpus.getIdFor(word));
-	}
-
-	public Integer getFirstYear(final String corpusName, final String word)
-			throws Exception {
-		if (!firstYearCache.contains(corpusName, word)) {
-			final Corpus corpus = corpora.get(corpusName);
-			if (!corpus.hasMappingFor(word))
-				firstYearCache.put(corpusName, word, null);
-			final Integer wordId = corpus.getIdFor(word);
-			try (Connection con = sql2o.open()) {
-				Integer i = con.createQuery(FIRST_YEAR_QUERY)
-						.addParameter("word", wordId)
-						.addParameter("corpus", corpus.getId())
-						.executeScalar(Integer.class);
-				firstYearCache.put(corpusName, word, i);
-			}
-		}
-		return firstYearCache.get(corpusName, word);
-	}
-
-	public Integer getLastYear(final String corpusName, final String word)
-			throws Exception {
-		if (!lastYearCache.contains(corpusName, word)) {
-			final Corpus corpus = corpora.get(corpusName);
-			if (!corpus.hasMappingFor(word))
-				lastYearCache.put(corpusName, word, null);
-			final Integer wordId = corpus.getIdFor(word);
-			try (Connection con = sql2o.open()) {
-				Integer i = con.createQuery(LAST_YEAR_QUERY)
-						.addParameter("word", wordId)
-						.addParameter("corpus", corpus.getId())
-						.executeScalar(Integer.class);
-				lastYearCache.put(corpusName, word, i);
-			}
-		}
-		return lastYearCache.get(corpusName, word);
 	}
 
 	private void initializeMapping(final Configuration config)
@@ -286,7 +298,8 @@ public class DatabaseService {
 					throw new IllegalArgumentException(
 							"Configuration and database do not match for "
 									+ corpusAndId.word);
-				configuration.CorpusInfo info = corpusConfigs.get(0).getInfo();
+				final configuration.CorpusInfo info = corpusConfigs.get(0)
+						.getInfo();
 				final String pathName = info.getMappingPath();
 				final boolean lowercase = info.getLowercase();
 				if (pathName == null)
@@ -312,17 +325,5 @@ public class DatabaseService {
 	public boolean wordInCorpus(final String word, final String corpus) {
 		return corpora.containsKey(corpus)
 				&& corpora.get(corpus).hasMappingFor(word);
-	}
-
-	public String getCorpusName(String corpus) {
-		return corpora.get(corpus).getFullName();
-	}
-
-	public String getCorpusNote(String corpus) {
-		return corpora.get(corpus).getNote();
-	}
-
-	public String getCorpusLink(String corpus, String word) {
-		return corpora.get(corpus).getUrl(word);
 	}
 }

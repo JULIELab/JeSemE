@@ -39,7 +39,7 @@ public class TestServer {
 		expected.addValues("bar", Lists.newArrayList(
 				new YearAndValue(1910, 0.4f), new YearAndValue(1920, 0.5f),
 				new YearAndValue(1930, 0.2f), new YearAndValue(1940, 0.1f)));
-		final Map<String, Object> actual = Server.getAssociationJSON(db, CORPUS,
+		final Map<String, Object> actual = Server.getAssociationJson(db, CORPUS,
 				DatabaseService.SIMILARITY_TABLE, false, "foo", "bar");
 		assertEquals(expected.data.get("xs"), actual.get("xs"));
 		assertEquals(((List<?>) expected.data.get("columns")).get(0),
@@ -52,7 +52,7 @@ public class TestServer {
 		expected.addValues("foo", Lists.newArrayList(
 				new YearAndValue(1910, 0.6f), new YearAndValue(1920, 0.1f),
 				new YearAndValue(1930, 0.3f), new YearAndValue(1940, 0.5f)));
-		final Map<String, Object> actual = Server.getFrequencyJSON(db, CORPUS,
+		final Map<String, Object> actual = Server.getFrequencyJson(db, CORPUS,
 				"foo");
 		assertEquals(expected.data.get("xs"), actual.get("xs"));
 		assertEquals(((List<?>) expected.data.get("columns")).get(0),

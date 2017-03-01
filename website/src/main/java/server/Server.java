@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import com.google.gson.Gson;
 
@@ -19,6 +22,8 @@ import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
 public class Server {
 	private static final int LIMIT = 2;
+	private static final ExecutorService executor = Executors
+			.newFixedThreadPool(20);
 
 	private static Map<String, Object> getAssociation(final Request request,
 			final DatabaseService db, final String table,
@@ -26,11 +31,11 @@ public class Server {
 		final String corpus = request.queryParams("corpus");
 		final String word1 = request.queryParams("word1");
 		final String word2 = request.queryParams("word2");
-		return getAssociationJSON(db, corpus, table, isContextQuery, word1,
+		return getAssociationJson(db, corpus, table, isContextQuery, word1,
 				word2);
 	}
 
-	static final Map<String, Object> getAssociationJSON(
+	static final Map<String, Object> getAssociationJson(
 			final DatabaseService db, final String corpus, final String table,
 			final boolean isContextQuery, final String initialWord,
 			final String... moreWords) throws Exception {
@@ -41,10 +46,24 @@ public class Server {
 		return data.data;
 	}
 
-	static final Map<String, Object> getFrequencyJSON(final DatabaseService db,
+	static final Future<Map<String, Object>> getAssociationJsonAsync(
+			final DatabaseService db, final String corpus, final String table,
+			final boolean isContextQuery, final String initialWord,
+			final String... moreWords) {
+		return executor.submit(() -> getAssociationJson(db, corpus, table,
+				isContextQuery, initialWord, moreWords));
+	}
+
+	static final Map<String, Object> getFrequencyJson(final DatabaseService db,
 			final String corpus, final String word) throws Exception {
 		return new JSON().addValues(word,
 				db.getYearAndFrequency(corpus, word)).data;
+	}
+
+	static final Future<Map<String, Object>> getFrequencyJsonAsync(
+			final DatabaseService db, final String corpus, final String word)
+			throws Exception {
+		return executor.submit(() -> getFrequencyJson(db, corpus, word));
 	}
 
 	static final String[] getMostSimilarAtBeginningAndEnd(
@@ -74,7 +93,8 @@ public class Server {
 		if (config.coversServer()) {
 			spark.Spark.ipAddress(config.getServer().getIp());
 			spark.Spark.port(config.getServer().getPort());
-			System.out.println("Using "+config.getServer().getIp()+":"+config.getServer().getPort());
+			System.out.println("Using " + config.getServer().getIp() + ":"
+					+ config.getServer().getPort());
 		}
 
 		staticFileLocation("/public");
@@ -89,39 +109,44 @@ public class Server {
 			model.put("corpus", corpus);
 			model.put("corpusName", db.getCorpusName(corpus));
 			model.put("corpusNote", db.getCorpusNote(corpus));
-			model.put("corpusLink",db.getCorpusLink(corpus, word));
+			model.put("corpusLink", db.getCorpusLink(corpus, word));
 
 			if (db.wordInCorpus(word, corpus)) {
-				long t = System.currentTimeMillis();
 				final String[] mostSimilar = getMostSimilarAtBeginningAndEnd(db,
 						corpus, word);
-				System.out.println("most " + (System.currentTimeMillis() - t));
-				t = System.currentTimeMillis();
+				Future<Map<String, Object>> similaritydata = null;
+				Future<Map<String, Object>> ppmidata = null;
+				Future<Map<String, Object>> chidata = null;
+				Future<Map<String, Object>> frequencydata = null;
+				try {
+					similaritydata = getAssociationJsonAsync(db, corpus,
+							DatabaseService.SIMILARITY_TABLE, false, word,
+							mostSimilar);
+					ppmidata = getAssociationJsonAsync(db, corpus,
+							DatabaseService.PPMI_TABLE, true, word,
+							getTopContextAtBeginningAndEnd(db,
+									DatabaseService.PPMI_TABLE, corpus, word));
+					chidata = getAssociationJsonAsync(db, corpus,
+							DatabaseService.CHI_TABLE, true, word,
+							getTopContextAtBeginningAndEnd(db,
+									DatabaseService.CHI_TABLE, corpus, word));
+					frequencydata = getFrequencyJsonAsync(db, corpus, word);
 
-				model.put("similaritydata",
-						getAssociationJSON(db, corpus,
-								DatabaseService.SIMILARITY_TABLE, false, word,
-								mostSimilar));
-				System.out.println("sim " + (System.currentTimeMillis() - t));
-				t = System.currentTimeMillis();
-				model.put("ppmidata",
-						getAssociationJSON(db, corpus,
-								DatabaseService.PPMI_TABLE, true, word,
-								getTopContextAtBeginningAndEnd(db,
-										DatabaseService.PPMI_TABLE, corpus,
-										word)));
-				model.put("chidata",
-						getAssociationJSON(db, corpus,
-								DatabaseService.CHI_TABLE, true, word,
-								getTopContextAtBeginningAndEnd(db,
-										DatabaseService.CHI_TABLE, corpus,
-										word)));
-				System.out.println("ppmi " + (System.currentTimeMillis() - t));
-				t = System.currentTimeMillis();
-				model.put("frequencydata", getFrequencyJSON(db, corpus, word));
-				System.out.println("freq " + (System.currentTimeMillis() - t));
-				t = System.currentTimeMillis();
-				return new ModelAndView(model, "result");
+					model.put("similaritydata", similaritydata.get());
+					model.put("ppmidata", ppmidata.get());
+					model.put("chidata", chidata.get());
+					model.put("frequencydata", frequencydata.get());
+					return new ModelAndView(model, "result");
+				} finally {
+					if (similaritydata != null)
+						similaritydata.cancel(true);
+					if (ppmidata != null)
+						ppmidata.cancel(true);
+					if (chidata != null)
+						chidata.cancel(true);
+					if (frequencydata != null)
+						frequencydata.cancel(true);
+				}
 			} else
 				return new ModelAndView(model, "unknown");
 		}, new ThymeleafTemplateEngine());
@@ -136,11 +161,11 @@ public class Server {
 
 		get("/api/chi", (request, response) -> getAssociation(request, db,
 				DatabaseService.CHI_TABLE, true), new Gson()::toJson);
-		
+
 		get("/api/covers", (request, response) -> {
 			final String corpus = request.queryParams("corpus");
 			final String word = request.queryParams("word");
-			Map<String,Boolean> answer = new HashMap<>();
+			final Map<String, Boolean> answer = new HashMap<>();
 			answer.put("covers", db.wordInCorpus(word, corpus));
 			return answer;
 		}, new Gson()::toJson);
@@ -148,7 +173,7 @@ public class Server {
 		get("/api/frequency", (request, response) -> {
 			final String corpus = request.queryParams("corpus");
 			final String word = request.queryParams("word");
-			return getFrequencyJSON(db, corpus, word);
+			return getFrequencyJson(db, corpus, word);
 		}, new Gson()::toJson);
 	}
 
