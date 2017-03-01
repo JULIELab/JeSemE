@@ -32,8 +32,12 @@
 }
 
 .center-block {
-	text-align: justified;
 	padding: 100px;
+}
+
+.center-part {
+	text-align: justified;
+	padding: 20px;
 }
 </style>
 
@@ -45,61 +49,102 @@
 <body>
 
 	<div class="center-block">
-
 		<h1>JeDiSem Help</h1>
 		<p>
 			JeDiSem is described in detail in <a href="paper.pdf">our paper</a>,
 			the following is mostly a simplified overview.
 		</p>
+		<div class="center-part">
+			<h2>Metrics</h2>
+			<h3>
+				PPMI and &chi;<sup>2</sup>
+			</h3>
+			<p>
+				Both Positive Pointwise Mutual Information (PPMI) and Pearson's
+				&chi;<sup>2</sup> measure how specific a combination of two words
+				is. Both use the frequency of a word \(i\) or context word \(j\) to
+				calculate the probability of finding one of them, as in \(P(i)\)
+				respectively \(P(j)\).They then compare the expected probability of
+				encountering both words \(P(i)P(j)\) with the observed
+				frequency/probability \(P(i,j)\).
+			</p>
+			<p>PPMI favors infrequent context words and can be calculated
+				with: $$PPMI(i,j) := max(\frac{P(i,j)}{P(i)P(j)},0)$$</p>
+			<p>
+				&chi;<sup>2</sup> is regarded as more balanced and can be calculated
+				with: $$\chi^2(i,j) := \frac{(P(i,j) - P(i)P(j))^2}{P(i)P(j)}$$
+			</p>
 
-		<h2>Metrics</h2>
-		<h3>
-			PPMI and &chi;<sup>2</sup>
-		</h3>
-		<p>
-			Both Positive Pointwise Mutual Information (PPMI) and Pearson's &chi;<sup>2</sup>
-			measure how specific a combination of two words is. Both use the
-			frequency of a word \(i\) or context word \(j\) to calculate the
-			probability of finding one of them, as in \(P(i)\) respectively
-			\(P(j)\).They then compare the expected probability of encountering
-			both words \(P(i)P(j)\) with the observed frequency/probability
-			\(P(i,j)\).
-		</p>
-		<p>PPMI favors infrequent context words and can be calculated
-			with: $$PPMI(i,j) := max(\frac{P(i,j)}{P(i)P(j)},0)$$</p>
-		<p>
-			&chi;<sup>2</sup> is regarded as more balanced and can be calculated
-			with: $$\chi^2(i,j) := \frac{(P(i,j) - P(i)P(j))^2}{P(i)P(j)}$$
-		</p>
+			<h3>
+				SVD<sub>PPMI</sub>
+			</h3>
 
-		<h3>
-			SVD<sub>PPMI</sub>
-		</h3>
-
-		<p>
-			SVD<sub>PPMI</sub> uses singular value decomposition to reduce the
-			dimensionality of a matrix storing PPMI data. 
-			
-			It represents a PPMI-matrix $M$ as
-			the matrix product $$U \cdot \Sigma \cdot V^T$$. The best performing
-			word embeddings are then given by the top n (typically about 500)
-			entries of $$U$$ as determined by the corresponding singular values
-			in $$\Sigma$$.
-		</p>
-		<h2>Corpora</h2>
-		<h3></h3>
-		<p></p>
-		<h3></h3>
-		<p></p>
-		<h3></h3>
-		<p></p>
-		<h2>API</h2>
-		<h3>Similar Words</h3>
-		<p></p>
-		<h3>Typical Context</h3>
-		<p></p>
-		<h3>Relative Frequency</h3>
-		<p></p>
+			<p>
+				SVD<sub>PPMI</sub> uses singular value decomposition (SVD) to reduce
+				the dimensionality of a matrix storing PPMI data. It produces word
+				embeddings with quality similar to word2vec embeddings. See <a
+					href="http://www.aclweb.org/anthology/Q15-1016">Levy (2015)</a> for
+				details. In contrast to word2vec, it is not affected by random
+				initialization based <a
+					href="http://aclweb.org/anthology/C/C16/C16-1262.pdf">realiability
+					problems</a>.
+			</p>
+		</div>
+		<div class="center-part">
+			<h2>Corpora</h2>
+			<h3>COHA</h3>
+			<p>
+				Corpus of Historical American English, representative and balanced.
+				Lowercased during preprocessing. <a
+					href="http://corpus.byu.edu/coha/">See here for more
+					information.</a>
+			</p>
+			<h3>DTA</h3>
+			<p>
+				Deutsches Textarchiv 'German Text Archive', a representative (yet
+				only vaguely balanced) corpus of ca. 1600-1900 German. Lemmatized
+				during preprocessing. <a href="http://www.deutschestextarchiv.de">See
+					here for more information in German.</a>
+			</p>
+			<h3>Google Books</h3>
+			<p>
+				The Google Books Ngram corpus covers about 6% of all books. We use
+				the English Fiction and German subcorpus. It is unbalanced and known
+				for sampling bias. English Fiction lowercased during preprocessing,
+				German lemmatized and lowercased. <a
+					href="https://books.google.com/ngrams">See here for Google's
+					visualization.</a>
+			</p>
+		</div>
+		<div class="center-part">
+			<h2>API</h2>
+			JeDiSem provides several APIs for GET requests, which return JSON.
+			All will preprocess words to match the queried corpus.
+			<h3>Similar Words</h3>
+			<p>Expects corpus, word1 and word2 as parameters, as in:</p>
+			<p>
+				<a
+					href="http://jedisem.org/api/similarity?word1=day&word2=night&corpus=coha">jedisem.org/api/similarity?word1=day&amp;word2=night&amp;corpus=coha</a>
+			</p>
+			<h3>Typical Context</h3>
+			<p>
+				Expects corpus, word1 and word2 as parameters. Contexts can be
+				requested via PPMI or &chi;<sup>2</sup> as in:
+			</p>
+			<p>
+				<a
+					href="http://jedisem.org/api/ppmi?word1=day&word2=night&corpus=coha">jedisem.org/api/ppmi?word1=day&amp;word2=night&amp;corpus=coha</a>
+			</p>
+			<p>
+				<a
+					href="http://jedisem.org/api/chi?word1=day&word2=night&corpus=coha">jedisem.org/api/chi?word1=day&amp;word2=night&amp;corpus=coha</a>
+			</p>
+			<h3>Relative Frequency</h3>
+			<p>Expects corpus and word as parameters, as in:</p>
+			<p>
+				<a href="http://jedisem.org/api/frequency?word=day&corpus=coha">jedisem.org/api/frequency?word=day&amp;corpus=coha</a>
+			</p>
+		</div>
 	</div>
 	<footer class="footer">
 		<p>
