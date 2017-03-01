@@ -144,15 +144,24 @@ public class DatabaseService {
 	}
 
 	public String getCorpusLink(final String corpus, final String word) {
-		return corpora.get(corpus).getUrl(word);
+		Corpus c = corpora.get(corpus);
+		if (c != null)
+			return c.getUrl(word);
+		return null;
 	}
 
 	public String getCorpusName(final String corpus) {
-		return corpora.get(corpus).getFullName();
+		Corpus c = corpora.get(corpus);
+		if (c != null)
+			return c.getFullName();
+		return null;
 	}
 
 	public String getCorpusNote(final String corpus) {
-		return corpora.get(corpus).getNote();
+		Corpus c = corpora.get(corpus);
+		if (c != null)
+			return c.getNote();
+		return null;
 	}
 
 	public Integer getFirstYear(final String corpusName, final String word)
@@ -320,6 +329,10 @@ public class DatabaseService {
 				corpora.put(corpusAndId.word, corpus);
 			}
 		}
+	}
+
+	public boolean knowCorpus(final String corpus) {
+		return corpora.containsKey(corpus);
 	}
 
 	public boolean wordInCorpus(final String word, final String corpus) {

@@ -147,8 +147,10 @@ public class Server {
 					if (frequencydata != null)
 						frequencydata.cancel(true);
 				}
-			} else
-				return new ModelAndView(model, "unknown");
+			} else if (db.knowCorpus(corpus))
+				return new ModelAndView(model, "unknownWord");
+			else
+				return new ModelAndView(model, "unknownCorpus");
 		}, new ThymeleafTemplateEngine());
 
 		get("/api/similarity",
