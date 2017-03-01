@@ -24,7 +24,7 @@ function addWordTo(chart, url, wordBox, error) {
             word2: word2
         }, function (data) {
             if (data.columns[0].length === 1)
-                document.getElementById(error).innerHTML = word2 + " not covered by "+corpusName;
+                document.getElementById(error).innerHTML = "Interaction with \""+ word2 + "\" not covered by "+corpusName;
             else
                 chart.load(data);
         });
@@ -41,7 +41,7 @@ function addWordToFrequencyChart(chart, url, wordBox, error) {
             word: word2
         }, function (data) {
             if (data.columns[0].length === 1)
-                document.getElementById(error).innerHTML = word2 + " not covered by "+corpusName;
+                document.getElementById(error).innerHTML ="\"" + word2 + "\" not covered by "+corpusName;
             else
                 chart.load(data);
         });
@@ -59,7 +59,7 @@ function addWordToTwo(chart, url, chart2, url2, wordBox, error) {
             word2: word2
         }, function (data) {
             if (data.columns[0].length === 1)
-                document.getElementById(error).innerHTML = word2 + " not covered by "+corpusName;
+                document.getElementById(error).innerHTML = "Interaction with \"" + word2 + "\" not covered by "+corpusName;
             else
                 chart.load(data);
         });
