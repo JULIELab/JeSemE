@@ -6,7 +6,6 @@ import static spark.Spark.staticFileLocation;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,24 +50,22 @@ public class Server {
 	static final String[] getMostSimilarAtBeginningAndEnd(
 			final DatabaseService db, final String corpus, final String word)
 			throws Exception {
-		final List<Integer> years = db.getYears(corpus, word);
 		final Set<String> mostSimilar = new HashSet<>();
 		mostSimilar.addAll(db.getMostSimilarWordsInYear(corpus, word,
-				years.get(0), LIMIT));
+				db.getFirstYear(corpus, word), LIMIT));
 		mostSimilar.addAll(db.getMostSimilarWordsInYear(corpus, word,
-				years.get(years.size() - 1), LIMIT));
+				db.getLastYear(corpus, word), LIMIT));
 		return mostSimilar.toArray(new String[mostSimilar.size()]);
 	}
 
 	static final String[] getTopContextAtBeginningAndEnd(
 			final DatabaseService db, final String table, final String corpus,
 			final String word) throws Exception {
-		final List<Integer> years = db.getYears(corpus, word);
 		final Set<String> topContext = new HashSet<>();
 		topContext.addAll(db.getTopContextWordsInYear(corpus, table, word,
-				years.get(0), LIMIT));
+				db.getFirstYear(corpus, word), LIMIT));
 		topContext.addAll(db.getTopContextWordsInYear(corpus, table, word,
-				years.get(years.size() - 1), LIMIT));
+				db.getLastYear(corpus, word), LIMIT));
 		return topContext.toArray(new String[topContext.size()]);
 	}
 

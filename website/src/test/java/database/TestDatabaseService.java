@@ -115,14 +115,18 @@ public class TestDatabaseService {
 
 	@Test
 	public void testGetYears() throws Exception {
-		assertEquals(Arrays.asList(new Integer[] { 1910, 1920, 1930, 1940 }),
-				db.getYears(CORPUS, "foo"));
+		assertEquals(new Integer(1910),
+				db.getFirstYear(CORPUS, "foo"));
+		assertEquals(new Integer(1940),
+				db.getLastYear(CORPUS, "foo"));
 	}
 
 	@Test
 	public void testGetYearsWithMapping() throws Exception {
-		assertEquals(Arrays.asList(new Integer[] { 1910, 1920, 1930, 1940 }),
-				db.getYears(CORPUS, "fooo"));
+		assertEquals(new Integer(1910),
+				db.getFirstYear(CORPUS, "fooo"));
+		assertEquals(new Integer(1940),
+				db.getLastYear(CORPUS, "fooo"));
 	}
 
 }

@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 
+import com.google.common.collect.HashBasedTable;
+
 import configuration.Configuration;
 import database.corpus.Corpus;
 import database.corpus.DTAMapper;
@@ -33,7 +35,10 @@ import database.importer.WordImporter;
  */
 
 public class DatabaseService {
-
+	private HashBasedTable<String, String, Integer> firstYearCache = HashBasedTable
+			.create();
+	private HashBasedTable<String, String, Integer> lastYearCache = HashBasedTable
+			.create();
 	private static final String SCHEMA = "JEDISEM_V09";
 	private static final String CORPORA = SCHEMA + ".TABLES";
 	public static final String SIMILARITY_TABLE = SCHEMA + ".SIMILARITY";
@@ -48,9 +53,11 @@ public class DatabaseService {
 	private static final String SIMILARITY_QUERY = "SELECT year, association AS value FROM "
 			+ "%s"
 			+ " WHERE corpus=:corpus AND (word1=:word1 AND word2=:word2) ORDER BY year ASC";
-	private static final String YEARS_QUERY = "SELECT DISTINCT year FROM "
-			+ SIMILARITY_TABLE
-			+ " WHERE corpus=:corpus AND (word1=:word OR word2=:word) ORDER BY year";
+	private static final String YEAR_QUERY = "SELECT year FROM "
+			+ FREQUENCY_TABLE
+			+ " WHERE corpus=:corpus AND word=:word ORDER BY year";
+	private static final String FIRST_YEAR_QUERY = YEAR_QUERY + " ASC LIMIT 1";
+	private static final String LAST_YEAR_QUERY = YEAR_QUERY + " DESC LIMIT 1";
 	private static final String MOST_SIMILAR_QUERY = "SELECT word1, word2 FROM "
 			+ SIMILARITY_TABLE
 			+ " WHERE corpus=:corpus AND (word1=:givenWord OR word2=:givenWord) AND year=:year ORDER BY association DESC LIMIT :limit";
@@ -138,21 +145,23 @@ public class DatabaseService {
 			final String word, final Integer year, final int limit) {
 		final Corpus corpus = corpora.get(corpusName);
 		final List<String> words = new ArrayList<>();
-		if (!corpus.hasMappingFor(word))
+		if (!corpus.hasMappingFor(word) || year == null)
 			return words;
 		final Integer wordId = corpus.getIdFor(word);
 		final String sql = MOST_SIMILAR_QUERY;
+
 		try (Connection con = sql2o.open()) {
+			long t = System.currentTimeMillis();
 			for (final IDAndID ids : con.createQuery(sql)
 					.addParameter("givenWord", wordId)
 					.addParameter("corpus", corpus.getId())
 					.addParameter("year", year).addParameter("limit", limit)
 					.executeAndFetch(IDAndID.class)) {
-				
 				final Integer newWordId = ids.WORD1.equals(wordId) ? ids.WORD2
 						: ids.WORD1;
 				words.add(corpus.getStringFor(newWordId));
 			}
+			System.out.println("end most " + (System.currentTimeMillis() - t));
 			return words;
 		}
 	}
@@ -162,7 +171,7 @@ public class DatabaseService {
 			final int limit) {
 		final Corpus corpus = corpora.get(corpusName);
 		final List<String> words = new ArrayList<>();
-		if (!corpus.hasMappingFor(word))
+		if (!corpus.hasMappingFor(word) || year == null)
 			return words;
 		final Integer givenWordId = corpus.getIdFor(word);
 		final String sql = String.format(TOP_CONTEXT_QUERY, table);
@@ -226,17 +235,40 @@ public class DatabaseService {
 		return getYearAndFrequency(corpus.getId(), corpus.getIdFor(word));
 	}
 
-	public List<Integer> getYears(final String corpusName, final String word)
+	public Integer getFirstYear(final String corpusName, final String word)
 			throws Exception {
-		final Corpus corpus = corpora.get(corpusName);
-		if (!corpus.hasMappingFor(word))
-			return new ArrayList<>();
-		final Integer wordId = corpus.getIdFor(word);
-		try (Connection con = sql2o.open()) {
-			return con.createQuery(YEARS_QUERY).addParameter("word", wordId)
-					.addParameter("corpus", corpus.getId())
-					.executeScalarList(Integer.class);
+		if (!firstYearCache.contains(corpusName, word)) {
+			final Corpus corpus = corpora.get(corpusName);
+			if (!corpus.hasMappingFor(word))
+				firstYearCache.put(corpusName, word, null);
+			final Integer wordId = corpus.getIdFor(word);
+			try (Connection con = sql2o.open()) {
+				Integer i = con.createQuery(FIRST_YEAR_QUERY)
+						.addParameter("word", wordId)
+						.addParameter("corpus", corpus.getId())
+						.executeScalar(Integer.class);
+				firstYearCache.put(corpusName, word, i);
+			}
 		}
+		return firstYearCache.get(corpusName, word);
+	}
+
+	public Integer getLastYear(final String corpusName, final String word)
+			throws Exception {
+		if (!lastYearCache.contains(corpusName, word)) {
+			final Corpus corpus = corpora.get(corpusName);
+			if (!corpus.hasMappingFor(word))
+				lastYearCache.put(corpusName, word, null);
+			final Integer wordId = corpus.getIdFor(word);
+			try (Connection con = sql2o.open()) {
+				Integer i = con.createQuery(LAST_YEAR_QUERY)
+						.addParameter("word", wordId)
+						.addParameter("corpus", corpus.getId())
+						.executeScalar(Integer.class);
+				lastYearCache.put(corpusName, word, i);
+			}
+		}
+		return lastYearCache.get(corpusName, word);
 	}
 
 	private void initializeMapping(final Configuration config)
@@ -258,23 +290,20 @@ public class DatabaseService {
 				final String pathName = info.getMappingPath();
 				final boolean lowercase = info.getLowercase();
 				if (pathName == null)
-					if(lowercase)
+					if (lowercase)
 						mapper = new LowerCaseMapper();
 					else
 						mapper = new DummyMapper();
 				else
-					mapper = new DTAMapper(Paths.get(pathName),lowercase);
+					mapper = new DTAMapper(Paths.get(pathName), lowercase);
 
 				final Corpus corpus = new Corpus(corpusAndId.id,
 						con.createQuery("SELECT word,id FROM " + WORDIDS_TABLE
 								+ " WHERE corpus=:corpus")
 								.addParameter("corpus", corpusAndId.id)
 								.executeAndFetch(WordAndID.class),
-						mapper, 
-						info.getFullName(), 
-						info.getNote(), 
-						info.getUrl(), 
-						info.getInsertInUrl());
+						mapper, info.getFullName(), info.getNote(),
+						info.getUrl(), info.getInsertInUrl());
 				corpora.put(corpusAndId.word, corpus);
 			}
 		}
@@ -284,12 +313,12 @@ public class DatabaseService {
 		return corpora.containsKey(corpus)
 				&& corpora.get(corpus).hasMappingFor(word);
 	}
-	
-	public String getCorpusName(String corpus){
+
+	public String getCorpusName(String corpus) {
 		return corpora.get(corpus).getFullName();
 	}
-	
-	public String getCorpusNote(String corpus){
+
+	public String getCorpusNote(String corpus) {
 		return corpora.get(corpus).getNote();
 	}
 

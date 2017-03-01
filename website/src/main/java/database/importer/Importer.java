@@ -102,6 +102,7 @@ public abstract class Importer {
 		} else
 			stream = Files.lines(path);
 		LOGGER.info("Starting import of {} into {}", path, tableName);
+		System.out.println("Starting import of "+path);
 		final Iterator<String[]> iter = stream.map(x -> x.split(","))
 				.iterator();
 		long i = 0;
