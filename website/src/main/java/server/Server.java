@@ -4,13 +4,15 @@ import static spark.Spark.get;
 import static spark.Spark.redirect;
 import static spark.Spark.staticFileLocation;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import com.google.gson.Gson;
 
@@ -46,35 +48,34 @@ public class Server {
 		return data.data;
 	}
 
-	static final Future<Map<String, Object>> getAssociationJsonAsync(
-			final DatabaseService db, final String corpus, final String table,
-			final boolean isContextQuery, final String initialWord,
-			final String... moreWords) {
-		return executor.submit(() -> getAssociationJson(db, corpus, table,
-				isContextQuery, initialWord, moreWords));
-	}
-
 	static final Map<String, Object> getFrequencyJson(final DatabaseService db,
 			final String corpus, final String word) throws Exception {
 		return new JSON().addValues(word,
 				db.getYearAndFrequency(corpus, word)).data;
 	}
 
-	static final Future<Map<String, Object>> getFrequencyJsonAsync(
-			final DatabaseService db, final String corpus, final String word)
-			throws Exception {
-		return executor.submit(() -> getFrequencyJson(db, corpus, word));
+	private static Callable<List<String>> getMostSimilarAsync(
+			final boolean first, final DatabaseService db, final String corpus,
+			final String word) throws Exception {
+		return () -> db.getMostSimilarWordsInYear(corpus, word, first
+				? db.getFirstYear(corpus, word) : db.getLastYear(corpus, word),
+				LIMIT);
 	}
 
 	static final String[] getMostSimilarAtBeginningAndEnd(
 			final DatabaseService db, final String corpus, final String word)
 			throws Exception {
-		final Set<String> mostSimilar = new HashSet<>();
-		mostSimilar.addAll(db.getMostSimilarWordsInYear(corpus, word,
-				db.getFirstYear(corpus, word), LIMIT));
-		mostSimilar.addAll(db.getMostSimilarWordsInYear(corpus, word,
-				db.getLastYear(corpus, word), LIMIT));
-		return mostSimilar.toArray(new String[mostSimilar.size()]);
+		return executor
+				.invokeAll(Arrays.asList(
+						getMostSimilarAsync(true, db, corpus, word),
+						getMostSimilarAsync(false, db, corpus, word)))
+				.stream().map(future -> {
+					try {
+						return future.get();
+					} catch (final Exception e) {
+						throw new IllegalStateException(e);
+					}
+				}).flatMap(List::stream).distinct().toArray(String[]::new);
 	}
 
 	static final String[] getTopContextAtBeginningAndEnd(
@@ -111,47 +112,38 @@ public class Server {
 			model.put("corpusNote", db.getCorpusNote(corpus));
 			model.put("corpusLink", db.getCorpusLink(corpus, word));
 
-			if (db.wordInCorpus(word, corpus)) {
-				final String[] mostSimilar = getMostSimilarAtBeginningAndEnd(db,
-						corpus, word);
-				Future<Map<String, Object>> similaritydata = null;
-				Future<Map<String, Object>> ppmidata = null;
-				Future<Map<String, Object>> chidata = null;
-				Future<Map<String, Object>> frequencydata = null;
-				try {
-					similaritydata = getAssociationJsonAsync(db, corpus,
-							DatabaseService.SIMILARITY_TABLE, false, word,
-							mostSimilar);
-					ppmidata = getAssociationJsonAsync(db, corpus,
-							DatabaseService.PPMI_TABLE, true, word,
-							getTopContextAtBeginningAndEnd(db,
-									DatabaseService.PPMI_TABLE, corpus, word));
-					chidata = getAssociationJsonAsync(db, corpus,
-							DatabaseService.CHI_TABLE, true, word,
-							getTopContextAtBeginningAndEnd(db,
-									DatabaseService.CHI_TABLE, corpus, word));
-					frequencydata = getFrequencyJsonAsync(db, corpus, word);
-
-					model.put("similaritydata", similaritydata.get());
-					model.put("ppmidata", ppmidata.get());
-					model.put("chidata", chidata.get());
-					model.put("frequencydata", frequencydata.get());
-					return new ModelAndView(model, "result");
-				} finally {
-					if (similaritydata != null)
-						similaritydata.cancel(true);
-					if (ppmidata != null)
-						ppmidata.cancel(true);
-					if (chidata != null)
-						chidata.cancel(true);
-					if (frequencydata != null)
-						frequencydata.cancel(true);
-				}
-			} else if (db.knowCorpus(corpus))
+			if (db.wordInCorpus(word, corpus))
+				return new ModelAndView(model, "result");
+			else if (db.knowCorpus(corpus))
 				return new ModelAndView(model, "unknownWord");
 			else
 				return new ModelAndView(model, "unknownCorpus");
 		}, new ThymeleafTemplateEngine());
+
+		get("/api/mostsimilar", (request, response) -> {
+			final String corpus = request.queryParams("corpus");
+			final String word = request.queryParams("word");
+			final String[] mostSimilar = getMostSimilarAtBeginningAndEnd(db,
+					corpus, word);
+			return getAssociationJson(db, corpus,
+					DatabaseService.SIMILARITY_TABLE, false, word, mostSimilar);
+		}, new Gson()::toJson);
+
+		get("/api/typicalcontextppmi", (request, response) -> {
+			final String corpus = request.queryParams("corpus");
+			final String word = request.queryParams("word");
+			return getAssociationJson(db, corpus, DatabaseService.PPMI_TABLE,
+					true, word, getTopContextAtBeginningAndEnd(db,
+							DatabaseService.PPMI_TABLE, corpus, word));
+		}, new Gson()::toJson);
+
+		get("/api/typicalcontextchi", (request, response) -> {
+			final String corpus = request.queryParams("corpus");
+			final String word = request.queryParams("word");
+			return getAssociationJson(db, corpus, DatabaseService.CHI_TABLE,
+					true, word, getTopContextAtBeginningAndEnd(db,
+							DatabaseService.CHI_TABLE, corpus, word));
+		}, new Gson()::toJson);
 
 		get("/api/similarity",
 				(request, response) -> getAssociation(request, db,

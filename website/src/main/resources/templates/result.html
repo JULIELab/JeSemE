@@ -22,7 +22,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.11/c3.min.js"></script>
 <script
 	src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-<script src="chart.js"></script><!-- helper functions -->
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+<script src="result.js"></script><!-- helper functions -->
 
 <!--constants -->
 <script th:inline="javascript">
@@ -55,7 +57,7 @@
 					<div class="col-sm-8">
 						<div class="chart" id="similaritychart"></div>
 						<script type="text/javascript">
-							similaritychart = chart("#similaritychart",
+							similaritychart = chart("similaritychart",'api/mostsimilar',
 									similaritydata, {
 										max : 1,
 										min : 0,
@@ -97,14 +99,14 @@
 							</h4>
 							<div class="chart" id="chichart"></div>
 							<script type="text/javascript">
-								chichart = chart("#chichart", chidata)
+								chichart = chart("chichart", 'api/typicalcontextchi', chidata)
 							</script>
 						</div>
 						<div id="PPMI" class="tab-pane fade">
 							<h4>Specific Context by PPMI</h4>
 							<div class="chart" id="ppmichart"></div>
 							<script type="text/javascript">
-								ppmichart = chart("#ppmichart", ppmidata)
+								ppmichart = chart("ppmichart", 'api/typicalcontextppmi', ppmidata)
 							</script>
 						</div>
 					</div>
@@ -132,7 +134,7 @@
 					<div class="col-sm-8">
 						<div class="chart" id="frequencychart"></div>
 						<script type="text/javascript">
-							frequencychart = chart("#frequencychart",
+							frequencychart = chart("frequencychart",'api/frequency', 
 									frequencydata, {
 										tick : {
 											format : percentFormatter
@@ -145,9 +147,7 @@
 							This chart shows the relative frequency of "<td th:text="${word}">WORD</td>" over time. Changes in frequency
 							might indicate shifts in meaning, yet can also be caused by
 							cultural processes (what are people writing about) or sampling
-							problems. Note that these numbers may not match those provided by
-							other sources, as they were calucluated based on frequent words
-							only - see <a href="/help.html">Help</a> for details.
+							problems - see <a href="/help.html">Help</a> for details.
 						</p>
 						<form action="javascript:void(0);"
 							onsubmit="addWordToFrequencyChart(frequencychart, 'api/frequency', 'addWordToFrequencyTextBox', 'addWordToFrequencyTextBoxError')">

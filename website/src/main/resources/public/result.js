@@ -8,7 +8,6 @@
 
     function roundingFormatter(format, value) {
         return function(value){
-        	console.log(value + "  " + d3.format(format)(value))
         	return d3.format(format)(value)
         }
     }
@@ -74,7 +73,7 @@ function addWordToTwo(chart, url, chart2, url2, wordBox, error) {
     }
 }
 
-function chart(bindto, data, y){
+function chart(bindto, url, y){
     var myy =  y != null ? y : {}
     if(!("tick" in myy)){
     	myy["tick"] = {
@@ -82,8 +81,8 @@ function chart(bindto, data, y){
     	}
     }
     var aChart = c3.generate({
-        bindto: bindto,
-        data: data != null ? data : {"columns": [[]]},
+        bindto: "#"+bindto,
+        data: {"columns": [[]]},
         axis: 	{
                 x: {
                     tick: {
@@ -91,29 +90,14 @@ function chart(bindto, data, y){
                     }
                 },
                 y:myy
-		},
-		
-// tooltip: {
-// position: function () {
-// var position = c3.chart.internal.fn.tooltipPosition.apply(this, arguments);
-// position.top = 0;
-// return position;
-// },
-// contents: function (data, defaultTitleFormat, defaultValueFormat, color) {
-// var $$ = this, config = $$.config,
-// titleFormat = config.tooltip_format_title || defaultTitleFormat,
-// nameFormat = config.tooltip_format_name || function (name) { return name; },
-// valueFormat = config.tooltip_format_value || defaultValueFormat,
-// text, i, title, value;
-// text = '<a href="http://google.de" target="_blank">test</a>'
-	     
-// return text;
-// }
-// }
-		})
-		
-// aChart.internal.hideTooltip = function () {
-// setTimeout(aChart, 10)
-// };
-	return aChart;    
+		},})
+		var spinner = new Spinner().spin(document.getElementById(bindto))
+		$(document).ready(	 $.getJSON(url, {
+	     	 corpus: corpus,
+	         word: word,
+	     }, function (data) {
+	    	 aChart.load(data);
+	    	 spinner.stop()
+	     }))
+	return aChart 
  }
