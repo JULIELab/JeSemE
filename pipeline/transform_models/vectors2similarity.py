@@ -27,8 +27,8 @@ def main():
         chi.append((year, read_generic(folder2chi(folder), word2id)))
         svd_similarity.append(
             (year, read_generic(folder2svd(folder), word2id, True)))
-    store_results(args["<target>"], ("WORDIDS", iterate(word2id, True)), ("FREQUENCY", iterate(
-        id2freq)), ("PPMI", iterate(ppmi)), ("CHI", iterate(chi)), ("SIMILARITY", iterate(svd_similarity)))
+    store_results(args["<target>"], ("WORDIDS", iterate(word2id, is_word2id=True)), ("FREQUENCY", iterate(
+        id2freq, is_frequency=True)), ("PPMI", iterate(ppmi)), ("CHI", iterate(chi)), ("SIMILARITY", iterate(svd_similarity)))
 
 
 def iterate(mapping, is_word2id=False, is_frequency=False):
