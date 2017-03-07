@@ -11,7 +11,7 @@ def main():
     Usage:
         vectors2similarity.py <target> <limit> <folders>...
 """)
-    id2freq, ppmi, svd_similarity = [], [], []
+    id2freq, ppmi, chi, svd_similarity = [], [], [], []
     folders = args["<folders>"]
     limit = int(args["<limit>"])
 
@@ -27,9 +27,8 @@ def main():
         chi.append((year, read_generic(folder2chi(folder), word2id)))
         svd_similarity.append(
             (year, read_generic(folder2svd(folder), word2id, True)))
-
-    store_results(args["<target>"], ("WORDIDS", iterate(word2id, is_word2id=True)), ("FREQUENCY", iterate(
-        id2freq, is_frequency=True)), ("PPMI", iterate(ppmi)), ("CHI", iterate(chi)), ("SIMILARITY", iterate(svd_similarity)))
+    store_results(args["<target>"], ("WORDIDS", iterate(word2id, True)), ("FREQUENCY", iterate(
+        id2freq)), ("PPMI", iterate(ppmi)), ("CHI", iterate(chi)), ("SIMILARITY", iterate(svd_similarity)))
 
 
 def iterate(mapping, is_word2id=False, is_frequency=False):
@@ -63,12 +62,16 @@ def folder2chi(folder):
     return PositiveExplicit(join(folder, "chi")).similarity_first_order
 
 
+def folder2chi(folder):
+    return PositiveExplicit(join(folder, "chi")).similarity_first_order
+
+
 def folder2svd(folder):
     return SVDEmbedding(join(folder, "svd_pmi")).similarity
 
 
 def folder2vocab(folder):
-    return join(folder, join("shared", "counts.words.vocab"))
+    return join(folder, "counts.words.vocab")
 
 
 def intersect(words):
