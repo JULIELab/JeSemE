@@ -39,8 +39,8 @@ def iterate(mapping, is_word2id=False, is_frequency=False):
             yield [str(x) for x in word, value]
     elif is_frequency:
         for year, info in mapping:
-            for id1, id2, m in info.items():
-                yield [str(x) for x in word, year, value]
+            for word, freq in info.items():
+                yield [str(x) for x in word, year, freq]
     else:
         for year, generator in mapping:
             for word, word2, metric in generator:
