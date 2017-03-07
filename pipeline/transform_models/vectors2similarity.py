@@ -27,23 +27,24 @@ def main():
         chi.append((year, read_generic(folder2chi(folder), word2id)))
         svd_similarity.append(
             (year, read_generic(folder2svd(folder), word2id, True)))
-
     store_results(args["<target>"], ("WORDIDS", iterate(word2id, True)), ("FREQUENCY", iterate(
         id2freq)), ("PPMI", iterate(ppmi)), ("CHI", iterate(chi)), ("SIMILARITY", iterate(svd_similarity)))
 
 
-def iterate(mapping, is_word2id=False):
-    if is_word2id:
+def iterate(mapping, is_word2id=False, is_frequency=False):
+    if is_word2id and is_frequency:
+        raise Exception("Not allowed")
+    elif is_word2id:
         for word, value in mapping.items():
             yield [str(x) for x in word, value]
+    elif is_frequency:
+        for year, info in mapping:
+            for id1, id2, m in info.items():
+                yield [str(x) for x in word, year, value]
     else:
-        for (year, info) in mapping:
-            for word, value in info.items():
-                if isinstance(value, dict):
-                    for word2, innervalue in value.items():
-                        yield [str(x) for x in word, word2, year, innervalue]
-                else:
-                    yield [str(x) for x in word, year, value]
+        for year, generator in mapping:
+            for word, word2, metric in generator:
+                yield [str(x) for x in word, word2, year, metric]
 
 
 def store_results(path, *mappings):
@@ -56,8 +57,14 @@ def store_results(path, *mappings):
 def folder2ppmi(folder):
     return PositiveExplicit(join(folder, "pmi")).similarity_first_order
 
+
 def folder2chi(folder):
     return PositiveExplicit(join(folder, "chi")).similarity_first_order
+
+
+def folder2chi(folder):
+    return PositiveExplicit(join(folder, "chi")).similarity_first_order
+
 
 def folder2svd(folder):
     return SVDEmbedding(join(folder, "svd_pmi")).similarity
@@ -115,10 +122,9 @@ def read_generic(method, word2id, remove_duplicates=False):
         for word2, id2 in word2id.items():
             if word1 != word2:
                 if not remove_duplicates or (remove_duplicates and id1 < id2):
-                    m = method(word1, word2)
-                    if m != 0.0:
-                        mapping[id1][id2] = m
-    return mapping
+                    metric = method(word1, word2)
+                    if metric != 0.0:
+                        yield id1, id2, metric
 
 
 if __name__ == "__main__":
