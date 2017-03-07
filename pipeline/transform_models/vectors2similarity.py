@@ -5,6 +5,7 @@ from representations.embedding import SVDEmbedding
 from representations.explicit import PositiveExplicit
 from os.path import join, basename, normpath
 
+
 def main():
     args = docopt("""
     Usage:
@@ -23,7 +24,8 @@ def main():
             year = name
         id2freq.append((year, read_freq(folder, word2id)))
         ppmi.append((year, read_generic(folder2ppmi(folder), word2id)))
-        svd_similarity.append((year, read_generic(folder2svd(folder), word2id, True)))
+        svd_similarity.append(
+            (year, read_generic(folder2svd(folder), word2id, True)))
 
     store_results(args["<target>"], ("WORDIDS", iterate(word2id, True)), ("FREQUENCY", iterate(
         id2freq)), ("PPMI", iterate(ppmi)), ("SIMILARITY", iterate(svd_similarity)))
@@ -42,18 +44,25 @@ def iterate(mapping, is_word2id=False):
                 else:
                     yield [str(x) for x in word, year, value]
 
+
 def store_results(path, *mappings):
     for name, mapping in mappings:
         with open(join(path, name + ".csv"), "w") as f:
             for l in mapping:
                 print >>f, ",".join(l)
 
+
 def folder2ppmi(folder):
     return PositiveExplicit(join(folder, "pmi")).similarity_first_order
+
+
 def folder2svd(folder):
     return SVDEmbedding(join(folder, "svd_pmi")).similarity
+
+
 def folder2vocab(folder):
     return join(folder, join("shared", "counts.words.vocab"))
+
 
 def intersect(words):
     if len(words) == 0:
@@ -64,6 +73,7 @@ def intersect(words):
     for w in words[1:]:
         intersection = intersection.intersection(w)
     return intersection
+
 
 def read_vocabs(limit, folders):
     words = []
@@ -78,7 +88,8 @@ def read_vocabs(limit, folders):
                 word, freq = line.strip().split()
                 w.add(word)
         words.append(w)
-    return {y:x for x, y in enumerate(intersect(words))}
+    return {y: x for x, y in enumerate(intersect(words))}
+
 
 def read_freq(folder, word2id):
     id2freq = {}
@@ -91,7 +102,7 @@ def read_freq(folder, word2id):
             total += float(freq)
     total = total / 100
     for i, f in id2freq.items():
-        id2freq[i] = f/total
+        id2freq[i] = f / total
     return id2freq
 
 
@@ -100,11 +111,10 @@ def read_generic(method, word2id, remove_duplicates=False):
     for word1, id1 in word2id.items():
         for word2, id2 in word2id.items():
             if word1 != word2:
-                if remove_duplicates:
-                    if id1 < id2:
-                        mapping[id1][id2] = method(word1, word2)
-                else:
-                    mapping[id1][id2] = method(word1, word2)
+                if not remove_duplicates or (remove_duplicates and id1 < id2):
+                    m = method(word1, word2)
+                    if m != 0.0:
+                        mapping[id1][id2] = m
     return mapping
 
 
