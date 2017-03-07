@@ -20,7 +20,7 @@ function prepare {
 		sed "s/[^[:alnum:]]*[ \t\n\r][^[:alnum:]]*/ /g;s/[^a-z0-9]*$/ /g;s/  */ /g;/^\s*$/d" < $source_path > $target_path/clean
 	fi
 
-	python $HYPERWORD_PATH/hyperwords/corpus2counts.py --win $CONTEXT_WINDOW $target_path/clean > $target_path/counts
+	python $HYPERWORD_PATH/hyperwords/corpus2counts.py --win $CONTEXT_WINDOW --thr 50 $target_path/clean > $target_path/counts
 }
 
 function copy_vocab {
