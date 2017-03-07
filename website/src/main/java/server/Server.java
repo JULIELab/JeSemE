@@ -24,8 +24,9 @@ import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
 public class Server {
 	private static final int LIMIT = 2;
+	private static final int THREADS = 12;
 	private static final ExecutorService executor = Executors
-			.newFixedThreadPool(20);
+			.newFixedThreadPool(THREADS);
 
 	private static Map<String, Object> getAssociation(final Request request,
 			final DatabaseService db, final String table,
@@ -97,6 +98,8 @@ public class Server {
 			System.out.println("Using " + config.getServer().getIp() + ":"
 					+ config.getServer().getPort());
 		}
+		
+		spark.Spark.threadPool(THREADS);
 
 		staticFileLocation("/public");
 		redirect.get("/", "/index.html");
