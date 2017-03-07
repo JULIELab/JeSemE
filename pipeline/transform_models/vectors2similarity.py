@@ -61,7 +61,7 @@ def folder2svd(folder):
 
 
 def folder2vocab(folder):
-    return join(folder, join("shared", "counts.words.vocab"))
+    return join(folder, "counts.words.vocab")
 
 
 def intersect(words):
