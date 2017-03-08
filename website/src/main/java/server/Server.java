@@ -4,6 +4,7 @@ import static spark.Spark.get;
 import static spark.Spark.redirect;
 import static spark.Spark.staticFileLocation;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 
@@ -90,17 +92,30 @@ public class Server {
 		return topContext.toArray(new String[topContext.size()]);
 	}
 
-	public static void startServer(final DatabaseService db,
-			final Configuration config) {
+	private static void configureServer(final Configuration config) {
 		if (config.coversServer()) {
 			spark.Spark.ipAddress(config.getServer().getIp());
 			spark.Spark.port(config.getServer().getPort());
 			System.out.println("Using " + config.getServer().getIp() + ":"
 					+ config.getServer().getPort());
 		}
-		
 		spark.Spark.threadPool(THREADS);
+	}
 
+	public static void startErrorServer(final Configuration config,
+			ArrayList<String> messageParts) {
+		configureServer(config);
+		final Map<String, Object> model = new HashMap<>();
+		model.put("message", messageParts.stream().collect(Collectors.joining(" ")));
+		ModelAndView modelAndView = new ModelAndView(model, "error");
+		get("/", (request, response) -> modelAndView,
+				new ThymeleafTemplateEngine());
+	}
+
+	public static void startServer(final DatabaseService db,
+			final Configuration config) {
+		configureServer(config);
+		
 		staticFileLocation("/public");
 		redirect.get("/", "/index.html");
 
