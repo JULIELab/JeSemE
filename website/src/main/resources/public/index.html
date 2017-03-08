@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8"/>
+<meta charset="UTF-8" />
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 
@@ -22,7 +22,7 @@ html {
 	min-height: 100%;
 }
 
-tooltipedtext {
+.tooltipedtext {
 	border-bottom: 1px dotted;
 }
 
@@ -42,10 +42,10 @@ tooltipedtext {
 }
 
 .description {
-	margin:auto;
-	text-align:justify;
-	color:darkgrey;
-	width:60%;
+	margin: auto;
+	text-align: justify;
+	color: darkgrey;
+	width: 60%;
 }
 </style>
 
@@ -85,27 +85,28 @@ tooltipedtext {
 			<input type="search" name="word" id="word" placeholder="enter a word" />
 			<input type="submit" value="Search" /> <br> <input type="radio"
 				name="corpus" value="coha" checked="checked">
-			<tooltipedtext data-toggle="tooltip"
-				title="Corpus of Historical American English, 400 Million words, lowercased">COHA</tooltipedtext>
+			<span class="tooltipedtext" data-toggle="tooltip"
+				title="Corpus of Historical American English, 400 Million words, lowercased">COHA</span>
 			<input type="radio" name="corpus" value="dta">
-			<tooltipedtext data-toggle="tooltip"
-				title="Deutsches Textarchiv 'German Text Archive', nearly 2000 books, lemmatized">DTA</tooltipedtext>
+			<span class="tooltipedtext" data-toggle="tooltip"
+				title="Deutsches Textarchiv 'German Text Archive', nearly 2000 books, lemmatized">DTA</span>
 			<input type="radio" name="corpus" value="gbfiction">
-			<tooltipedtext data-toggle="tooltip"
+			<span class="tooltipedtext" data-toggle="tooltip"
 				title="Google Books English Fiction, part of biggest existing corpus, lowercased">GB
-			Fiction</tooltipedtext>
+			Fiction</span>
 			<input type="radio" name="corpus" value="gbgerman">
-			<tooltipedtext data-toggle="tooltip"
+			<span class="tooltipedtext" data-toggle="tooltip"
 				title="Google Books German, part of biggest existing corpus, lemmatized">GB
-			German</tooltipedtext>
+			German</span>
 			<input type="radio" name="corpus" value="rsc">
-			<tooltipedtext data-toggle="tooltip"
+			<span class="tooltipedtext" data-toggle="tooltip"
 				title="Royal Society Corpus, rather small and specific, lowercased">RSC
-			German</tooltipedtext>
+			</span>
 		</form>
 		<br></br>
-		<p class="description">JeDiSem allows you to explore the semantic development of words over time. 
-		An intereting example is searching "heart" in the COHA corpus.</p>
+		<p class="description">JeDiSem allows you to explore the semantic
+			development of words over time. An intereting example is searching
+			"heart" in the COHA corpus.</p>
 	</div>
 	<footer class="footer">
 		<p>
