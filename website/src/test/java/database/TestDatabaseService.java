@@ -3,49 +3,27 @@ package database;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
-import java.util.HashSet;
-
 import org.dbunit.DatabaseUnitException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.sql2o.Sql2o;
-
-import com.zaxxer.hikari.HikariDataSource;
-
-import configuration.Configuration;
+import helper.DatabaseServiceHelper;
 
 public class TestDatabaseService {
 
 	private static final String CORPUS = "test1";
+	private static DatabaseServiceHelper helper;
 	private static DatabaseService db;
 
 	@AfterClass
 	public static void after() {
-		db.dropAll();
+		 helper.after();
 	}
 
 	@BeforeClass
 	public static void before() throws Exception {
-		db = initializeDatabase();
-		assertEquals(new HashSet<>(Arrays.asList("test1", "test2")),
-				db.corpora.keySet());
-	}
-
-	public static DatabaseService initializeDatabase() throws Exception {
-		final Configuration config = Configuration
-				.readYamlFile("src/test/resources/config.yaml");
-		final HikariDataSource ds = new HikariDataSource();
-		ds.setJdbcUrl(config.getDatabase().getUrl());
-		ds.setUsername(config.getDatabase().getUser());
-		ds.setPassword(config.getDatabase().getPassword());
-
-		final Sql2o sql2o = new Sql2o(ds);
-
-		DatabaseService.initializeTables(sql2o);
-		DatabaseService.importTables(config, sql2o);
-
-		return new DatabaseService(sql2o, config);
+		helper =  new DatabaseServiceHelper();
+		db = helper.getDatabaseService();
 	}
 
 	@Test

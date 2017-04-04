@@ -15,22 +15,24 @@ import com.google.common.collect.Lists;
 
 import configuration.Configuration;
 import database.DatabaseService;
-import database.TestDatabaseService;
 import database.YearAndValue;
+import helper.DatabaseServiceHelper;
 
 public class TestServer {
 
+	private static DatabaseServiceHelper helper;
 	private static DatabaseService db;
 	private static final String CORPUS = "test1";
 
 	@AfterClass
 	public static void after() {
-		db.dropAll();
+		 helper.after();
 	}
 
 	@BeforeClass
 	public static void before() throws Exception {
-		db = TestDatabaseService.initializeDatabase();
+		helper =  new DatabaseServiceHelper();
+		db = helper.getDatabaseService();
 	}
 
 	@Test

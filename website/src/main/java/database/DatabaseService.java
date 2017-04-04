@@ -77,6 +77,9 @@ public class DatabaseService {
 		}
 	}
 
+	/**
+	 * Static to avoid initializeMapping
+	 */
 	public static void importTables(final Configuration config,
 			final Sql2o sql2o) throws Exception {
 
@@ -106,6 +109,9 @@ public class DatabaseService {
 		}
 	}
 
+	/**
+	 * Static to avoid initializeMapping
+	 */
 	public static void initializeTables(final Sql2o sql2o) {
 		try (Connection con = sql2o.open()) {
 			con.createQuery("CREATE SCHEMA " + SCHEMA).executeUpdate();
