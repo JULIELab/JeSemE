@@ -33,7 +33,7 @@ import database.importer.WordImporter;
  */
 
 public class DatabaseService {
-	private static final String SCHEMA = "JEDISEM_V09";
+	private static final String SCHEMA = "JEDISEM_RSC"; //TODO: change if merged
 	private static final String CORPORA = SCHEMA + ".TABLES";
 	public static final String SIMILARITY_TABLE = SCHEMA + ".SIMILARITY";
 	private static final String WORDIDS_TABLE = SCHEMA + ".WORDIDS";
