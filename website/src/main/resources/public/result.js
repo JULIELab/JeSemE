@@ -73,7 +73,16 @@ function addWordToTwo(chart, url, chart2, url2, wordBox, error) {
     }
 }
 
-function chart(bindto, url, y){
+function chart(bindto, url, y, x, line){
+	//TODO use x, failed attempt at formatter?
+	if(line)
+		return line_chart(bindto, url, y)
+	else
+		return bar_chart(bindto, url, y)
+}
+
+
+function line_chart(bindto, url, y, x){
     var myy =  y != null ? y : {}
     if(!("tick" in myy)){
     	myy["tick"] = {
@@ -84,6 +93,35 @@ function chart(bindto, url, y){
         bindto: "#"+bindto,
         data: {"columns": [[]]},
         axis: 	{
+                x: { tick: { format: decadeFormatter } },
+                y: myy
+		},})
+		var spinner = new Spinner().spin(document.getElementById(bindto))
+		$(document).ready(	 $.getJSON(url, {
+	     	 corpus: corpus,
+	         word: word,
+	     }, function (data) {
+	    	 aChart.load(data);
+	    	 spinner.stop()
+	     }))
+	return aChart 
+ }
+
+function bar_chart(bindto, url, y){
+    var myy =  y != null ? y : {}
+    if(!("tick" in myy)){
+    	myy["tick"] = {
+            format: roundingFormatter(".2")
+    	}
+    }
+    var aChart = c3.generate({
+        bindto: "#"+bindto,
+        data: {"columns": [[]],  type: 'bar'},
+        bar: 	{
+            width: {
+                ratio: 0.5 // this makes bar width 50% of length between ticks
+            },
+        
                 x: {
                     tick: {
                         format: decadeFormatter

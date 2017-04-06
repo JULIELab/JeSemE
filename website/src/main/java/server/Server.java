@@ -126,6 +126,7 @@ public class Server {
 
 			model.put("word", word);
 			model.put("corpus", corpus);
+			model.put("lineChart", !corpus.equals("rsc"));//TODO move in config or make switch on website?	
 			model.put("corpusName", db.getCorpusName(corpus));
 			model.put("corpusNote", db.getCorpusNote(corpus));
 			model.put("corpusLink", db.getCorpusLink(corpus, word));
