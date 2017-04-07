@@ -12,7 +12,7 @@ import de.julielab.jeseme.configuration.Configuration;
 import de.julielab.jeseme.database.DatabaseService;
 import de.julielab.jeseme.server.Server;
 
-public class Main {
+public class CLI {
 	private static final String doc = "JeDiSem\n" + "Usage:\n"
 			+ "  jedisem server <dbconfig>\n" + "  jedisem import <dbconfig>\n"
 			+ "  jedisem initialize <dbconfig>\n"
