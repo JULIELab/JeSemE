@@ -1,2 +1,2 @@
-# JeDiSem
-Jena Diachronic Semantic Website
+# JeSemE
+Jena Semantic Explorer
