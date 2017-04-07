@@ -16,6 +16,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gson.Gson;
 
 import configuration.Configuration;
@@ -25,6 +28,7 @@ import spark.Request;
 import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
 public class Server {
+	private static final Logger LOG = LoggerFactory.getLogger(Server.class);
 	private static final int LIMIT = 2;
 	private static final int THREADS = 12;
 	private static final ExecutorService executor = Executors
@@ -36,6 +40,7 @@ public class Server {
 		final String corpus = request.queryParams("corpus");
 		final String word1 = request.queryParams("word1");
 		final String word2 = request.queryParams("word2");
+		LOG.info("association {} between {} and {} in {}", new Object[]{table, word1, word2, corpus});
 		return getAssociationJson(db, corpus, table, isContextQuery, word1,
 				word2);
 	}
@@ -48,6 +53,7 @@ public class Server {
 		for (final String word : moreWords)
 			data.addValues(word, db.getYearAndAssociation(corpus, table,
 					isContextQuery, initialWord, word));
+		LOG.trace("finished association {} with {} in {}", new Object[]{table, initialWord, corpus});
 		return data.data;
 	}
 
@@ -68,7 +74,8 @@ public class Server {
 	static final String[] getMostSimilarAtBeginningAndEnd(
 			final DatabaseService db, final String corpus, final String word)
 			throws Exception {
-		return executor
+		LOG.trace("starting getMostSimilarAtBeginningAndEnd {} in {}", word, corpus);
+		String[] mostSimilar = executor
 				.invokeAll(Arrays.asList(
 						getMostSimilarAsync(true, db, corpus, word),
 						getMostSimilarAsync(false, db, corpus, word)))
@@ -79,6 +86,8 @@ public class Server {
 						throw new IllegalStateException(e);
 					}
 				}).flatMap(List::stream).distinct().toArray(String[]::new);
+		LOG.trace("finished getMostSimilarAtBeginningAndEnd {} in {}", word, corpus);
+		return mostSimilar;
 	}
 
 	static final String[] getTopContextAtBeginningAndEnd(
@@ -122,6 +131,7 @@ public class Server {
 		get("/search", (request, response) -> {
 			final String corpus = request.queryParams("corpus");
 			final String word = request.queryParams("word");
+			LOG.info("search {} in {}", word, corpus);
 			final Map<String, Object> model = new HashMap<>();
 
 			model.put("word", word);
@@ -142,6 +152,7 @@ public class Server {
 		get("/api/mostsimilar", (request, response) -> {
 			final String corpus = request.queryParams("corpus");
 			final String word = request.queryParams("word");
+			LOG.info("mostsimilar {} in {}", word, corpus);
 			final String[] mostSimilar = getMostSimilarAtBeginningAndEnd(db,
 					corpus, word);
 			return getAssociationJson(db, corpus,
@@ -151,6 +162,7 @@ public class Server {
 		get("/api/typicalcontextppmi", (request, response) -> {
 			final String corpus = request.queryParams("corpus");
 			final String word = request.queryParams("word");
+			LOG.info("typicalcontextppmi {} in {}", word, corpus);
 			return getAssociationJson(db, corpus, DatabaseService.PPMI_TABLE,
 					true, word, getTopContextAtBeginningAndEnd(db,
 							DatabaseService.PPMI_TABLE, corpus, word));
@@ -159,6 +171,7 @@ public class Server {
 		get("/api/typicalcontextchi", (request, response) -> {
 			final String corpus = request.queryParams("corpus");
 			final String word = request.queryParams("word");
+			LOG.info("typicalcontextchi {} in {}", word, corpus);
 			return getAssociationJson(db, corpus, DatabaseService.CHI_TABLE,
 					true, word, getTopContextAtBeginningAndEnd(db,
 							DatabaseService.CHI_TABLE, corpus, word));
@@ -178,6 +191,7 @@ public class Server {
 		get("/api/covers", (request, response) -> {
 			final String corpus = request.queryParams("corpus");
 			final String word = request.queryParams("word");
+			LOG.info("covers {} in {}", word, corpus);
 			final Map<String, Boolean> answer = new HashMap<>();
 			answer.put("covers", db.wordInCorpus(word, corpus));
 			return answer;
@@ -186,6 +200,7 @@ public class Server {
 		get("/api/frequency", (request, response) -> {
 			final String corpus = request.queryParams("corpus");
 			final String word = request.queryParams("word");
+			LOG.info("frequency {} in {}", word, corpus);
 			return getFrequencyJson(db, corpus, word);
 		}, new Gson()::toJson);
 	}

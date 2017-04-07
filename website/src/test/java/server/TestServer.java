@@ -3,7 +3,6 @@ package server;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-import java.net.Socket;
 import java.util.List;
 import java.util.Map;
 
@@ -13,7 +12,6 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
-import configuration.Configuration;
 import database.DatabaseService;
 import database.YearAndValue;
 import helper.DatabaseServiceHelper;
@@ -72,18 +70,5 @@ public class TestServer {
 		assertArrayEquals(new String[] { "bar", "boo" },
 				Server.getTopContextAtBeginningAndEnd(db,
 						DatabaseService.PPMI_TABLE, CORPUS, "foo"));
-	}
-
-	@Test
-	public void testStartPingStop() throws Exception {
-		Server.startServer(db,
-				Configuration.readYamlFile("src/test/resources/config.yaml"));
-		try (Socket s = new Socket("127.0.0.1", 6666)) {
-			//nothing to do
-		} catch (final Exception e) {
-			org.junit.Assert.fail("Server not working");
-			throw (e);
-		}
-		Server.stopServer();
 	}
 }

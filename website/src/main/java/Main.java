@@ -19,6 +19,7 @@ public class Main {
 			+ "  jedisem error <dbconfig> <message>... \n\n" + "Options:\n"
 			+ "  -h --help     Show this screen.\n";
 
+	@SuppressWarnings("unchecked")
 	public static void main(final String[] args) throws Exception {
 		final Map<String, Object> opts = new Docopt(doc).parse(args);
 		final Configuration config = Configuration
