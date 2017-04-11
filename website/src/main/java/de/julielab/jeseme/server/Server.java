@@ -3,6 +3,7 @@ package de.julielab.jeseme.server;
 import static spark.Spark.get;
 import static spark.Spark.redirect;
 import static spark.Spark.staticFileLocation;
+import static spark.Spark.externalStaticFileLocation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -126,6 +127,8 @@ public class Server {
 		configureServer(config);
 		
 		staticFileLocation("/public");
+		externalStaticFileLocation("downloads");
+		
 		redirect.get("/", "/index.html");
 
 		get("/search", (request, response) -> {
