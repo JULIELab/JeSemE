@@ -10,6 +10,11 @@ do
 		echo "finished $name"
 	)&
 done
-
 wait
+
+cd downloads
+mv coha50.zip coha.zip
+mv dta50.zip dta.zip
+mv google_german_lemmata.zip google_german.zip
+mv royal_society_corpus.zip rsc.zip
 echo "done"
