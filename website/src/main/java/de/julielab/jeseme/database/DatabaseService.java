@@ -34,7 +34,7 @@ import de.julielab.jeseme.database.importer.WordImporter;
  */
 
 public class DatabaseService {
-	private static final String SCHEMA = "JEDISEM_V1"; //TODO update if reprocessed
+	private static final String SCHEMA = "JESEME_V1"; //TODO update if reprocessed
 	private static final String CORPORA = SCHEMA + ".TABLES";
 	public static final String SIMILARITY_TABLE = SCHEMA + ".SIMILARITY";
 	private static final String WORDIDS_TABLE = SCHEMA + ".WORDIDS";
