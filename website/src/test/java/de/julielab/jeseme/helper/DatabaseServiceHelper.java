@@ -19,8 +19,8 @@ public class DatabaseServiceHelper {
 		ds.setUsername(config.getDatabase().getUser());
 		ds.setPassword(config.getDatabase().getPassword());
 
-		final Sql2o sql2o = new Sql2o(ds);
-
+		Sql2o sql2o = new Sql2o(ds);
+		
 		DatabaseService.initializeTables(sql2o);
 		DatabaseService.importTables(config, sql2o);
 		db = new DatabaseService(sql2o, config);

@@ -1,6 +1,7 @@
 package de.julielab.jeseme.database;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import org.dbunit.DatabaseUnitException;
@@ -36,6 +37,9 @@ public class TestDatabaseService {
 
 		assertEquals(Arrays.asList(new String[] { "arr", "bar" }),
 				db.getMostSimilarWordsInYear(CORPUS, "foo", 1910, 2));
+		
+		//in table1 file, yet not imported due to minimum similarity
+		assertTrue(db.getMostSimilarWordsInYear(CORPUS, "foo", 1900, 2).isEmpty());
 	}
 
 	@Test

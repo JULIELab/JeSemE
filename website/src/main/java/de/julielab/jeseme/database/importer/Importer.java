@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 
-public abstract class Importer {
+public abstract class Importer implements AcceptanceCriterium {
 	static class GZIPFiles {
 		private static void closeSafely(final Closeable closeable) {
 			if (closeable != null)
@@ -102,22 +102,22 @@ public abstract class Importer {
 		} else
 			stream = Files.lines(path);
 		LOGGER.info("Starting import of {} into {}", path, tableName);
-		System.out.println("Starting import of "+path);
 		final Iterator<String[]> iter = stream.map(x -> x.split(","))
 				.iterator();
-		long i = 0;
+		long i = 1; //error if 0 due to criteria below
 		Query query = null;
 		try {
 			while (iter.hasNext()) {
 				if (query == null)
 					query = sql2o.beginTransaction()
 							.createQuery(String.format(sql, tableName));
-
-				addParameters(iter.next(), query)
-						.addParameter("corpus", corpusId).addToBatch();
-
-				//Nicer batch import leaks memory, thus using new connections is recommended
-				++i;
+				String[] data = iter.next();
+				if (accepts(data)) {
+					addParameters(data, query)
+							.addParameter("corpus", corpusId).addToBatch();
+					//Nicer batch import leaks memory, thus using new connections is recommended
+					++i;
+				}
 				if ((i % IMPORT_BATCH_SIZE) == 0)
 					query.executeBatch();
 				if ((i % IMPORT_COMMIT_SIZE) == 0) {

@@ -22,6 +22,7 @@ import de.julielab.jeseme.database.corpus.DummyMapper;
 import de.julielab.jeseme.database.corpus.LowerCaseMapper;
 import de.julielab.jeseme.database.corpus.WordMapper;
 import de.julielab.jeseme.database.importer.AssociationImporter;
+import de.julielab.jeseme.database.importer.AssociationImporterWithMinimum;
 import de.julielab.jeseme.database.importer.FrequencyImporter;
 import de.julielab.jeseme.database.importer.Importer;
 import de.julielab.jeseme.database.importer.WordImporter;
@@ -95,7 +96,7 @@ public class DatabaseService {
 						.getKey();
 				new WordImporter(sql2o, corpusId, WORDIDS_TABLE)
 						.importStuff(path.resolve(Importer.WORDS_CSV));
-				new AssociationImporter(sql2o, corpusId, SIMILARITY_TABLE)
+				new AssociationImporterWithMinimum(sql2o, corpusId, SIMILARITY_TABLE, 0.05f)
 						.importStuff(path.resolve(Importer.SIMILARITY_CSV));
 				new AssociationImporter(sql2o, corpusId, PPMI_TABLE)
 						.importStuff(path.resolve(Importer.PPMI_CSV));
