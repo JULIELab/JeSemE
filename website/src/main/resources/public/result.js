@@ -73,19 +73,17 @@ function addWordToTwo(chart, url, chart2, url2, wordBox, error) {
     }
 }
 
-function chart(bindto, url, y, x, line){
-	//TODO use x, failed attempt at formatter?
+function chart(bindto, url, yformat, line){
 	if(line)
-		return line_chart(bindto, url, y)
+		return line_chart(bindto, url, yformat)
 	else
-		return bar_chart(bindto, url, y)
+		return bar_chart(bindto, url, yformat)
 }
 
-
-function line_chart(bindto, url, y, x){
-    var myy =  y != null ? y : {}
-    if(!("tick" in myy)){
-    	myy["tick"] = {
+function line_chart(bindto, url, yformat, x){
+    var myyformat =  yformat != null ? yformat : {}
+    if(!("tick" in myyformat)){
+    	myyformat["tick"] = {
             format: roundingFormatter(".2")
     	}
     }
@@ -94,7 +92,7 @@ function line_chart(bindto, url, y, x){
         data: {"columns": [[]]},
         axis: 	{
                 x: { tick: { format: decadeFormatter } },
-                y: myy
+                y: myyformat
 		},})
 		var spinner = new Spinner().spin(document.getElementById(bindto))
 		$(document).ready(	 $.getJSON(url, {
@@ -107,10 +105,10 @@ function line_chart(bindto, url, y, x){
 	return aChart 
  }
 
-function bar_chart(bindto, url, y){
-    var myy =  y != null ? y : {}
-    if(!("tick" in myy)){
-    	myy["tick"] = {
+function bar_chart(bindto, url, yformat){
+    var myyformat =  yformat != null ? yformat : {}
+    if(!("tick" in myyformat)){
+    	myyformat["tick"] = {
             format: roundingFormatter(".2")
     	}
     }
@@ -127,7 +125,7 @@ function bar_chart(bindto, url, y){
                         format: decadeFormatter
                     }
                 },
-                y:myy
+                y:myyformat
 		},})
 		var spinner = new Spinner().spin(document.getElementById(bindto))
 		$(document).ready(	 $.getJSON(url, {
