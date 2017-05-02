@@ -23,9 +23,11 @@ import de.julielab.jeseme.database.corpus.LowerCaseMapper;
 import de.julielab.jeseme.database.corpus.WordMapper;
 import de.julielab.jeseme.database.importer.AssociationImporter;
 import de.julielab.jeseme.database.importer.AssociationImporterWithMinimum;
+import de.julielab.jeseme.database.importer.EmbeddingImporter;
 import de.julielab.jeseme.database.importer.FrequencyImporter;
 import de.julielab.jeseme.database.importer.Importer;
 import de.julielab.jeseme.database.importer.WordImporter;
+import de.julielab.jeseme.embeddings.Embedding;
 
 /**
  *
@@ -39,6 +41,7 @@ public class DatabaseService {
 	public static final String SIMILARITY_TABLE = SCHEMA + ".SIMILARITY";
 	private static final String WORDIDS_TABLE = SCHEMA + ".WORDIDS";
 	public static final String PPMI_TABLE = SCHEMA + ".PPMI";
+	public static final String EMBEDDING_TABLE = SCHEMA + ".EMBEDDING";
 	public static final String CHI_TABLE = SCHEMA + ".CHI";
 	private static final String FREQUENCY_TABLE = SCHEMA + ".FREQUENCY";
 	private static final Logger LOGGER = LoggerFactory
@@ -94,6 +97,7 @@ public class DatabaseService {
 								+ " (corpus) VALUES (:corpus);", true)
 						.addParameter("corpus", corpusName).executeUpdate()
 						.getKey();
+				
 				new WordImporter(sql2o, corpusId, WORDIDS_TABLE)
 						.importStuff(path.resolve(Importer.WORDS_CSV));
 				new AssociationImporterWithMinimum(sql2o, corpusId, SIMILARITY_TABLE, 0.05f)
@@ -104,6 +108,8 @@ public class DatabaseService {
 						.importStuff(path.resolve(Importer.CHI_CSV));
 				new FrequencyImporter(sql2o, corpusId, FREQUENCY_TABLE)
 						.importStuff(path.resolve(Importer.FREQUENCY_CSV));
+				new EmbeddingImporter(sql2o, corpusId, EMBEDDING_TABLE)
+				.importStuff(path.resolve(Importer.EMBEDDING_CSV));
 
 				LOGGER.info("Finished import");
 			}
@@ -278,6 +284,23 @@ public class DatabaseService {
 		if (!corpus.hasMappingFor(word))
 			return new ArrayList<>();
 		return getYearAndFrequency(corpus.getId(), corpus.getIdFor(word));
+	}
+	
+	public List<Embedding> getEmbedding(final String corpusName,
+			final String word) throws Exception {
+		final Corpus corpus = corpora.get(corpusName);
+		if (!corpus.hasMappingFor(word))
+			return null; //TODO Option?
+		final int wordId = corpus.getIdFor(word);
+		return getEmbedding(corpus.getId(), wordId);		
+	}
+
+	List<YearAndString> getEmbedding(final int corpus, int wordId) throws Exception {
+		try (Connection con = sql2o.open()) {
+			return con.createQuery(EMBEDDING_QUERY)
+					.addParameter("corpus", corpus).addParameter("word", wordId)
+					.executeAndFetch(YearAndValue.class);
+		}
 	}
 
 	private void initializeMapping(final Configuration config)

@@ -68,6 +68,7 @@ public abstract class Importer implements AcceptanceCriterium {
 
 	static final long IMPORT_COMMIT_SIZE = 10 * IMPORT_BATCH_SIZE;
 	public static final String FREQUENCY_CSV = "FREQUENCY.csv";
+	public static final String EMBEDDING_CSV = "EMBEDDING.csv";
 	public static final String PPMI_CSV = "PPMI.csv";
 	public static final String CHI_CSV = "CHI.csv";
 	public static final String SIMILARITY_CSV = "SIMILARITY.csv";
