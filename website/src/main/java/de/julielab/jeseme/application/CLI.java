@@ -49,6 +49,9 @@ public class CLI {
 		ds.setJdbcUrl(config.getDatabase().getUrl());
 		ds.setUsername(config.getDatabase().getUser());
 		ds.setPassword(config.getDatabase().getPassword());
+		//fix for not auto-detecting driver when running local demo on mac
+		if(config.getDatabase().getUrl().contains("jdbc:hsqldb:mem:"))
+			ds.setDriverClassName("org.hsqldb.jdbc.JDBCDriver");
 		return new Sql2o(ds);
 	}
 

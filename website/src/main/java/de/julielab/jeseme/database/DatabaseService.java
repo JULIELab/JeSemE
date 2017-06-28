@@ -15,6 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 import de.julielab.jeseme.configuration.Configuration;
 import de.julielab.jeseme.database.corpus.Corpus;
 import de.julielab.jeseme.database.corpus.DTAMapper;
@@ -62,10 +65,15 @@ public class DatabaseService {
 			+ SIMILARITY_TABLE
 			+ " WHERE corpus=:corpus AND (word1=:givenWord OR word2=:givenWord) AND year=:year ORDER BY association DESC LIMIT :limit";
 
-	private static final String TOP_CONTEXT_QUERY = "SELECT word2 FROM %s WHERE corpus=:corpus AND word1=:givenWord AND year=:year ORDER BY association DESC LIMIT :limit";
-	private static final String FREQUENCY_QUERY = "SELECT year, frequency AS value FROM "
-			+ FREQUENCY_TABLE
-			+ " WHERE corpus=:corpus AND word=:word ORDER BY year ASC";
+	private static final String TOP_CONTEXT_QUERY = "SELECT word2 FROM %s WHERE corpus=:corpus AND word1=:givenWord AND "
+			+ "year=:year ORDER BY association DESC LIMIT :limit";
+	private static final String YEAR_AND_STUFF_QUERY_TEMPLATE = "SELECT year, <WHAT> AS value FROM <TABLE> "
+			+ "WHERE corpus=:corpus AND word=:word ORDER BY year ASC";
+
+	private static final String FREQUENCY_QUERY = YEAR_AND_STUFF_QUERY_TEMPLATE
+			.replace("<WHAT>", "frequency").replace("<TABLE>", FREQUENCY_TABLE);
+	private static final String EMBEDDING_QUERY = YEAR_AND_STUFF_QUERY_TEMPLATE
+			.replace("<WHAT>", "embedding").replace("<TABLE>", EMBEDDING_TABLE);
 
 	private static Integer getYear(final String query, final Sql2o sql2o,
 			final Map<String, Corpus> corpora, final String word,
@@ -87,7 +95,8 @@ public class DatabaseService {
 	public static void importTables(final Configuration config,
 			final Sql2o sql2o) throws Exception {
 
-		for (final de.julielab.jeseme.configuration.Corpus corpus : config.getCorpora()) {
+		for (final de.julielab.jeseme.configuration.Corpus corpus : config
+				.getCorpora()) {
 			final String corpusName = corpus.getName();
 			final Path path = Paths.get(corpus.getPath());
 
@@ -97,11 +106,12 @@ public class DatabaseService {
 								+ " (corpus) VALUES (:corpus);", true)
 						.addParameter("corpus", corpusName).executeUpdate()
 						.getKey();
-				
+
 				new WordImporter(sql2o, corpusId, WORDIDS_TABLE)
 						.importStuff(path.resolve(Importer.WORDS_CSV));
-				new AssociationImporterWithMinimum(sql2o, corpusId, SIMILARITY_TABLE, 0.05f)
-						.importStuff(path.resolve(Importer.SIMILARITY_CSV));
+				new AssociationImporterWithMinimum(sql2o, corpusId,
+						SIMILARITY_TABLE, 0.05f).importStuff(
+								path.resolve(Importer.SIMILARITY_CSV));
 				new AssociationImporter(sql2o, corpusId, PPMI_TABLE)
 						.importStuff(path.resolve(Importer.PPMI_CSV));
 				new AssociationImporter(sql2o, corpusId, CHI_TABLE)
@@ -109,7 +119,7 @@ public class DatabaseService {
 				new FrequencyImporter(sql2o, corpusId, FREQUENCY_TABLE)
 						.importStuff(path.resolve(Importer.FREQUENCY_CSV));
 				new EmbeddingImporter(sql2o, corpusId, EMBEDDING_TABLE)
-				.importStuff(path.resolve(Importer.EMBEDDING_CSV));
+						.importStuff(path.resolve(Importer.EMBEDDING_CSV));
 
 				LOGGER.info("Finished import");
 			}
@@ -140,6 +150,9 @@ public class DatabaseService {
 					.executeUpdate();
 			con.createQuery("CREATE TABLE " + FREQUENCY_TABLE
 					+ " (corpus INTEGER, word INTEGER, year SMALLINT, frequency REAL, PRIMARY KEY(word, year, corpus));")
+					.executeUpdate();
+			con.createQuery("CREATE TABLE " + EMBEDDING_TABLE
+					+ " (corpus INTEGER, word INTEGER, year SMALLINT, embedding TEXT, PRIMARY KEY(word, year, corpus));")
 					.executeUpdate();
 		}
 	}
@@ -239,6 +252,21 @@ public class DatabaseService {
 		}
 	}
 
+	public List<YearAndValue> getSimilarity(final String corpusName,
+			final String word1, final String word2) throws Exception {
+		Map<Integer, Embedding> embeddings1 = getEmbedding(corpusName, word1);
+		Map<Integer, Embedding> embeddings2 = getEmbedding(corpusName, word2);
+		return Sets.union(embeddings1.keySet(), embeddings2.keySet()).stream()
+				.sorted().map(year -> {
+					if (embeddings1.containsKey(year)
+							&& embeddings2.containsKey(year))
+						return new YearAndValue(year, (float) embeddings1
+								.get(year).similarity(embeddings2.get(year)));
+					else
+						return new YearAndValue(year, 0f);
+				}).collect(Collectors.toList());
+	}
+
 	List<YearAndValue> getYearAndAssociation(final int corpus,
 			final String tableName, final boolean isContextQuery, int word1Id,
 			int word2Id) throws Exception {
@@ -285,21 +313,23 @@ public class DatabaseService {
 			return new ArrayList<>();
 		return getYearAndFrequency(corpus.getId(), corpus.getIdFor(word));
 	}
-	
-	public List<Embedding> getEmbedding(final String corpusName,
+
+	public Map<Integer, Embedding> getEmbedding(final String corpusName,
 			final String word) throws Exception {
 		final Corpus corpus = corpora.get(corpusName);
 		if (!corpus.hasMappingFor(word))
-			return null; //TODO Option?
-		final int wordId = corpus.getIdFor(word);
-		return getEmbedding(corpus.getId(), wordId);		
+			return Maps.newHashMap();
+		return getEmbedding(corpus.getId(), corpus.getIdFor(word)).stream()
+				.collect(Collectors.toMap(yas -> yas.year,
+						yas -> new Embedding(yas.value)));
 	}
 
-	List<YearAndString> getEmbedding(final int corpus, int wordId) throws Exception {
+	List<YearAndString> getEmbedding(final int corpus, int wordId)
+			throws Exception {
 		try (Connection con = sql2o.open()) {
 			return con.createQuery(EMBEDDING_QUERY)
 					.addParameter("corpus", corpus).addParameter("word", wordId)
-					.executeAndFetch(YearAndValue.class);
+					.executeAndFetch(YearAndString.class);
 		}
 	}
 
@@ -318,8 +348,8 @@ public class DatabaseService {
 					throw new IllegalArgumentException(
 							"Configuration and database do not match for "
 									+ corpusAndId.word);
-				final de.julielab.jeseme.configuration.CorpusInfo info = corpusConfigs.get(0)
-						.getInfo();
+				final de.julielab.jeseme.configuration.CorpusInfo info = corpusConfigs
+						.get(0).getInfo();
 				final String pathName = info.getMappingPath();
 				final boolean lowercase = info.getLowercase();
 				if (pathName == null)

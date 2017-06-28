@@ -1,7 +1,11 @@
 package de.julielab.jeseme.database.importer;
 
+import java.util.Arrays;
+
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
+
+import com.google.common.base.Joiner;
 
 public class EmbeddingImporter extends Importer {
 
@@ -16,7 +20,8 @@ public class EmbeddingImporter extends Importer {
 	protected Query addParameters(final String[] s, final Query query) {
 		query.addParameter("word", Integer.valueOf(s[0]));
 		query.addParameter("year", Integer.valueOf(s[1]));
-		query.addParameter("embedding", s[2]);
+		query.addParameter("embedding",
+				Joiner.on(" ").join(Arrays.copyOfRange(s, 2, s.length)));
 		return query;
 	}
 

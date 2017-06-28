@@ -1,5 +1,7 @@
 package de.julielab.jeseme.embeddings;
 
+import java.util.Arrays;
+
 public class Embedding {
 	final double[] embedding;
 
@@ -24,5 +26,13 @@ public class Embedding {
 		for(int i = 0; i<this.embedding.length; ++i)
 			similarity += this.embedding[i] * other.embedding[i];
 		return similarity;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "Embedding [embedding=" + Arrays.toString(this.embedding) + "]";
 	}
 }

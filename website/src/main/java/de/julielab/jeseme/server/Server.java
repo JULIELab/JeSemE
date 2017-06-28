@@ -5,6 +5,7 @@ import static spark.Spark.redirect;
 import static spark.Spark.staticFileLocation;
 import static spark.Spark.externalStaticFileLocation;
 
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -130,6 +131,9 @@ public class Server {
 		externalStaticFileLocation("downloads");
 		
 		redirect.get("/", "/index.html");
+		
+		get("/file", (request, response) -> new FileInputStream("/index.html"));
+		
 
 		get("/search", (request, response) -> {
 			final String corpus = request.queryParams("corpus");

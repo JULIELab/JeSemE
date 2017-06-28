@@ -4,13 +4,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.Map;
+
 import org.dbunit.DatabaseUnitException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
 import de.julielab.jeseme.database.DatabaseService;
 import de.julielab.jeseme.database.YearAndValue;
+import de.julielab.jeseme.embeddings.Embedding;
 import de.julielab.jeseme.helper.DatabaseServiceHelper;
 
 public class TestDatabaseService {
@@ -21,13 +27,32 @@ public class TestDatabaseService {
 
 	@AfterClass
 	public static void after() {
-		 helper.after();
+		helper.after();
 	}
 
 	@BeforeClass
 	public static void before() throws Exception {
-		helper =  new DatabaseServiceHelper();
+		helper = new DatabaseServiceHelper();
 		db = helper.getDatabaseService();
+	}
+
+	@Test
+	public void testGetSimilarity() throws DatabaseUnitException, Exception {
+		assertEquals(
+				Lists.newArrayList(new YearAndValue(1910, 2f),
+						new YearAndValue(1920, 1f), new YearAndValue(1930, 3f),
+						new YearAndValue(1940, 1f)),
+				db.getSimilarity(CORPUS, "foo", "foo"));
+	}
+
+	@Test
+	public void testGetEmbedding() throws DatabaseUnitException, Exception {
+		Map<Integer, Embedding> year2Embedding = db.getEmbedding(CORPUS, "foo");
+		assertEquals(Sets.newHashSet(1910, 1920, 1930, 1940),
+				year2Embedding.keySet());
+		assertEquals(1,
+				year2Embedding.get(1910).similarity(year2Embedding.get(1920)),
+				0.00001);
 	}
 
 	@Test
@@ -37,9 +62,10 @@ public class TestDatabaseService {
 
 		assertEquals(Arrays.asList(new String[] { "arr", "bar" }),
 				db.getMostSimilarWordsInYear(CORPUS, "foo", 1910, 2));
-		
+
 		//in table1 file, yet not imported due to minimum similarity
-		assertTrue(db.getMostSimilarWordsInYear(CORPUS, "foo", 1900, 2).isEmpty());
+		assertTrue(
+				db.getMostSimilarWordsInYear(CORPUS, "foo", 1900, 2).isEmpty());
 	}
 
 	@Test
@@ -100,18 +126,14 @@ public class TestDatabaseService {
 
 	@Test
 	public void testGetYears() throws Exception {
-		assertEquals(new Integer(1910),
-				db.getFirstYear(CORPUS, "foo"));
-		assertEquals(new Integer(1940),
-				db.getLastYear(CORPUS, "foo"));
+		assertEquals(new Integer(1910), db.getFirstYear(CORPUS, "foo"));
+		assertEquals(new Integer(1940), db.getLastYear(CORPUS, "foo"));
 	}
 
 	@Test
 	public void testGetYearsWithMapping() throws Exception {
-		assertEquals(new Integer(1910),
-				db.getFirstYear(CORPUS, "fooo"));
-		assertEquals(new Integer(1940),
-				db.getLastYear(CORPUS, "fooo"));
+		assertEquals(new Integer(1910), db.getFirstYear(CORPUS, "fooo"));
+		assertEquals(new Integer(1940), db.getLastYear(CORPUS, "fooo"));
 	}
 
 }
