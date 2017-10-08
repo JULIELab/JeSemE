@@ -4,6 +4,7 @@ from collections import defaultdict
 from representations.embedding import SVDEmbedding
 from representations.explicit import PositiveExplicit
 from os.path import join, basename, normpath
+import pandas as pd
 
 
 def main():
