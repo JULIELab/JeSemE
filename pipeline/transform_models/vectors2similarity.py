@@ -28,9 +28,8 @@ def main():
         chi.append((year, read_generic(folder2chi(folder), word2id)))
         svd_similarity.append(
             (year, read_generic(folder2svd(folder), word2id, True)))
-    store_results(args["<target>"], ("WORDIDS", iterate(word2id, is_word2id=True)), ("FREQUENCY", iterate(
-        id2freq, is_frequency=True)), ("PPMI", iterate(ppmi)), ("CHI", iterate(chi)), ("SIMILARITY", iterate(svd_similarity)))
-
+    store_results(args["<target>"], ("WORDIDS", word2id), ("FREQUENCY", id2freq),
+                  ("PPMI", ppmi), ("CHI", chi), ("SIMILARITY", svd_similarity))
 
 
 def emotion_induction(word2id, method, emotion_lexicon):
@@ -51,46 +50,51 @@ def emotion_induction(word2id, method, emotion_lexicon):
     scores.
     """
     for target in list(word2id):
-    # def __turney_single_word__(target, method, emotion_lexicon):
-    #     vad=np.array([.0,.0,.0])
-    #     normalization=.0
-    #     for word in lexicon.words():
-    #         vad+=lexicon.get(entry)*embeddings.similarity(entry,targetWord)
-    #         normalization += embeddings.similarity(entry, targetWord)
-    #     return vad/normalization
-        id=word2id[target]
-        vad=np.array([.0,.0,.0])
-        denominator=.0
+        # def __turney_single_word__(target, method, emotion_lexicon):
+        #     vad=np.array([.0,.0,.0])
+        #     normalization=.0
+        #     for word in lexicon.words():
+        #         vad+=lexicon.get(entry)*embeddings.similarity(entry,targetWord)
+        #         normalization += embeddings.similarity(entry, targetWord)
+        #     return vad/normalization
+        id = word2id[target]
+        vad = np.array([.0, .0, .0])
+        denominator = .0
         for entry in emotion_lexicon.index:
-            vad+=emotion_lexicon.loc[entry]*method(entry,target)
-            denominator+=method(entry, target)
-        vad=vad/denominator
-        yield tuple([id]+list(vad))
-    
+            vad += emotion_lexicon.loc[entry] * method(entry, target)
+            denominator += method(entry, target)
+        vad = vad / denominator
+        yield tuple([id] + list(vad))
+
+# name of result file is used as "mode" to determine output format
 
 
-
-
-def iterate(mapping, is_word2id=False, is_frequency=False):
-    if is_word2id and is_frequency:
-        raise Exception("Not allowed")
-    elif is_word2id:
+def iterate(mapping, mode):
+    if mode == "WORDIDS":
         for word, value in mapping.items():
             yield [str(x) for x in word, value]
-    elif is_frequency:
+    elif mode == "FREQUENCY":
         for year, info in mapping:
             for word, freq in info.items():
                 yield [str(x) for x in word, year, freq]
-    else:
+    elif mode == "PPMI" or mode == "CHI":
         for year, generator in mapping:
             for word, word2, metric in generator:
                 yield [str(x) for x in word, word2, year, metric]
+    # similarity now calculated at runtime, top 5 per year only (for first and
+    # last would be enough with current jeseme, plan on new API)
+    elif mode == "SIMILARITY":
+        for year, generator in mapping:
+            for word, word2 in sorted(generator, key=lambda x: x[2], reverse=True)[:5]:
+                yield [str(x) for x in word, year, word2]
+    else
+        raise Exception("Not allowed")
 
 
 def store_results(path, *mappings):
     for name, mapping in mappings:
         with open(join(path, name + ".csv"), "w") as f:
-            for l in mapping:
+            for l in iterate(mapping, name):
                 print >>f, ",".join(l)
 
 
