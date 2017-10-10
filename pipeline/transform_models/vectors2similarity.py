@@ -4,6 +4,7 @@ from collections import defaultdict
 from representations.embedding import SVDEmbedding
 from representations.explicit import PositiveExplicit
 from os.path import join, basename, normpath
+import pandas as pd
 
 
 def main():
@@ -29,6 +30,45 @@ def main():
             (year, read_generic(folder2svd(folder), word2id, True)))
     store_results(args["<target>"], ("WORDIDS", iterate(word2id, is_word2id=True)), ("FREQUENCY", iterate(
         id2freq, is_frequency=True)), ("PPMI", iterate(ppmi)), ("CHI", iterate(chi)), ("SIMILARITY", iterate(svd_similarity)))
+
+
+
+def emotion_induction(word2id, method, emotion_lexicon):
+    """
+    Generator providing the emotion value for each word in the word2id
+    dictionary based on a modification of the Algorithm presented in Turney 
+    and Littman (2002) (numerical seed values are expected instead of 
+    positive/negative paradigm words).
+
+    Args:
+    word2id             Dictionary mapping from word to id.
+    method              A function mapping from word1,word2 to similarity score.
+    emotion_lexicon     Pandas data frame with columns Valence, Arousal, and
+                        Dominance and words as index.
+
+    Yields:
+    4-Tuple comprising the id of the word and the Valence, Arousal, Dominance 
+    scores.
+    """
+    for target in list(word2id):
+    # def __turney_single_word__(target, method, emotion_lexicon):
+    #     vad=np.array([.0,.0,.0])
+    #     normalization=.0
+    #     for word in lexicon.words():
+    #         vad+=lexicon.get(entry)*embeddings.similarity(entry,targetWord)
+    #         normalization += embeddings.similarity(entry, targetWord)
+    #     return vad/normalization
+        id=word2id[target]
+        vad=np.array([.0,.0,.0])
+        denominator=.0
+        for entry in emotion_lexicon.index:
+            vad+=emotion_lexicon.loc[entry]*method(entry,target)
+            denominator+=method(entry, target)
+        vad=vad/denominator
+        yield tuple([id]+list(vad))
+    
+
+
 
 
 def iterate(mapping, is_word2id=False, is_frequency=False):
