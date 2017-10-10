@@ -66,10 +66,11 @@ def emotion_induction(word2id, method, emotion_lexicon):
         vad = vad / denominator
         yield tuple([id] + list(vad))
 
-# name of result file is used as "mode" to determine output format
-
 
 def iterate(mapping, mode):
+    """
+    name of result file is used as "mode" to determine output format
+    """
     if mode == "WORDIDS":
         for word, value in mapping.items():
             yield [str(x) for x in word, value]
@@ -83,11 +84,12 @@ def iterate(mapping, mode):
                 yield [str(x) for x in word, word2, year, metric]
     # similarity now calculated at runtime, top 5 per year only (for first and
     # last would be enough with current jeseme, plan on new API)
+    # ERROR: I need the top n words for each word, not over all words
     elif mode == "SIMILARITY":
         for year, generator in mapping:
-            for word, word2 in sorted(generator, key=lambda x: x[2], reverse=True)[:5]:
+            for word, word2, metric in sorted(generator, key=lambda x: x[2], reverse=True)[:5]:
                 yield [str(x) for x in word, year, word2]
-    else
+    else:
         raise Exception("Not allowed")
 
 
