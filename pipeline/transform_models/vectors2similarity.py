@@ -27,7 +27,7 @@ def main():
         ppmi.append((year, read_generic(folder2ppmi(folder), word2id)))
         chi.append((year, read_generic(folder2chi(folder), word2id)))
         svd_similarity.append(
-            (year, read_generic(folder2svd(folder), word2id, True)))
+            (year, read_top(folder2svd(folder), word2id)))
     store_results(args["<target>"], ("WORDIDS", word2id), ("FREQUENCY", id2freq),
                   ("PPMI", ppmi), ("CHI", chi), ("SIMILARITY", svd_similarity))
 
@@ -82,12 +82,12 @@ def iterate(mapping, mode):
         for year, generator in mapping:
             for word, word2, metric in generator:
                 yield [str(x) for x in word, word2, year, metric]
-    # similarity now calculated at runtime, top 5 per year only (for first and
-    # last would be enough with current jeseme, plan on new API)
-    # ERROR: I need the top n words for each word, not over all words
+    #similarity now calculated at runtime, using
+    #read_top for 5 per year only (first and last 
+    #would be enough with current jeseme, plan on new API)
     elif mode == "SIMILARITY":
         for year, generator in mapping:
-            for word, word2, metric in sorted(generator, key=lambda x: x[2], reverse=True)[:5]:
+            for word, word2, metric in generator:
                 yield [str(x) for x in word, year, word2]
     else:
         raise Exception("Not allowed")
@@ -161,17 +161,24 @@ def read_freq(folder, word2id):
         id2freq[i] = f / total
     return id2freq
 
+def read_top(method, word2id, limit=5):
+    for word1, id1 in word2id.items():
+        similar = []
+        for word2, id2 in word2id.items():
+            if word1 != word2:
+                metric = method(word1, word2)
+                if metric != 0.0:
+                    similar.append((id1, id2, metric))
+        for id1, id2, metric in sorted(similar, key=lambda x: x[2], reverse=True)[:limit]:
+            yield id1, id2, metric
 
-def read_generic(method, word2id, remove_duplicates=False):
-    mapping = defaultdict(dict)
+def read_generic(method, word2id):
     for word1, id1 in word2id.items():
         for word2, id2 in word2id.items():
             if word1 != word2:
-                if not remove_duplicates or (remove_duplicates and id1 < id2):
-                    metric = method(word1, word2)
-                    if metric != 0.0:
-                        yield id1, id2, metric
-
+                metric = method(word1, word2)
+                if metric != 0.0:
+                    yield id1, id2, metric
 
 if __name__ == "__main__":
     main()
