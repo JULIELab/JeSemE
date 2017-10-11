@@ -30,10 +30,9 @@ def main():
         id2freq.append((year, read_freq(folder, word2id)))
         ppmi.append((year, read_generic(folder2ppmi(folder), word2id)))
         chi.append((year, read_generic(folder2chi(folder), word2id)))
-        svd = folder2svd(folder)
-        svd_similar.append((year, read_top(svd, word2id)))
+        svd_similar.append((year, read_top(folder2svd(folder), word2id)))
         emotions.append(
-            (year, emotion_induction(word2id, svd, emotion_lexicon)))
+            (year, emotion_induction(word2id, folder2svd(folder, True), emotion_lexicon)))
     # embeddings with alignment
     years_and_folders = [x for x in iterate_folder(folders)][::-1]  # reverse
     year, folder = years_and_folders[0]
@@ -198,7 +197,7 @@ def read_generic(method, word2id):
             yield result
 
 
-def emotion_induction(word2id, method, emotion_lexicon):
+def emotion_induction(word2id, embeddings, emotion_lexicon):
     """
     Generator providing the emotion value for each word in the word2id
     dictionary based on a modification of the Algorithm presented in Turney 
@@ -207,7 +206,7 @@ def emotion_induction(word2id, method, emotion_lexicon):
 
     Args:
     word2id             Dictionary mapping from word to id.
-    method              A function mapping from word1,word2 to similarity score.
+    embeddings          Used for similarity
     emotion_lexicon     Pandas data frame with columns Valence, Arousal, and
                         Dominance and words as index.
 
@@ -226,8 +225,10 @@ def emotion_induction(word2id, method, emotion_lexicon):
         vad = np.array([.0, .0, .0])
         denominator = .0
         for entry in emotion_lexicon.index:
-            vad += emotion_lexicon.loc[entry] * method(entry, target)
-            denominator += method(entry, target)
+            if entry in embeddings.wi:
+                similarity = embeddings.similarity(entry, target)
+                vad += emotion_lexicon.loc[entry] * similarity
+                denominator += similarity
         vad = vad / denominator
         yield _id, [str(emotion) for emotion in vad]
 
