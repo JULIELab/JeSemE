@@ -5,13 +5,22 @@ from representations.embedding import SVDEmbedding, Embedding
 from representations.explicit import PositiveExplicit
 from os.path import join, basename, normpath
 import pandas as pd
+import emotion_lexicons
 
 
 def main():
     args = docopt("""
     Usage:
-        vectors2similarity.py <target> <limit> <folders>...
+        vectors2similarity.py <target> <limit> <emotion_lexicon_path> <emotion_language> [lemmata_mapping_file] <folders>...
 """)
+
+    emotion_lexicon_path = args["<emotion_lexicon_path>"]
+    emotion_language = args["<emotion_language>"]
+
+    if args["lemmata_mapping_file"]:
+        print(args["lemmata_mapping_file"])
+    emotion_lexicon = load_emotions(emotion_lexicon_path, emotion_language)
+
     id2freq, ppmi, chi, svd_similar, emotions, embeddings = [], [], [], [], [], []
     folders = args["<folders>"]
     limit = int(args["<limit>"])
@@ -21,10 +30,10 @@ def main():
         id2freq.append((year, read_freq(folder, word2id)))
         ppmi.append((year, read_generic(folder2ppmi(folder), word2id)))
         chi.append((year, read_generic(folder2chi(folder), word2id)))
-        svd_similar.append(
-            (year, read_top(folder2svd(folder), word2id)))
-        #emotions.append((year, read_top(folder2svd(folder), word2id)))
-
+        svd = folder2svd(folder)
+        svd_similar.append((year, read_top(svd, word2id)))
+        emotions.append(
+            (year, emotion_induction(word2id, svd, emotion_lexicon)))
     # embeddings with alignment
     years_and_folders = [x for x in iterate_folder(folders)][::-1]  # reverse
     year, folder = years_and_folders[0]
@@ -36,7 +45,16 @@ def main():
         embeddings.append((year, get_embeddings(other_embed, word2id)))
 
     store_results(args["<target>"], ("WORDIDS", word2id), ("FREQUENCY", id2freq),
-                  ("PPMI", ppmi), ("CHI", chi), ("SIMILAR", svd_similar), ("EMBEDDINGS", embeddings))
+                  ("PPMI", ppmi), ("CHI", chi), ("SIMILAR", svd_similar), ("EMOTION", emotions), ("EMBEDDING", embeddings))
+
+
+def load_emotions(emotion_lexicon_path, emotion_language):
+    if emotion_language.lower() == "en":
+        return emotion_lexicons.load_english(emotion_lexicon_path)
+    elif emotion_language.lower() == "de":
+        return emotion_lexicons.load_german(emotion_lexicon_path)
+    else:
+        raise Exception("Not supported: " + emotion_language)
 
 
 def get_embeddings(embeddings, word2id):
@@ -77,12 +95,16 @@ def iterate(mapping, mode):
         for year, generator in mapping:
             for word, word2, metric in generator:
                 yield [str(x) for x in word, year, word2]
-    elif mode == "EMBEDDINGS":
+    elif mode == "EMBEDDING":
         for year, generator in mapping:
             for word, embeddings in generator:
                 yield [str(x) for x in word, year, embeddings]
+    elif mode == "EMOTION":
+        for year, generator in mapping:
+            for word, emotions in generator:
+                yield [str(x) for x in word, year, ",".join(emotions)]
     else:
-        raise Exception("Not allowed")
+        raise Exception("Not allowed: " + mode)
 
 
 def store_results(path, *mappings):
@@ -193,7 +215,7 @@ def emotion_induction(word2id, method, emotion_lexicon):
     4-Tuple comprising the id of the word and the Valence, Arousal, Dominance 
     scores.
     """
-    for target in list(word2id):
+    for target, _id in word2id.items():
         # def __turney_single_word__(target, method, emotion_lexicon):
         #     vad=np.array([.0,.0,.0])
         #     normalization=.0
@@ -201,14 +223,13 @@ def emotion_induction(word2id, method, emotion_lexicon):
         #         vad+=lexicon.get(entry)*embeddings.similarity(entry,targetWord)
         #         normalization += embeddings.similarity(entry, targetWord)
         #     return vad/normalization
-        id = word2id[target]
         vad = np.array([.0, .0, .0])
         denominator = .0
         for entry in emotion_lexicon.index:
             vad += emotion_lexicon.loc[entry] * method(entry, target)
             denominator += method(entry, target)
         vad = vad / denominator
-        yield tuple([id] + list(vad))
+        yield _id, [str(emotion) for emotion in vad]
 
 
 # Alignment code based on
