@@ -11,6 +11,10 @@ public class EmbeddingImporter extends Importer {
 
 	private static final String SQL_TEMPLATE = "INSERT INTO %s (corpus, word, year, embedding) VALUES (:corpus, :word, :year, :embedding)";
 
+	//TODO: rename to stuff importer :D 
+	//PayloadImporter
+	//CLOBImporter
+	//clobImporter makes most sense
 	public EmbeddingImporter(final Sql2o sql2o, final int corpusId,
 			final String tableName) {
 		super(SQL_TEMPLATE, sql2o, corpusId, tableName);
