@@ -11,15 +11,11 @@ import emotion_lexicons
 def main():
     args = docopt("""
     Usage:
-        vectors2similarity.py <target> <limit> <emotion_lexicon_path> <emotion_language> [lemmata_mapping_file] <folders>...
+        vectors2similarity.py <target> <limit> <emotion_lexicon_path> <emotion_language> <folders>...
 """)
 
-    emotion_lexicon_path = args["<emotion_lexicon_path>"]
-    emotion_language = args["<emotion_language>"]
-
-    if args["lemmata_mapping_file"]:
-        print(args["lemmata_mapping_file"])
-    emotion_lexicon = load_emotions(emotion_lexicon_path, emotion_language)
+    emotion_lexicon = load_emotions(
+        args["<emotion_lexicon_path>"], args["<emotion_language>"])
 
     id2freq, ppmi, chi, svd_similar, emotions, embeddings = [], [], [], [], [], []
     folders = args["<folders>"]
@@ -88,12 +84,12 @@ def iterate(mapping, mode):
             for word, word2, metric in generator:
                 yield [str(x) for x in word, word2, year, metric]
     # similarity now calculated at runtime, using
-    # read_top for 5 per year only (first and last
+    # read_top for 5 per year only (2 of first and last year
     # would be enough with current jeseme, plan on new API)
     elif mode == "SIMILAR":
         for year, generator in mapping:
             for word, word2, metric in generator:
-                yield [str(x) for x in word, year, word2]
+                yield [str(x) for x in word, year, word2, metric]
     elif mode == "EMBEDDING":
         for year, generator in mapping:
             for word, embeddings in generator:
@@ -181,7 +177,7 @@ def _read_helper(method, word2id, word1, id1, minimum_score=0.001):
     for word2, id2 in word2id.items():
         if word1 != word2:
             metric = method(word1, word2)
-            if metric < minimum_score:
+            if metric > minimum_score:
                 yield id1, id2, metric
 
 
@@ -225,7 +221,7 @@ def emotion_induction(word2id, embeddings, emotion_lexicon):
         vad = np.array([.0, .0, .0])
         denominator = .0
         for entry in emotion_lexicon.index:
-            if entry in embeddings.wi:
+            if entry in embeddings.wi:  # otherwise similarity is 0
                 similarity = embeddings.similarity(entry, target)
                 vad += emotion_lexicon.loc[entry] * similarity
                 denominator += similarity
