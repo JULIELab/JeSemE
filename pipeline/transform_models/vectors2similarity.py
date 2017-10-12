@@ -40,7 +40,7 @@ def main():
         embeddings.append((year, get_embeddings(other_embed, word2id)))
 
     store_results(args["<target>"], ("WORDIDS", word2id), ("FREQUENCY", id2freq),
-                  ("PPMI", ppmi), ("CHI", chi), ("SIMILAR", svd_similar), ("EMOTION", emotions), ("EMBEDDING", embeddings))
+                  ("PPMI", ppmi), ("CHI", chi), ("SIMILARITY", svd_similar), ("EMOTION", emotions), ("EMBEDDING", embeddings))
 
 
 def load_emotions(emotion_lexicon_path, emotion_language):
@@ -86,10 +86,10 @@ def iterate(mapping, mode):
     # similarity now calculated at runtime, using
     # read_top for 5 per year only (2 of first and last year
     # would be enough with current jeseme, plan on new API)
-    elif mode == "SIMILAR":
+    elif mode == "SIMILARITY":
         for year, generator in mapping:
             for word, word2, metric in generator:
-                yield [str(x) for x in word, year, word2, metric]
+                yield [str(x) for x in word, word2, year, metric]
     elif mode == "EMBEDDING":
         for year, generator in mapping:
             for word, embeddings in generator:
@@ -97,7 +97,7 @@ def iterate(mapping, mode):
     elif mode == "EMOTION":
         for year, generator in mapping:
             for word, emotions in generator:
-                yield [str(x) for x in word, year, ",".join(emotions)]
+                yield [str(x) for x in word, year, " ".join(emotions)]
     else:
         raise Exception("Not allowed: " + mode)
 
