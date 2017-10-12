@@ -55,7 +55,7 @@ def load_emotions(emotion_lexicon_path, emotion_language):
 def get_embeddings(embeddings, word2id):
     for word, _id in word2id.items():
         if word in embeddings.wi:
-            yield _id, ",".join([str(x) for x in embeddings.represent(word)])
+            yield _id, " ".join([str(x) for x in embeddings.represent(word)])
 
 
 def iterate_folder(folders):
