@@ -1,9 +1,9 @@
 package de.julielab.jeseme.database;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.dbunit.DatabaseUnitException;
@@ -54,14 +54,25 @@ public class TestDatabaseService {
 				year2Embedding.get(1910).similarity(year2Embedding.get(1920)),
 				0.00001);
 	}
+	
+	@Test
+	public void testGetEmotion() throws DatabaseUnitException, Exception {
+		Map<String, List<YearAndValue>> year2Embedding = db.getEmotion(CORPUS, "bar");
+		assertEquals(Lists.newArrayList(new YearAndValue(1910, 0.4f),
+			new YearAndValue(1930, 0.7f)), year2Embedding.get("valence"));
+		assertEquals(Lists.newArrayList(new YearAndValue(1910, 0.5f),
+				new YearAndValue(1930, -3f)), year2Embedding.get("arousal"));
+		assertEquals(Lists.newArrayList(new YearAndValue(1910, 6f),
+				new YearAndValue(1930, 5.55f)), year2Embedding.get("dominance"));
+	}
 
 	@Test
 	public void testGetMostSimilar() throws DatabaseUnitException, Exception {
 		assertEquals(Arrays.asList(new String[] { "arr" }),
-				db.getMostSimilarWordsInYear(CORPUS, "foo", 1910, 1));
+				db.getTopContextWordsInYear(CORPUS, DatabaseService.SIMILARITY_TABLE, "foo", 1910, 1));
 
-		assertEquals(Arrays.asList(new String[] { "arr", "bar" }),
-				db.getMostSimilarWordsInYear(CORPUS, "foo", 1910, 2));
+		assertEquals(Arrays.asList(new String[] { "arr", "boo" }),
+				db.getTopContextWordsInYear(CORPUS, DatabaseService.SIMILARITY_TABLE, "foo", 1910, 2));
 	}
 
 	@Test

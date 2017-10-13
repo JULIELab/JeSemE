@@ -31,7 +31,7 @@ import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
 public class Server {
 	private static final Logger LOG = LoggerFactory.getLogger(Server.class);
-	private static final int LIMIT = 2;
+	private static final int LIMIT = 2; //do not set over 5!
 	private static final int THREADS = 12;
 	private static final ExecutorService executor = Executors
 			.newFixedThreadPool(THREADS);
@@ -54,7 +54,7 @@ public class Server {
 		final JSON data = new JSON();
 		for (final String word : moreWords)
 			data.addValues(word, db.getYearAndAssociation(corpus, table,
-					isContextQuery, initialWord, word));
+					initialWord, word));
 		LOG.trace("finished association {} with {} in {}", new Object[]{table, initialWord, corpus});
 		return data.data;
 	}
@@ -65,17 +65,11 @@ public class Server {
 				db.getYearAndFrequency(corpus, word)).data;
 	}
 
-	private static Callable<List<String>> getMostSimilarAsync(
-			final boolean first, final DatabaseService db, final String corpus,
-			final String word) throws Exception {
-		return () -> db.getMostSimilarWordsInYear(corpus, word, first
-				? db.getFirstYear(corpus, word) : db.getLastYear(corpus, word),
-				LIMIT);
-	}
-
 	static final String[] getMostSimilarAtBeginningAndEnd(
 			final DatabaseService db, final String corpus, final String word)
 			throws Exception {
+		//now single threaded, use association query
+		
 		LOG.trace("starting getMostSimilarAtBeginningAndEnd {} in {}", word, corpus);
 		String[] mostSimilar = executor
 				.invokeAll(Arrays.asList(
