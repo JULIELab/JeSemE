@@ -62,10 +62,6 @@ public class TestDatabaseService {
 
 		assertEquals(Arrays.asList(new String[] { "arr", "bar" }),
 				db.getMostSimilarWordsInYear(CORPUS, "foo", 1910, 2));
-
-		//in table1 file, yet not imported due to minimum similarity
-		assertTrue(
-				db.getMostSimilarWordsInYear(CORPUS, "foo", 1900, 2).isEmpty());
 	}
 
 	@Test
@@ -84,36 +80,31 @@ public class TestDatabaseService {
 				new YearAndValue(1910, 0.4f), new YearAndValue(1920, 0.5f),
 				new YearAndValue(1930, 0.2f), new YearAndValue(1940, 0.1f) }),
 				db.getYearAndAssociation(CORPUS,
-						DatabaseService.SIMILARITY_TABLE, false, "foo", "bar"));
-		assertEquals(Arrays.asList(new YearAndValue[] {
-				new YearAndValue(1910, 0.4f), new YearAndValue(1920, 0.5f),
-				new YearAndValue(1930, 0.2f), new YearAndValue(1940, 0.1f) }),
-				db.getYearAndAssociation(CORPUS,
-						DatabaseService.SIMILARITY_TABLE, false, "bar", "foo"));
+						DatabaseService.SIMILARITY_TABLE, "bar", "foo"));
 		assertEquals(
 				Arrays.asList(new YearAndValue[] { new YearAndValue(1910, 23f),
 						new YearAndValue(1930, 29f) }),
 				db.getYearAndAssociation(CORPUS, DatabaseService.PPMI_TABLE,
-						true, "foo", "bar"));
+						"foo", "bar"));
 
 		assertEquals(
 				Arrays.asList(new YearAndValue[] { new YearAndValue(1920, 11f),
 						new YearAndValue(1930, 31f),
 						new YearAndValue(1940, 3f) }),
 				db.getYearAndAssociation(CORPUS, DatabaseService.PPMI_TABLE,
-						true, "bar", "foo"));
+						"bar", "foo"));
 		assertEquals(
 				Arrays.asList(
 						new YearAndValue[] { new YearAndValue(1950, 23f), }),
 				db.getYearAndAssociation(CORPUS, DatabaseService.CHI_TABLE,
-						true, "foo", "bar"));
+						"foo", "bar"));
 
 		assertEquals(
 				Arrays.asList(new YearAndValue[] { new YearAndValue(1960, 11f),
 						new YearAndValue(1970, 31f),
 						new YearAndValue(1980, 3f) }),
 				db.getYearAndAssociation(CORPUS, DatabaseService.CHI_TABLE,
-						true, "bar", "foo"));
+						"bar", "foo"));
 	}
 
 	@Test
