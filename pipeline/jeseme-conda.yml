@@ -24,6 +24,7 @@ dependencies:
 - sqlite=3.13.0=0
 - tk=8.5.18=0
 - wheel=0.29.0=py27_0
+- xlrd=1.1.0=py27_0
 - zlib=1.2.11=0
 - pip:
   - morfessor==2.0.1
