@@ -1,4 +1,3 @@
-#update paths to match local installation
 SOURCE="/home/hellrich/tmp/jedisem"
 TARGET="/home/hellrich/tmp/jedisem/jeseme_v2_import"
 EMOPATH="/home/hellrich/JeSemE/pipeline/transform_models/notgit"
@@ -9,12 +8,12 @@ mkdir -p $TARGET
 
 for x in google_fiction coha50
 do 
-   python vectors2similarity.py $_TARGET/$x 10000 $EN_EMO en $_SOURCE/$x/*
+   python vectors2similarity.py $TARGET/$x 10000 $EN_EMO en $SOURCE/$x/*
 done
 
-python vectors2similarity.py $_TARGET/rsc 5000 $EN_EMO en $_SOURCE/royal_society_corpus/models/*
+python vectors2similarity.py $TARGET/rsc 5000 $EN_EMO en $SOURCE/royal_society_corpus/models/*
 
 for x in google_german dta50
 do
-   python vectors2similarity.py $_TARGET/$x 10000 de $DE_EMO $_SOURCE/$x/*
+   python vectors2similarity.py $TARGET/$x 10000 de $DE_EMO $SOURCE/$x/*
 done
