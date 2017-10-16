@@ -11,7 +11,7 @@ public class EmbeddingImporter extends Importer {
 
 	private static final String SQL_TEMPLATE = "INSERT INTO %s (corpus, word, year, embedding) VALUES (:corpus, :word, :year, :embedding)";
 
-	//TODO: rename to stuff importer :D 
+	//TODO: rename to stuff importer :D
 	//PayloadImporter
 	//CLOBImporter
 	//clobImporter makes most sense

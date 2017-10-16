@@ -38,7 +38,7 @@ import de.julielab.jeseme.embeddings.Embedding;
  */
 
 public class DatabaseService {
-	private static final String SCHEMA = "JESEME_V1"; //TODO update if reprocessed
+	private static final String SCHEMA = "JESEME_V2"; //TODO update if reprocessed
 	private static final String CORPORA = SCHEMA + ".TABLES";
 	public static final String SIMILARITY_TABLE = SCHEMA + ".SIMILARITY";
 	public static final String EMOTION_TABLE = SCHEMA + ".EMOTION";
@@ -62,11 +62,6 @@ public class DatabaseService {
 			+ " ASC LIMIT 1";
 	private static final String LAST_YEAR_QUERY = YEAR_QUERY_FRAGMENT
 			+ " DESC LIMIT 1";
-	//TODO: no longer reordered, remove and rename TOP_CONTEXT_QUERY to TOP_ASSOCIATION_QUERY
-	private static final String MOST_SIMILAR_QUERY = "SELECT word1, word2 FROM "
-			+ SIMILARITY_TABLE
-			+ " WHERE corpus=:corpus AND (word1=:givenWord OR word2=:givenWord) AND year=:year ORDER BY association DESC LIMIT :limit";
-
 	private static final String TOP_CONTEXT_QUERY = "SELECT word2 FROM %s WHERE corpus=:corpus AND word1=:givenWord AND "
 			+ "year=:year ORDER BY association DESC LIMIT :limit";
 
@@ -144,12 +139,8 @@ public class DatabaseService {
 			con.createQuery("CREATE TABLE " + WORDIDS_TABLE
 					+ " (corpus INTEGER, word TEXT, id INTEGER, PRIMARY KEY(corpus, word, id) );")
 					.executeUpdate();
-			//TODO: replace with not reordered table, other index
 			final String assocTable = " (corpus INTEGER, word1 INTEGER, word2 INTEGER, year SMALLINT, association REAL, PRIMARY KEY(word1, year, corpus, word2) );";
 			con.createQuery("CREATE TABLE " + SIMILARITY_TABLE + assocTable)
-					.executeUpdate()
-					.createQuery("CREATE INDEX word2_index ON "
-							+ SIMILARITY_TABLE + " (word2,year,corpus);")
 					.executeUpdate();
 			con.createQuery("CREATE TABLE " + PPMI_TABLE + assocTable)
 					.executeUpdate();
@@ -208,6 +199,53 @@ public class DatabaseService {
 		return null;
 	}
 
+	List<YearAndString> getEmbedding(final int corpus, final int wordId)
+			throws Exception {
+		try (Connection con = sql2o.open()) {
+			return con.createQuery(EMBEDDING_QUERY)
+					.addParameter("corpus", corpus).addParameter("word", wordId)
+					.executeAndFetch(YearAndString.class);
+		}
+	}
+
+	public Map<Integer, Embedding> getEmbedding(final String corpusName,
+			final String word) throws Exception {
+		final Corpus corpus = corpora.get(corpusName);
+		if (!corpus.hasMappingFor(word))
+			return Maps.newHashMap();
+		return getEmbedding(corpus.getId(), corpus.getIdFor(word)).stream()
+				.collect(Collectors.toMap(yas -> yas.year,
+						yas -> new Embedding(yas.value)));
+	}
+
+	List<YearAndString> getEmotion(final int corpus, final int wordId)
+			throws Exception {
+		try (Connection con = sql2o.open()) {
+			return con.createQuery(EMOTION_QUERY).addParameter("corpus", corpus)
+					.addParameter("word", wordId)
+					.executeAndFetch(YearAndString.class);
+		}
+	}
+
+	public Map<String, List<YearAndValue>> getEmotion(final String corpusName,
+			final String word) throws Exception {
+		final Corpus corpus = corpora.get(corpusName);
+		if (!corpus.hasMappingFor(word))
+			return Maps.newHashMap();
+
+		final String[] emotions = "valence,arousal,dominance".split(",");
+		final Map<String, List<YearAndValue>> emotion2yav = new HashMap<>();
+		for (final String s : emotions)
+			emotion2yav.put(s, new ArrayList<>());
+		getEmotion(corpus.getId(), corpus.getIdFor(word)).forEach(yas -> {
+			final String[] vad = yas.value.split(" ");
+			for (int i = 0; i < emotions.length; ++i)
+				emotion2yav.get(emotions[i])
+						.add(new YearAndValue(yas.year, Float.valueOf(vad[i])));
+		});
+		return emotion2yav;
+	}
+
 	public Integer getFirstYear(final String corpusName, final String word)
 			throws Exception {
 		return getYear(FIRST_YEAR_QUERY, sql2o, corpora, word, corpusName);
@@ -216,6 +254,23 @@ public class DatabaseService {
 	public Integer getLastYear(final String corpusName, final String word)
 			throws Exception {
 		return getYear(LAST_YEAR_QUERY, sql2o, corpora, word, corpusName);
+	}
+
+	public List<YearAndValue> getSimilarity(final String corpusName,
+			final String word1, final String word2) throws Exception {
+		final Map<Integer, Embedding> embeddings1 = getEmbedding(corpusName,
+				word1);
+		final Map<Integer, Embedding> embeddings2 = getEmbedding(corpusName,
+				word2);
+		return Sets.union(embeddings1.keySet(), embeddings2.keySet()).stream()
+				.sorted().map(year -> {
+					if (embeddings1.containsKey(year)
+							&& embeddings2.containsKey(year))
+						return new YearAndValue(year, (float) embeddings1
+								.get(year).similarity(embeddings2.get(year)));
+					else
+						return new YearAndValue(year, 0f);
+				}).collect(Collectors.toList());
 	}
 
 	public List<String> getTopContextWordsInYear(final String corpusName,
@@ -238,24 +293,9 @@ public class DatabaseService {
 		}
 	}
 
-	public List<YearAndValue> getSimilarity(final String corpusName,
-			final String word1, final String word2) throws Exception {
-		Map<Integer, Embedding> embeddings1 = getEmbedding(corpusName, word1);
-		Map<Integer, Embedding> embeddings2 = getEmbedding(corpusName, word2);
-		return Sets.union(embeddings1.keySet(), embeddings2.keySet()).stream()
-				.sorted().map(year -> {
-					if (embeddings1.containsKey(year)
-							&& embeddings2.containsKey(year))
-						return new YearAndValue(year, (float) embeddings1
-								.get(year).similarity(embeddings2.get(year)));
-					else
-						return new YearAndValue(year, 0f);
-				}).collect(Collectors.toList());
-	}
-
 	List<YearAndValue> getYearAndAssociation(final int corpus,
-			final String tableName, int word1Id,
-			int word2Id) throws Exception {
+			final String tableName, final int word1Id, final int word2Id)
+			throws Exception {
 		final String sql = String.format(ASSOCIATION_QUERY, tableName);
 		try (Connection con = sql2o.open()) {
 			final List<YearAndValue> mostSimilar = con.createQuery(sql)
@@ -268,8 +308,8 @@ public class DatabaseService {
 	}
 
 	public List<YearAndValue> getYearAndAssociation(final String corpusName,
-			final String tableName, final String word1,
-			final String word2) throws Exception {
+			final String tableName, final String word1, final String word2)
+			throws Exception {
 		final Corpus corpus = corpora.get(corpusName);
 		if (!corpus.hasMappingFor(word1, word2))
 			return new ArrayList<>();
@@ -292,54 +332,6 @@ public class DatabaseService {
 		if (!corpus.hasMappingFor(word))
 			return new ArrayList<>();
 		return getYearAndFrequency(corpus.getId(), corpus.getIdFor(word));
-	}
-
-	public Map<Integer, Embedding> getEmbedding(final String corpusName,
-			final String word) throws Exception {
-		final Corpus corpus = corpora.get(corpusName);
-		if (!corpus.hasMappingFor(word))
-			return Maps.newHashMap();
-		return getEmbedding(corpus.getId(), corpus.getIdFor(word)).stream()
-				.collect(Collectors.toMap(yas -> yas.year,
-						yas -> new Embedding(yas.value)));
-	}
-	
-	public Map<String, List<YearAndValue>> getEmotion(final String corpusName,
-			final String word) throws Exception {
-		final Corpus corpus = corpora.get(corpusName);
-		if (!corpus.hasMappingFor(word))
-			return Maps.newHashMap();
-		
-		final String[] emotions = "valence,arousal,dominance".split(",");
-		Map<String, List<YearAndValue>> emotion2yav = new HashMap<>();
-		for(String s : emotions)
-			emotion2yav.put(s,new ArrayList<>() );	
-		getEmotion(corpus.getId(), corpus.getIdFor(word)).forEach(
-			yas -> {
-				String[] vad = yas.value.split(" ");
-				for(int i=0; i<emotions.length; ++i)
-					emotion2yav.get(emotions[i]).add(new YearAndValue(yas.year, Float.valueOf(vad[i])));
-			}
-		);				
-		return emotion2yav;
-	}
-	
-	List<YearAndString> getEmotion(final int corpus, int wordId)
-			throws Exception {
-		try (Connection con = sql2o.open()) {
-			return con.createQuery(EMOTION_QUERY)
-					.addParameter("corpus", corpus).addParameter("word", wordId)
-					.executeAndFetch(YearAndString.class);
-		}
-	}
-
-	List<YearAndString> getEmbedding(final int corpus, int wordId)
-			throws Exception {
-		try (Connection con = sql2o.open()) {
-			return con.createQuery(EMBEDDING_QUERY)
-					.addParameter("corpus", corpus).addParameter("word", wordId)
-					.executeAndFetch(YearAndString.class);
-		}
 	}
 
 	private void initializeMapping(final Configuration config)

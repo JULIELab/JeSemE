@@ -34,23 +34,24 @@ public class CLI {
 		else if ((boolean) opts.get("initialize"))
 			DatabaseService.initializeTables(prepareSql2o(config));
 		else if ((boolean) opts.get("demo")) {
-			Sql2o sql2o = prepareSql2o(config);
+			final Sql2o sql2o = prepareSql2o(config);
 			DatabaseService.initializeTables(sql2o);
 			DatabaseService.importTables(config, sql2o);
 			Server.startServer(new DatabaseService(sql2o, config), config);
-		} else if ((boolean) opts.get("error")) {
-			Server.startErrorServer(config, (ArrayList<String>) opts.get("<message>"));
-		} else
+		} else if ((boolean) opts.get("error"))
+			Server.startErrorServer(config,
+					(ArrayList<String>) opts.get("<message>"));
+		else
 			throw new IllegalArgumentException();
 	}
 
-	private static Sql2o prepareSql2o(Configuration config) {
+	private static Sql2o prepareSql2o(final Configuration config) {
 		final HikariDataSource ds = new HikariDataSource();
 		ds.setJdbcUrl(config.getDatabase().getUrl());
 		ds.setUsername(config.getDatabase().getUser());
 		ds.setPassword(config.getDatabase().getPassword());
 		//fix for not auto-detecting driver when running local demo on mac
-		if(config.getDatabase().getUrl().contains("jdbc:hsqldb:mem:"))
+		if (config.getDatabase().getUrl().contains("jdbc:hsqldb:mem:"))
 			ds.setDriverClassName("org.hsqldb.jdbc.JDBCDriver");
 		return new Sql2o(ds);
 	}

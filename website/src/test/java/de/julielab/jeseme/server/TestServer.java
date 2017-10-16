@@ -15,8 +15,6 @@ import com.google.common.collect.Lists;
 import de.julielab.jeseme.database.DatabaseService;
 import de.julielab.jeseme.database.YearAndValue;
 import de.julielab.jeseme.helper.DatabaseServiceHelper;
-import de.julielab.jeseme.server.JSON;
-import de.julielab.jeseme.server.Server;
 
 public class TestServer {
 
@@ -26,12 +24,12 @@ public class TestServer {
 
 	@AfterClass
 	public static void after() {
-		 helper.after();
+		helper.after();
 	}
 
 	@BeforeClass
 	public static void before() throws Exception {
-		helper =  new DatabaseServiceHelper();
+		helper = new DatabaseServiceHelper();
 		db = helper.getDatabaseService();
 	}
 
@@ -39,10 +37,25 @@ public class TestServer {
 	public void testAssociationJSON() throws Exception {
 		final JSON expected = new JSON();
 		expected.addValues("bar", Lists.newArrayList(
-				new YearAndValue(1910, 0.4f), new YearAndValue(1920, 0.5f),
-				new YearAndValue(1930, 0.2f), new YearAndValue(1940, 0.1f)));
+				new YearAndValue(1920, 23f), new YearAndValue(1930, 29f)));
 		final Map<String, Object> actual = Server.getAssociationJson(db, CORPUS,
-				DatabaseService.SIMILARITY_TABLE, false, "foo", "bar");
+				DatabaseService.PPMI_TABLE, "foo", "bar");
+		assertEquals(expected.data.get("xs"), actual.get("xs"));
+		assertEquals(((List<?>) expected.data.get("columns")).get(0),
+				((List<?>) actual.get("columns")).get(0));
+	}
+
+	@Test
+	public void testEmotionJSON() throws Exception {
+		final JSON expected = new JSON();
+		expected.addValues("valence", Lists.newArrayList(
+				new YearAndValue(1910, 0.4f), new YearAndValue(1930, 0.7f)));
+		expected.addValues("arousal", Lists.newArrayList(
+				new YearAndValue(1910, 0.5f), new YearAndValue(1930, -3f)));
+		expected.addValues("dominance", Lists.newArrayList(
+				new YearAndValue(1910, 6f), new YearAndValue(1930, 5.55f)));
+		final Map<String, Object> actual = Server.getEmotionJson(db, CORPUS,
+				"bar");
 		assertEquals(expected.data.get("xs"), actual.get("xs"));
 		assertEquals(((List<?>) expected.data.get("columns")).get(0),
 				((List<?>) actual.get("columns")).get(0));
@@ -62,15 +75,21 @@ public class TestServer {
 	}
 
 	@Test
-	public void testGetMostSimilarAtBeginningAndEnd() throws Exception {
-		assertArrayEquals(new String[] { "arr", "bar" },
-				Server.getMostSimilarAtBeginningAndEnd(db, CORPUS, "foo"));
-	}
-
-	@Test
 	public void testGetTopContextAtBeginningAndEnd() throws Exception {
 		assertArrayEquals(new String[] { "bar", "boo" },
 				Server.getTopContextAtBeginningAndEnd(db,
 						DatabaseService.PPMI_TABLE, CORPUS, "foo"));
+	}
+
+	@Test
+	public void testSimilarityJSON() throws Exception {
+		final JSON expected = new JSON();
+		expected.addValues("bar", Lists.newArrayList(new YearAndValue(1910, 0f),
+				new YearAndValue(1920, 0f), new YearAndValue(1930, 1f)));
+		final Map<String, Object> actual = Server.getSimilarityJson(db, CORPUS,
+				"foo", "bar");
+		assertEquals(expected.data.get("xs"), actual.get("xs"));
+		assertEquals(((List<?>) expected.data.get("columns")).get(0),
+				((List<?>) actual.get("columns")).get(0));
 	}
 }
