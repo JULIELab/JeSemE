@@ -73,7 +73,7 @@
 						<p>
 							This chart shows the words detected as most similar to "<td th:text="${word}">WORD</td>" and how their similarity changed
 							over time (higher is more similar). These values are based on SVD<sub>PPMI</sub>
-							- see <a href="/help.html">Help</a> for details. Note that values below 0.05 are omitted.
+							&mdash; see <a href="/help.html">Help</a> for details.
 						</p>
 						<form action="javascript:void(0);"
 							onsubmit="addWordTo(similaritychart, 'api/similarity', 'addWordToSimilarityTextBox', 'addWordToSimilarityTextBoxError')">
@@ -81,6 +81,34 @@
 								id="addWordToSimilarityTextBox" /> <input type="submit"
 								value="add" /> <span id="addWordToSimilarityTextBoxError"></span>
 						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="aChart panel panel-default">
+			<div class="panel-body">
+				<h2 class="text-center">Word Emotion</h2>
+				<div class="row">
+					<div class="col-sm-8">
+						<div class="chart" id="emotionchart"></div>
+						<script type="text/javascript">
+							emotionchart = chart("emotionchart",'api/emotion',
+									 {
+										max : 1,
+										min : 0.05,
+										padding : {
+											top : 0,
+											bottom : 0
+										}
+									}, lineChart)
+						</script>
+					</div>
+					<div class="col-sm-4">
+						<p>
+							This chart shows how the emotions connected to "<td th:text="${word}">WORD</td>" changed
+							over time. We describe emotions via valence (positive &ndash; negative), arousal (calm &ndash; excited) and dominance (controlled &ndash; in controll)
+							&mdash; see <a href="/help.html">Help</a> for details.
+						</p>
 					</div>
 				</div>
 			</div>
@@ -128,8 +156,8 @@
 					<p>
 						These charts show the most specific contexts of "<td th:text="${word}">WORD</td>" over time (higher is more
 						specific). Specific contexts are words which appear often with "<td th:text="${word}">WORD</td>", yet not with other words. &chi;<sup>2</sup>
-						provides a balanced view, while PPMI prefers rare contexts - see <a
-							href="/help.html">Help</a> for details. Note that no value is displayed for a time span, if the words did not co-occur during it.
+						provides a balanced view, while PPMI prefers rare contexts &mdash; see <a
+							href="/help.html">Help</a> for details. Note that no value is displayed for a time span, if the words did not co-occur during it or it is below 0.01.
 					</p>
 					<form action="javascript:void(0);"
 						onsubmit="addWordToTwo(chichart, 'api/chi', ppmichart, 'api/ppmi', 'addWordToContextInput', 'addWordToContextError')">
@@ -165,7 +193,7 @@
 							This chart shows the relative frequency of "<td th:text="${word}">WORD</td>" over time. Changes in frequency
 							might indicate shifts in meaning, yet can also be caused by
 							cultural processes (what are people writing about) or sampling
-							problems - see <a href="/help.html">Help</a> for details.
+							problems &mdash; see <a href="/help.html">Help</a> for details.
 						</p>
 						<form action="javascript:void(0);"
 							onsubmit="addWordToFrequencyChart(frequencychart, 'api/frequency', 'addWordToFrequencyTextBox', 'addWordToFrequencyTextBoxError')">
