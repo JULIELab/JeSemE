@@ -50,8 +50,8 @@
 
 	<div class="center-block">
 		<h1>JeSemE Help</h1>
-		<p>JeSemE is described in detail in our upcomming ACL paper, the
-			following is mostly a simplified overview.</p>
+		<p>JeSemE is described in detail in our <a href="https://aclanthology.info/pdf/P/P17/P17-4006.pdf">ACL paper "Exploring Diachronic Lexical Semantics with JESEME"</a>, the
+			following is a simplified overview.</p>
 		<div class="center-part">
 			<h2 id="metrics">Metrics</h2>
 			<h3>
@@ -67,10 +67,10 @@
 				frequency/probability \(P(i,j)\).
 			</p>
 			<p>PPMI favors infrequent context words and can be calculated
-				with: $$PPMI(i,j) := max(\frac{P(i,j)}{P(i)P(j)},0)$$</p>
+				with: $$PPMI(i,j) := max(log\frac{P(i,j)}{P(i)P(j)},0)$$</p>
 			<p>
-				&chi;<sup>2</sup> is regarded as more balanced and can be calculated
-				with: $$\chi^2(i,j) := \frac{(P(i,j) - P(i)P(j))^2}{P(i)P(j)}$$
+				&chi;<sup>2</sup> is regarded as more balanced, we use a normalized version calculated
+				with: $$\chi^2(i,j) := max(log\frac{(P(i,j) - P(i)P(j))^2}{P(i)P(j)},0)$$
 			</p>
 
 			<h3>
