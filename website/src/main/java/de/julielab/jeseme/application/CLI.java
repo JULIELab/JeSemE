@@ -18,17 +18,19 @@ public class CLI {
 			+ "  jedisem initialize <dbconfig>\n"
 			+ "  jedisem demo <dbconfig>\n"
 			+ "  jedisem error <dbconfig> <message>... \n\n" + "Options:\n"
-			+ "  -h --help     Show this screen.\n";
+			+ "  -h --help     Show this screen.\n"
+			+ "  -e --external  Use only external web resources\n";
 
 	@SuppressWarnings("unchecked")
 	public static void main(final String[] args) throws Exception {
 		final Map<String, Object> opts = new Docopt(doc).parse(args);
 		final Configuration config = Configuration
 				.readYamlFile(opts.get("<dbconfig>").toString());
+		opts.putIfAbsent("--external", false);
 
 		if ((boolean) opts.get("server"))
 			Server.startServer(
-					new DatabaseService(prepareSql2o(config), config), config);
+					new DatabaseService(prepareSql2o(config), config), config, (boolean) opts.get("--external"));
 		else if ((boolean) opts.get("import"))
 			DatabaseService.importTables(config, prepareSql2o(config));
 		else if ((boolean) opts.get("initialize"))
@@ -37,7 +39,7 @@ public class CLI {
 			final Sql2o sql2o = prepareSql2o(config);
 			DatabaseService.initializeTables(sql2o);
 			DatabaseService.importTables(config, sql2o);
-			Server.startServer(new DatabaseService(sql2o, config), config);
+			Server.startServer(new DatabaseService(sql2o, config), config, (boolean) opts.get("--external"));
 		} else if ((boolean) opts.get("error"))
 			Server.startErrorServer(config,
 					(ArrayList<String>) opts.get("<message>"));
