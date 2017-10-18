@@ -61,7 +61,7 @@
 							similaritychart = chart("similaritychart",'api/mostsimilar',
 									 {
 										max : 1,
-										min : 0.05,
+										min : 0,
 										padding : {
 											top : 0,
 											bottom : 0
@@ -129,7 +129,7 @@
 							<div class="chart" id="chichart"></div>
 							<script type="text/javascript">
 								chichart = chart("chichart", 'api/typicalcontextchi', {
-									min : 0,
+									min : 0.01,
 									padding : {
 										top : 0,
 										bottom : 0
@@ -157,7 +157,7 @@
 						These charts show the most specific contexts of "<td th:text="${word}">WORD</td>" over time (higher is more
 						specific). Specific contexts are words which appear often with "<td th:text="${word}">WORD</td>", yet not with other words. &chi;<sup>2</sup>
 						provides a balanced view, while PPMI prefers rare contexts &mdash; see <a
-							href="/help.html">Help</a> for details. Note that no value is displayed for a time span, if the words did not co-occur during it or it is below 0.01.
+							href="/help.html">Help</a> for details.
 					</p>
 					<form action="javascript:void(0);"
 						onsubmit="addWordToTwo(chichart, 'api/chi', ppmichart, 'api/ppmi', 'addWordToContextInput', 'addWordToContextError')">
