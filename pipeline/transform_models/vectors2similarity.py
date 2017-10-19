@@ -223,8 +223,10 @@ def emotion_induction(word2id, embeddings, emotion_lexicon):
         for entry in emotion_lexicon.index:
             if entry in embeddings.wi:  # otherwise similarity is 0
                 similarity = embeddings.similarity(entry, target)
-                vad += emotion_lexicon.loc[entry] * similarity
-                denominator += similarity
+		# values below 0 very rare, yet possible 
+                if similarity > 0:
+                    vad += emotion_lexicon.loc[entry] * similarity
+                    denominator += similarity
         vad = vad / denominator
         yield _id, [str(emotion) for emotion in vad]
 

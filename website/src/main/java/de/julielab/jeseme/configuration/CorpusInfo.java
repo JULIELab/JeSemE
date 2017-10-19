@@ -62,8 +62,9 @@ public class CorpusInfo {
 
 	@Override
 	public String toString() {
-		return "CorpusInfo [mappingPath=" + mappingPath + ", lowercase=" + lowercase + ", fullName=" + fullName
-				+ ", note=" + note + ", insertInUrl=" + insertInUrl + ", url=" + url + "]";
+		return "CorpusInfo [mappingPath=" + mappingPath + ", lowercase="
+				+ lowercase + ", fullName=" + fullName + ", note=" + note
+				+ ", insertInUrl=" + insertInUrl + ", url=" + url + "]";
 	}
 
 }

@@ -71,7 +71,8 @@ public class Corpus {
 
 	@Override
 	public String toString() {
-		return "Corpus [name=" + name + ", path=" + path + ", info=" + info + "]";
+		return "Corpus [name=" + name + ", path=" + path + ", info=" + info
+				+ "]";
 	}
 
 }

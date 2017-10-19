@@ -8,7 +8,7 @@ public class YearAndValue {
 		this.year = year;
 		this.value = value;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 *

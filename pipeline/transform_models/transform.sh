@@ -22,7 +22,7 @@ DE_EMO=$EMOPATH/13428_2013_426_MOESM1_ESM.xlsx
         echo "finished $x" ) &
 (       x="google_german"
         mkdir -p $TARGET/$x
-        python vectors2similarity.py $TARGET/$x 10000 $DE_EMO de $SOURCE/$x/{1830,1840,1850,1860,1870,1880,1890,1900,1910,1920,1930,1940,1950,1960,1970,1980,1990,2000} 
+        python vectors2similarity.py $TARGET/$x 10000 $DE_EMO de $SOURCE/google_german_lemmata/{1830,1840,1850,1860,1870,1880,1890,1900,1910,1920,1930,1940,1950,1960,1970,1980,1990,2000} 
         echo "finished $x" ) &
 wait
 echo "done"

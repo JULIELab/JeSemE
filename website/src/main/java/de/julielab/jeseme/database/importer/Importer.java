@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 
-public abstract class Importer{
+public abstract class Importer {
 	static class GZIPFiles {
 		private static void closeSafely(final Closeable closeable) {
 			if (closeable != null)
@@ -113,11 +113,12 @@ public abstract class Importer{
 					query = sql2o.beginTransaction()
 							.createQuery(String.format(sql, tableName));
 
-				String[] data = iter.next();
-				addParameters(data, query).addParameter("corpus", corpusId).addToBatch();
+				final String[] data = iter.next();
+				addParameters(data, query).addParameter("corpus", corpusId)
+						.addToBatch();
 				//Nicer batch import leaks memory, thus using new connections is recommended
 				++i;
-				
+
 				if ((i % IMPORT_BATCH_SIZE) == 0)
 					query.executeBatch();
 				if ((i % IMPORT_COMMIT_SIZE) == 0) {

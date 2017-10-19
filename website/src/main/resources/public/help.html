@@ -43,17 +43,26 @@
 
 
 
-<title>JeSemE</title>
+<title>JeSemE 2.0</title>
 
 </head>
 <body>
 
 	<div class="center-block">
 		<h1>JeSemE Help</h1>
-		<p>JeSemE is described in detail in our upcomming ACL paper, the
-			following is mostly a simplified overview.</p>
+		<p>JeSemE is described in detail in our <a href="https://aclanthology.info/pdf/P/P17/P17-4006.pdf">ACL paper "Exploring Diachronic Lexical Semantics with JESEME"</a>, the
+			following is a simplified overview. Note that the new Emotion metric will be described in another upcomming paper.</p>
 		<div class="center-part">
 			<h2 id="metrics">Metrics</h2>
+			<h3>
+				VAD Emotions
+			</h3>
+			<p>
+				The Valence Arousal Dominance (VAD) model of emotion assumes that affective states can be described relative to three emotional dimensions, 
+				i.e., Valence (corresponding to the concept of polarity, see above), Arousal (the degree of excitement or calmness) and Dominance 
+				(feeling in or out of control of a social situation). Emotion values for historical texts are calculated by combining word embeddings and 
+				contemporary emotion lexicons, see <a href="https://dh2017.adho.org/abstracts/491/491.pdf">here</a> for details.
+			</p>
 			<h3>
 				PPMI and &chi;<sup>2</sup>
 			</h3>
@@ -64,13 +73,13 @@
 				calculate the probability of finding one of them, as in \(P(i)\)
 				respectively \(P(j)\).They then compare the expected probability of
 				encountering both words \(P(i)P(j)\) with the observed
-				frequency/probability \(P(i,j)\).
+				frequency/probability \(P(i,j)\). JeSemE provides only values above 0.01, due to storage constraints.
 			</p>
 			<p>PPMI favors infrequent context words and can be calculated
-				with: $$PPMI(i,j) := max(\frac{P(i,j)}{P(i)P(j)},0)$$</p>
+				with: $$PPMI(i,j) := max(log\frac{P(i,j)}{P(i)P(j)},0)$$</p>
 			<p>
-				&chi;<sup>2</sup> is regarded as more balanced and can be calculated
-				with: $$\chi^2(i,j) := \frac{(P(i,j) - P(i)P(j))^2}{P(i)P(j)}$$
+				&chi;<sup>2</sup> is regarded as more balanced, we use a normalized version calculated
+				with: $$\chi^2(i,j) := max(log\frac{(P(i,j) - P(i)P(j))^2}{P(i)P(j)},0)$$
 			</p>
 
 			<h3>

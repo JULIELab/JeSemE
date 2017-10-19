@@ -14,8 +14,6 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import de.julielab.jeseme.database.DatabaseService;
-import de.julielab.jeseme.database.YearAndValue;
 import de.julielab.jeseme.embeddings.Embedding;
 import de.julielab.jeseme.helper.DatabaseServiceHelper;
 
@@ -37,42 +35,52 @@ public class TestDatabaseService {
 	}
 
 	@Test
-	public void testGetSimilarity() throws DatabaseUnitException, Exception {
-		assertEquals(
-				Lists.newArrayList(new YearAndValue(1910, 2f),
-						new YearAndValue(1920, 1f), new YearAndValue(1930, 3f),
-						new YearAndValue(1940, 1f)),
-				db.getSimilarity(CORPUS, "foo", "foo"));
-	}
-
-	@Test
 	public void testGetEmbedding() throws DatabaseUnitException, Exception {
-		Map<Integer, Embedding> year2Embedding = db.getEmbedding(CORPUS, "foo");
+		final Map<Integer, Embedding> year2Embedding = db.getEmbedding(CORPUS,
+				"foo");
 		assertEquals(Sets.newHashSet(1910, 1920, 1930, 1940),
 				year2Embedding.keySet());
 		assertEquals(1,
 				year2Embedding.get(1910).similarity(year2Embedding.get(1920)),
 				0.00001);
 	}
-	
+
 	@Test
 	public void testGetEmotion() throws DatabaseUnitException, Exception {
-		Map<String, List<YearAndValue>> year2Embedding = db.getEmotion(CORPUS, "bar");
-		assertEquals(Lists.newArrayList(new YearAndValue(1910, 0.4f),
-			new YearAndValue(1930, 0.7f)), year2Embedding.get("valence"));
-		assertEquals(Lists.newArrayList(new YearAndValue(1910, 0.5f),
-				new YearAndValue(1930, -3f)), year2Embedding.get("arousal"));
-		assertEquals(Lists.newArrayList(new YearAndValue(1910, 6f),
-				new YearAndValue(1930, 5.55f)), year2Embedding.get("dominance"));
+		final Map<String, List<YearAndValue>> year2Embedding = db
+				.getEmotion(CORPUS, "bar");
+		assertEquals(
+				Lists.newArrayList(new YearAndValue(1910, 0.4f),
+						new YearAndValue(1930, 0.7f)),
+				year2Embedding.get("valence"));
+		assertEquals(
+				Lists.newArrayList(new YearAndValue(1910, 0.5f),
+						new YearAndValue(1930, -3f)),
+				year2Embedding.get("arousal"));
+		assertEquals(
+				Lists.newArrayList(new YearAndValue(1910, 6f),
+						new YearAndValue(1930, 5.55f)),
+				year2Embedding.get("dominance"));
 	}
 
 	@Test
 	public void testGetMostSimilar() throws DatabaseUnitException, Exception {
 		assertEquals(Arrays.asList(new String[] { "arr" }),
-				db.getTopContextWordsInYear(CORPUS, DatabaseService.SIMILARITY_TABLE, "foo", 1910, 1));
+				db.getTopContextWordsInYear(CORPUS,
+						DatabaseService.SIMILARITY_TABLE, "foo", 1910, 1));
 
 		assertEquals(Arrays.asList(new String[] { "arr", "boo" }),
-				db.getTopContextWordsInYear(CORPUS, DatabaseService.SIMILARITY_TABLE, "foo", 1910, 2));
+				db.getTopContextWordsInYear(CORPUS,
+						DatabaseService.SIMILARITY_TABLE, "foo", 1910, 2));
+	}
+
+	@Test
+	public void testGetSimilarity() throws DatabaseUnitException, Exception {
+		assertEquals(
+				Lists.newArrayList(new YearAndValue(1910, 2f),
+						new YearAndValue(1920, 1f), new YearAndValue(1930, 3f),
+						new YearAndValue(1940, 1f)),
+				db.getSimilarity(CORPUS, "foo", "foo"));
 	}
 
 	@Test
