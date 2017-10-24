@@ -26,3 +26,5 @@ DE_EMO=$EMOPATH/13428_2013_426_MOESM1_ESM.xlsx
         echo "finished $x" ) &
 wait
 echo "done"
+
+./scale_emotion.sh
