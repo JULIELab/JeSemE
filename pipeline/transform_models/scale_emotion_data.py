@@ -22,7 +22,7 @@ def scale(path):
         emos=emos.subtract(emos.mean(axis=0)).divide(emos.std(axis=0, ddof=0))
         #print(emos.mean(axis=0), emos.std(axis=0, ddof=0))
         df.loc[df.year==year, 'emotion']=__combine__(emos)
-    df.to_csv(path[:-4]+'_normalized.csv')
+    df.to_csv(path[:-4]+'_normalized.csv', header=False)
 
 if __name__=='__main__':
     scale(sys.argv[1])
