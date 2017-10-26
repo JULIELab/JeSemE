@@ -94,8 +94,6 @@
 						<script type="text/javascript">
 							emotionchart = chart("emotionchart",'api/emotion',
 									 {
-										max : 9,
-										min : 1,
 										padding : {
 											top : 0,
 											bottom : 0
@@ -106,8 +104,8 @@
 					<div class="col-sm-4">
 						<p>
 							This chart shows how the emotions connected to "<td th:text="${word}">WORD</td>" changed
-							over time. We describe emotions via valence (positive &ndash; negative), arousal (calm &ndash; excited) and dominance (controlled &ndash; in controll)
-							&mdash; see <a href="/help.html">Help</a> for details.
+							over time. We describe emotions via valence (positive &ndash; negative), arousal (calm &ndash; excited) and dominance (controlled &ndash; in control)
+							&mdash; see <a href="/help.html">Help</a> for details. Scores are given in standard deviations around an (for each time span) emotionally neutral 0.
 						</p>
 					</div>
 				</div>
