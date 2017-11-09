@@ -25,13 +25,16 @@ public class JSON {
 		data.put("columns", columns);
 	}
 
-	public JSON addValues(final String word, final List<YearAndValue> yearAndValueList) {
+	public JSON addValues(final String word,
+			final List<YearAndValue> yearAndValueList) {
 		xs.put(word, word + "-x-value");
 
-		final List<Object> yearList = new ArrayList<>(yearAndValueList.size() + 1);
+		final List<Object> yearList = new ArrayList<>(
+				yearAndValueList.size() + 1);
 		yearList.add(word + "-x-value");
 
-		final List<Object> valueList = new ArrayList<>(yearAndValueList.size() + 1);
+		final List<Object> valueList = new ArrayList<>(
+				yearAndValueList.size() + 1);
 		valueList.add(word);
 
 		for (final YearAndValue yas : yearAndValueList) {

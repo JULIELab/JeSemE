@@ -10,7 +10,7 @@ import de.julielab.jeseme.database.DatabaseService;
 public class DatabaseServiceHelper {
 	private DatabaseService db = null;
 	private HikariDataSource ds = null;
-	
+
 	public DatabaseServiceHelper() throws Exception {
 		final Configuration config = Configuration
 				.readYamlFile("src/test/resources/config.yaml");
@@ -19,13 +19,13 @@ public class DatabaseServiceHelper {
 		ds.setUsername(config.getDatabase().getUser());
 		ds.setPassword(config.getDatabase().getPassword());
 
-		Sql2o sql2o = new Sql2o(ds);
-		
+		final Sql2o sql2o = new Sql2o(ds);
+
 		DatabaseService.initializeTables(sql2o);
 		DatabaseService.importTables(config, sql2o);
 		db = new DatabaseService(sql2o, config);
 	}
-	
+
 	public void after() {
 		db.dropAll();
 		ds.close();

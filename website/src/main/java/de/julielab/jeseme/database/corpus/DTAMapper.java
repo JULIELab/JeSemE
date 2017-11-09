@@ -13,7 +13,8 @@ public class DTAMapper implements WordMapper {
 	private final Map<String, String> mapping = new HashMap<>();
 	private final boolean lowercase;
 
-	public DTAMapper(final Path path, boolean lowercase) throws IOException {
+	public DTAMapper(final Path path, final boolean lowercase)
+			throws IOException {
 		final Iterator<String[]> iter = Files.lines(path)
 				.map(line -> line.split(";")).iterator();
 		while (iter.hasNext()) {
@@ -29,8 +30,8 @@ public class DTAMapper implements WordMapper {
 
 	@Override
 	public String map(String s) {
-		s = mapping.containsKey(s) ? mapping.get(s) : s ;
-		if(lowercase)
+		s = mapping.containsKey(s) ? mapping.get(s) : s;
+		if (lowercase)
 			s = s.toLowerCase();
 		return s;
 	}

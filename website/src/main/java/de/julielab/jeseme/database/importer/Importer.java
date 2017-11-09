@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
 
-public abstract class Importer implements AcceptanceCriterium {
+public abstract class Importer {
 	static class GZIPFiles {
 		private static void closeSafely(final Closeable closeable) {
 			if (closeable != null)
@@ -68,10 +68,11 @@ public abstract class Importer implements AcceptanceCriterium {
 
 	static final long IMPORT_COMMIT_SIZE = 10 * IMPORT_BATCH_SIZE;
 	public static final String FREQUENCY_CSV = "FREQUENCY.csv";
+	public static final String EMBEDDING_CSV = "EMBEDDING.csv";
 	public static final String PPMI_CSV = "PPMI.csv";
 	public static final String CHI_CSV = "CHI.csv";
 	public static final String SIMILARITY_CSV = "SIMILARITY.csv";
-
+	public static final String EMOTION_CSV = "EMOTION.csv";
 	public static final String WORDS_CSV = "WORDIDS.csv";
 
 	private static final Logger LOGGER = LoggerFactory
@@ -111,13 +112,13 @@ public abstract class Importer implements AcceptanceCriterium {
 				if (query == null)
 					query = sql2o.beginTransaction()
 							.createQuery(String.format(sql, tableName));
-				String[] data = iter.next();
-				if (accepts(data)) {
-					addParameters(data, query)
-							.addParameter("corpus", corpusId).addToBatch();
-					//Nicer batch import leaks memory, thus using new connections is recommended
-					++i;
-				}
+
+				final String[] data = iter.next();
+				addParameters(data, query).addParameter("corpus", corpusId)
+						.addToBatch();
+				//Nicer batch import leaks memory, thus using new connections is recommended
+				++i;
+
 				if ((i % IMPORT_BATCH_SIZE) == 0)
 					query.executeBatch();
 				if ((i % IMPORT_COMMIT_SIZE) == 0) {

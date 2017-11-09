@@ -8,6 +8,10 @@
 
     function roundingFormatter(format, value) {
         return function(value){
+        	format = format +"n"
+        	value = (value < 0.0001 && value > -0.0001) ? 0 : value
+        	console.log("foo")
+        	console.log(d3.format(format)(value))
         	return d3.format(format)(value)
         }
     }
@@ -80,7 +84,7 @@ function chart(bindto, url, yformat, line){
 		return bar_chart(bindto, url, yformat)
 }
 
-function line_chart(bindto, url, yformat, x){
+function line_chart(bindto, url, yformat){
     var myyformat =  yformat != null ? yformat : {}
     if(!("tick" in myyformat)){
     	myyformat["tick"] = {

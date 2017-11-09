@@ -43,17 +43,27 @@
 
 
 
-<title>JeSemE</title>
+<title>JeSemE 2.0</title>
 
 </head>
 <body>
 
 	<div class="center-block">
 		<h1>JeSemE Help</h1>
-		<p>JeSemE is described in detail in our upcomming ACL paper, the
-			following is mostly a simplified overview.</p>
+		<p>JeSemE is described in detail in our <a href="https://aclanthology.info/pdf/P/P17/P17-4006.pdf">ACL paper "Exploring Diachronic Lexical Semantics with JESEME"</a>, the
+			following is a simplified overview. Note that the new Emotion metric will be described in a forthcoming paper.</p>
 		<div class="center-part">
 			<h2 id="metrics">Metrics</h2>
+			<h3>
+				VAD Emotions
+			</h3>
+			<p>
+				The Valence Arousal Dominance (VAD) model of emotion assumes that affective states can be described relative to three emotional dimensions, 
+				i.e., Valence (corresponding to the concept of polarity, see above), Arousal (the degree of excitement or calmness) and Dominance 
+				(feeling in or out of control of a social situation). Emotion values for historical texts are calculated by combining word embeddings and 
+				contemporary emotion lexicons, see <a href="https://dh2017.adho.org/abstracts/491/491.pdf">"The Course of Emotion in Three Centuries of German Text&mdash;A Methodological Framework"</a> for details. The following illustration shows the three-dimensional VAD space with the position of several emotion words.
+			</p>
+			<p><img src="vad-cube.png" alt="VAD emotions" height="350">	</p>
 			<h3>
 				PPMI and &chi;<sup>2</sup>
 			</h3>
@@ -64,13 +74,13 @@
 				calculate the probability of finding one of them, as in \(P(i)\)
 				respectively \(P(j)\).They then compare the expected probability of
 				encountering both words \(P(i)P(j)\) with the observed
-				frequency/probability \(P(i,j)\).
+				frequency/probability \(P(i,j)\). JeSemE provides only values above 0.01, due to storage constraints.
 			</p>
 			<p>PPMI favors infrequent context words and can be calculated
-				with: $$PPMI(i,j) := max(\frac{P(i,j)}{P(i)P(j)},0)$$</p>
+				with: $$PPMI(i,j) := max(log\frac{P(i,j)}{P(i)P(j)},0)$$</p>
 			<p>
-				&chi;<sup>2</sup> is regarded as more balanced and can be calculated
-				with: $$\chi^2(i,j) := \frac{(P(i,j) - P(i)P(j))^2}{P(i)P(j)}$$
+				&chi;<sup>2</sup> is regarded as more balanced, we use a normalized version calculated
+				with: $$\chi^2(i,j) := max(log\frac{(P(i,j) - P(i)P(j))^2}{P(i)P(j)},0)$$
 			</p>
 
 			<h3>
@@ -83,9 +93,9 @@
 				embeddings with quality similar to word2vec embeddings. See <a
 					href="http://www.aclweb.org/anthology/Q15-1016">Levy (2015)</a> for
 				details. In contrast to word2vec, it is not affected by random
-				initialization based <a
-					href="http://aclweb.org/anthology/C/C16/C16-1262.pdf">realiability
-					problems</a>.
+				initialization based realiability problems, see our papers <a
+					href="http://aclweb.org/anthology/C/C16/C16-1262.pdf">"Bad Company&mdash;Neighborhoods in Neural Embedding Spaces Considered Harmful"</a> and <a
+					href="https://dh2017.adho.org/abstracts/487/487.pdf">"Don’t Get Fooled by Word Embeddings&mdash;Better Watch their Neighborhood"</a> for details.
 			</p>
 		</div>
 		<div class="center-part">
@@ -133,18 +143,22 @@
 				<a
 					href="http://JeSemE.org/api/similarity?word1=day&word2=night&corpus=coha">JeSemE.org/api/similarity?word1=day&amp;word2=night&amp;corpus=coha</a>
 			</p>
+			<h3>Word Emotion</h3>
+			<p>Expects corpus and word as parameters, as in:</p>
+			<p>
+				<a
+					href="http://jeseme.org/api/emotion?word=heart&corpus=coha">JeSemE.org/api/emotion?word=heart&amp;corpus=coha</a>
+			</p>
 			<h3>Typical Context</h3>
+			<p>Expects corpus and word as parameters, Contexts can be
+				requested for PPMI or &chi;<sup>2</sup> as in:</p>
 			<p>
-				Expects corpus, word1 and word2 as parameters. Contexts can be
-				requested via PPMI or &chi;<sup>2</sup> as in:
+				<a
+					href="http://jeseme.org/api/typicalcontextppmi?word=day&corpus=coha">JeSemE.org/api/typicalcontextppmi?word=day&amp;corpus=coha</a>
 			</p>
 			<p>
 				<a
-					href="http://JeSemE.org/api/ppmi?word1=day&word2=night&corpus=coha">JeSemE.org/api/ppmi?word1=day&amp;word2=night&amp;corpus=coha</a>
-			</p>
-			<p>
-				<a
-					href="http://JeSemE.org/api/chi?word1=day&word2=night&corpus=coha">JeSemE.org/api/chi?word1=day&amp;word2=night&amp;corpus=coha</a>
+					href="http://jeseme.org/api/typicalcontextchi?word=day&corpus=coha">JeSemE.org/api/typicalcontextchi?word=day&amp;corpus=coha</a>
 			</p>
 			<h3>Relative Frequency</h3>
 			<p>Expects corpus and word as parameters, as in:</p>
@@ -154,13 +168,13 @@
 		</div>
 		<div class="center-part">
 			<h2 id="download"> Download Models</h2>
-			The models used by JeSemE are available for download.
+			The models used by JeSemE are available for download. Each ZIP contains CSVs mapping words to IDs and IDs to decade-dependent statistics/word embeddings.
 			<ul>
-			  <li><a href="models/coha.zip" download>COHA 8GB</a></li>
-			  <li><a href="models/dta.zip" download>DTA 2GB</a></li>
-			  <li><a href="models/google_fiction.zip" download>Google Books Fiction 13GB</a></li>
-			  <li><a href="models/google_german.zip" download>Google Books German 8GB</a></li>
-			  <li><a href="models/rsc.zip" download>RSC 0.5GB</a></li>
+			  <li><a href="https://cloud.uni-jena.de/index.php/s/OCz44jvrByXGnr8/download" download>COHA (1.6GB)</a></li>
+			  <li><a href="https://cloud.uni-jena.de/index.php/s/3uAs1WCPdmGynHP/download" download>DTA (0.4 GB)</a></li>
+			  <li><a href="https://cloud.uni-jena.de/index.php/s/Ggz3NILv6ZvyAQP/download" download>Google Books Fiction (1.9 GB)</a></li>
+			  <li><a href="https://cloud.uni-jena.de/index.php/s/1Lz1o9NIa3oOCUB/download" download>Google Books German (0.7 GB)</a></li>
+			  <li><a href="https://cloud.uni-jena.de/index.php/s/l52pUuADyhrI6uZ/download" download>RSC (0.1 GB)</a></li>
 			</ul>
 		</div> 
 	</div>

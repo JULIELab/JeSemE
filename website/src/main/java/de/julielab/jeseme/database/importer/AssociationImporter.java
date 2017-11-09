@@ -10,7 +10,7 @@ public class AssociationImporter extends Importer {
 			final String tableName) {
 		super(SQL_TEMPLATE, sql2o, corpusId, tableName);
 	}
-	
+
 	@Override
 	protected Query addParameters(final String[] s, final Query query) {
 		query.addParameter("word1", Integer.valueOf(s[0]));
