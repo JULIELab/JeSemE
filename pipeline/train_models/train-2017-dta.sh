@@ -4,7 +4,7 @@ HYPERWORD_PATH="/home/hellrich/hyperwords/omerlevy-hyperwords-688addd64ca2"
 SMOOTHING="0.75"
 DIM="500"
 CONTEXT_WINDOW=4
-TARGET="/home/hellrich/dta_2017"
+TARGET="/home/hellrich/tmp/jedisem/dta_2017"
 SOURCE="/home/hellrich/historical-emotion/dta/jeseme_dta_corpus"
 
 function prepare {
