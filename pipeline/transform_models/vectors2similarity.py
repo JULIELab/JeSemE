@@ -11,7 +11,10 @@ import emotion_lexicons
 def main():
     args = docopt("""
     Usage:
-        vectors2similarity.py <target> <limit> <emotion_lexicon_path> <emotion_language> <folders>...
+        vectors2similarity.py [options] <target> <limit> <emotion_lexicon_path> <emotion_language> <folders>...
+	
+    Options:
+        --exceptions=EXCEPTIONS  Words to transform regardless of the frequency rank limit, use "," for multiple
 """)
 
     emotion_lexicon = load_emotions(
@@ -20,8 +23,9 @@ def main():
     id2freq, ppmi, chi, svd_similar, emotions, embeddings = [], [], [], [], [], []
     folders = args["<folders>"]
     limit = int(args["<limit>"])
+    exceptions = args["--exceptions"].split(",")
 
-    word2id = read_vocabs(limit, folders)
+    word2id = read_vocabs(limit, exceptions, folders)
     for year, folder in iterate_folder(folders):
         id2freq.append((year, read_freq(folder, word2id)))
         ppmi.append((year, read_generic(folder2ppmi(folder), word2id)))
@@ -142,18 +146,17 @@ def intersect(words):
     return intersection
 
 
-def read_vocabs(limit, folders):
+def read_vocabs(limit, exceptions, folders):
     words = []
     for vocab in [folder2vocab(folder) for folder in folders]:
         w = set()
         i = 0
         with open(vocab, "r") as v:
             for line in v:
-                if i == limit:
-                    break
-                i += 1
-                word, freq = line.strip().split()
-                w.add(word)
+		word, freq = line.strip().split()
+                if i < limit or word in exceptions:
+                    i += 1    
+                    w.add(word)
         words.append(w)
     return {y: x for x, y in enumerate(intersect(words))}
 
