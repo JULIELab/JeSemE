@@ -23,7 +23,7 @@ def main():
     id2freq, ppmi, chi, svd_similar, emotions, embeddings = [], [], [], [], [], []
     folders = args["<folders>"]
     limit = int(args["<limit>"])
-    exceptions = args["--exceptions"].split(",")
+    exceptions = [] if args["--exceptions"] == None else args["--exceptions"].split(",")
 
     word2id = read_vocabs(limit, exceptions, folders)
     for year, folder in iterate_folder(folders):
