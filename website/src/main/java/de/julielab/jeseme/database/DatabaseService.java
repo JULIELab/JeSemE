@@ -370,6 +370,8 @@ public class DatabaseService {
 						info.getUrl(), info.getInsertInUrl());
 				corpora.put(corpusAndId.word, corpus);
 			}
+		}catch(Exception e){
+			LOGGER.log(e)	
 		}
 	}
 
