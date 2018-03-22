@@ -38,7 +38,7 @@ import de.julielab.jeseme.embeddings.Embedding;
  */
 
 public class DatabaseService {
-	private static final String SCHEMA = "JESEME_V2"; //TODO update if reprocessed
+	private static final String SCHEMA = "JESEME_V2_1"; //TODO update if reprocessed
 	private static final String CORPORA = SCHEMA + ".TABLES";
 	public static final String SIMILARITY_TABLE = SCHEMA + ".SIMILARITY";
 	public static final String EMOTION_TABLE = SCHEMA + ".EMOTION";
