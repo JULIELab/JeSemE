@@ -371,7 +371,7 @@ public class DatabaseService {
 				corpora.put(corpusAndId.word, corpus);
 			}
 		}catch(Exception e){
-			LOGGER.log(e)	
+			LOGGER.error("Exception:", e);	
 		}
 	}
 
