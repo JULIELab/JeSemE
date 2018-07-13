@@ -50,8 +50,8 @@
 
 	<div class="center-block">
 		<h1>JeSemE Help</h1>
-		<p>JeSemE is described in detail in our <a href="https://aclanthology.info/pdf/P/P17/P17-4006.pdf">ACL paper "Exploring Diachronic Lexical Semantics with JESEME"</a>, the
-			following is a simplified overview. Note that the new Emotion metric will be described in a forthcoming paper.</p>
+		<p>JeSemE is described in detail in our <a href=>COLING"</a> and our <a href="https://aclanthology.info/pdf/P/P17/P17-4006.pdf">ACL paper "Exploring Diachronic Lexical Semantics with JESEME"</a>, the
+			following is a simplified overview.</p>
 		<div class="center-part">
 			<h2 id="metrics">Metrics</h2>
 			<h3>
@@ -61,7 +61,7 @@
 				The Valence Arousal Dominance (VAD) model of emotion assumes that affective states can be described relative to three emotional dimensions, 
 				i.e., Valence (corresponding to the concept of polarity, see above), Arousal (the degree of excitement or calmness) and Dominance 
 				(feeling in or out of control of a social situation). Emotion values for historical texts are calculated by combining word embeddings and 
-				contemporary emotion lexicons, see <a href="https://dh2017.adho.org/abstracts/491/491.pdf">"The Course of Emotion in Three Centuries of German Text&mdash;A Methodological Framework"</a> for details. The following illustration shows the three-dimensional VAD space with the position of several emotion words.
+				contemporary emotion lexicons, see <a href="https://arxiv.org/abs/1806.08115">"Inducing Affective Lexical Semantics in Historical Language"</a> for details. The following illustration shows the three-dimensional VAD space with the position of several emotion words.
 			</p>
 			<p><img src="vad-cube.png" alt="VAD emotions" height="350">	</p>
 			<h3>
@@ -74,7 +74,7 @@
 				calculate the probability of finding one of them, as in \(P(i)\)
 				respectively \(P(j)\).They then compare the expected probability of
 				encountering both words \(P(i)P(j)\) with the observed
-				frequency/probability \(P(i,j)\). JeSemE provides only values above 0.01, due to storage constraints.
+				frequency/probability \(P(i,j)\). Resulting values are normalized, so all associations for a word sum up to 1. JeSemE provides only values above 0.01, due to storage constraints.
 			</p>
 			<p>PPMI favors infrequent context words and can be calculated
 				with: $$PPMI(i,j) := max(log\frac{P(i,j)}{P(i)P(j)},0)$$</p>
@@ -170,11 +170,11 @@
 			<h2 id="download"> Download Models</h2>
 			The models used by JeSemE are available for download. Each ZIP contains CSVs mapping words to IDs and IDs to decade-dependent statistics/word embeddings.
 			<ul>
-			  <li><a href="https://cloud.uni-jena.de/index.php/s/OCz44jvrByXGnr8/download" download>COHA (1.6GB)</a> (old version)</li>
-			  <li><a href="https://cloud.uni-jena.de/index.php/s/3uAs1WCPdmGynHP/download" download>DTA (0.4 GB)</a></li>
-			  <li><a href="https://cloud.uni-jena.de/index.php/s/Ggz3NILv6ZvyAQP/download" download>Google Books Fiction (1.9 GB)</a></li>
-			  <li><a href="https://cloud.uni-jena.de/index.php/s/1Lz1o9NIa3oOCUB/download" download>Google Books German (0.7 GB)</a> (old version)</li>
-			  <li><a href="https://cloud.uni-jena.de/index.php/s/l52pUuADyhrI6uZ/download" download>RSC (0.1 GB)</a></li>
+			  <li><a href="https://cloud.uni-jena.de/index.php/s/sZ4JcLCkFEz9NBg" download>COHA</a></li>
+			  <li><a href="https://cloud.uni-jena.de/index.php/s/MzpPJBPMcscKYW5" download>DTA</a></li>
+			  <li><a href="https://cloud.uni-jena.de/index.php/s/jGB6QJFX8Xc9xeW" download>Google Books Fiction</a></li>
+			  <li><a href="https://cloud.uni-jena.de/index.php/s/WzcMDnY6G4ibF98" download>Google Books German</a></li>
+			  <li><a href="https://cloud.uni-jena.de/index.php/s/DTa9D5TMz9e2DYC" download>RSC</a></li>
 			</ul>
 		</div> 
 	</div>
