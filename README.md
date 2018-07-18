@@ -1,8 +1,8 @@
 # JeSemE
-JeSemE (Jena Semantic Explorer) allows you to explore the semantic development of words over time based on distributional semantics. JeSemE is described in detail in our ACL paper "Exploring Diachronic Lexical Semantics with JESEME": https://aclanthology.info/pdf/P/P17/P17-4006.pdf
+JeSemE (Jena Semantic Explorer) allows you to explore the semantic development of words over time based on distributional semantics. JeSemE is described in detail in our ACL 2017 paper ["Exploring Diachronic Lexical Semantics with JESEME"]( https://aclanthology.info/pdf/P/P17/P17-4006.pdf) and our COLING 2018 paper ["JeSemE: A Website for Exploring Diachronic Changes in Word Meaning and Emotion"](https://arxiv.org/abs/1807.04148)
 
 # Dependencies
-Modified version of Omar Levy's hyperwords https://github.com/hellrich/hyperwords
+Modified version of Omar Levy's [hyperwords](https://github.com/hellrich/hyperwords)
 
 # External Emotion Lexicons
 
