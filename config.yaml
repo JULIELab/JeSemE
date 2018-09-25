@@ -1,0 +1,23 @@
+database : {
+            url : "jdbc:postgresql://URL:PORT/DATABASE",
+            user : USER,
+            password : PASSWORD
+           }
+
+corpora : [
+            {name : dta, path : PATH,
+                    info : {mappingPath : "normalized.csv", lowercase : false, fullName : "Deutsches Textarchiv", note : "lemmatized", url : "http://www.deutschestextarchiv.de/search/ddc", insertInUrl : false }
+                    },
+            {name : coha, path : PATH,
+                    info : {lowercase : true,  fullName : "Corpus of Historical American English", note : "lowercased", url : "http://corpus.byu.edu/coha/", insertInUrl : false  }
+                    },
+            {name : gbfiction, path : PATH,
+                    info : {lowercase : true,  fullName : "Google Books English Fiction", note : "lowercased", url : "https://books.google.com/advanced_book_search", insertInUrl : false  }
+                    },
+            {name : gbgerman, path : PATH,
+                    info : {lowercase : false, mappingPath : "normalized.csv", fullName : "Google Books German", note : "lowercased and lemmatized", url : "https://books.google.com/advanced_book_search", insertInUrl : false  }
+                    },
+            {name : rsc, path : PATH,
+                    info : {lowercase : true,  fullName : "Royal Society Corpus", note : "lowercased and lemmatized", url : "https://fedora.clarin-d.uni-saarland.de/rsc/", insertInUrl : false }
+                  }
+         ]
