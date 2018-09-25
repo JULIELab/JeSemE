@@ -13,11 +13,11 @@ import de.julielab.jeseme.database.DatabaseService;
 import de.julielab.jeseme.server.Server;
 
 public class CLI {
-	private static final String doc = "JeDiSem\n" + "Usage:\n"
-			+ "  jedisem server <dbconfig>\n" + "  jedisem import <dbconfig>\n"
-			+ "  jedisem initialize <dbconfig>\n"
-			+ "  jedisem demo <dbconfig>\n"
-			+ "  jedisem error <dbconfig> <message>... \n\n" + "Options:\n"
+	private static final String doc = "JeSemE\n" + "Usage:\n"
+			+ "  JeSemE server <dbconfig>\n" + "  JeSemE import <dbconfig>\n"
+			+ "  JeSemE initialize <dbconfig>\n"
+			+ "  JeSemE demo <dbconfig>\n"
+			+ "  JeSemE error <dbconfig> <message>... \n\n" + "Options:\n"
 			+ "  -h --help     Show this screen.\n"
 			+ "  -e --external  Use only external web resources\n";
 
