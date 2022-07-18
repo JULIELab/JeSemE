@@ -2,9 +2,9 @@
 
 ## Supported Versions
 
-This repository is archived and unsupported.
+This repository currently planned to be maintained until 2028.
 
 
 ## Reporting a Vulnerability
 
-Don't contact use. We know about at least two security issues found be "dependabot".
+Please contact julielab@listserv.uni-jena.de in case of security related issue
