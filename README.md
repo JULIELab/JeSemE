@@ -11,7 +11,7 @@ Modified version of Omar Levy's [hyperwords](https://github.com/hellrich/hyperwo
 * Configuration is done via config.yaml, you must set correct paths for your system!
 * Requires a Postgres Server, enter details in config
 * Mapping between words and lemmata (German only, fit for historic texts) via normalized.csv (mappingPath in config)
-* Files with trained models and derived emotions can be found online on JeSemE's [help page](http://jeseme.org/help.html)
+* Files with trained models and derived emotions can be found online on JeSemE's [help page](https://jeseme.coling.uni-jena.de/)
 * Use the JAR to execute the commands "initialize" first (creates necessary tables), then "import" (takes some hours & approx 30 GB), and finally start JeSemE via "server"
 
 # External Emotion Lexicons
